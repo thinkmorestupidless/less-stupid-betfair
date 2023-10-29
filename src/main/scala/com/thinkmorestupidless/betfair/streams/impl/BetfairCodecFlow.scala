@@ -4,10 +4,9 @@ import akka.NotUsed
 import akka.stream.scaladsl.{BidiFlow, Flow}
 import akka.util.ByteString
 import com.thinkmorestupidless.betfair.streams.domain.{IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage}
-import io.circe.Error
+import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs._
 import io.circe.parser._
 import io.circe.syntax._
-import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs._
 import org.slf4j.LoggerFactory
 
 object BetfairCodecFlow {
@@ -17,27 +16,25 @@ object BetfairCodecFlow {
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  private val toByteString: OutgoingBetfairSocketMessage => ByteString =
-    msg => ByteString(s"${msg.asJson.noSpaces}\n")
+  private val outgoing = Flow[OutgoingBetfairSocketMessage].map(msg => ByteString(s"${msg.asJson.noSpaces}\n"))
 
-  private val fromByteString: ByteString => Either[Error, IncomingBetfairSocketMessage] =
-    byteString => {
-      val x = for {
+  private val incoming = Flow[ByteString]
+    .map(byteString =>
+      for {
         json <- parse(byteString.utf8String)
         msg <- json.as[IncomingBetfairSocketMessage]
       } yield msg
-      x
-    }
-
-  def apply(): BetfairCodecFlow = {
-    val outgoing = Flow[OutgoingBetfairSocketMessage].map(toByteString)
-    val incoming = Flow[ByteString].map(fromByteString).collect {
+    )
+    .collect {
       case Right(message) => Some(message)
       case Left(error) =>
         log.error(s"Failed to process incoming message '$error'")
         None
     }
+    .collect { case Some(message) =>
+      message
+    }
 
+  def apply(): BetfairCodecFlow =
     BidiFlow.fromFlows(outgoing, incoming)
-  }
 }

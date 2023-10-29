@@ -21,12 +21,14 @@ object BetfairProtocolFlow {
   type BetfairProtocolFlow = BidiFlow[
     OutgoingBetfairSocketMessage,
     OutgoingBetfairSocketMessage,
-    Either[circe.Error, IncomingBetfairSocketMessage],
-    Either[circe.Error, IncomingBetfairSocketMessage],
+    IncomingBetfairSocketMessage,
+    IncomingBetfairSocketMessage,
     NotUsed
   ]
 
-  def apply(session: BetfairSession, globalMarketFilterRepository: GlobalMarketFilterRepository)(implicit system: ActorSystem[_]): BetfairProtocolFlow = {
+  def apply(session: BetfairSession, globalMarketFilterRepository: GlobalMarketFilterRepository)(implicit
+      system: ActorSystem[_]
+  ): BetfairProtocolFlow = {
     implicit val timeout = Timeout(10.seconds)
 
     val protocolActor: ActorRef[Question] = system.systemActorOf(
@@ -66,11 +68,15 @@ private object BetfairProtocolActor {
   sealed trait BetfairProtocolMessage
   final case class SetGlobalMarketFilter(marketFilter: MarketFilter) extends BetfairProtocolMessage
   final case class InitializationError(cause: Throwable) extends BetfairProtocolMessage
-  final case class Question(incoming: IncomingBetfairSocketMessage, replyTo: ActorRef[Answer]) extends BetfairProtocolMessage
+  final case class Question(incoming: IncomingBetfairSocketMessage, replyTo: ActorRef[Answer])
+      extends BetfairProtocolMessage
 
   final case class Answer(messages: List[BetfairSocketMessage])
 
-  def apply(session: BetfairSession, globalMarketFilterRepository: GlobalMarketFilterRepository): Behavior[BetfairProtocolMessage] = {
+  def apply(
+      session: BetfairSession,
+      globalMarketFilterRepository: GlobalMarketFilterRepository
+  ): Behavior[BetfairProtocolMessage] =
     Behaviors.withStash(capacity = 100) { buffer =>
       Behaviors.setup { context =>
         implicit val timeout = Timeout(3.seconds)
@@ -125,7 +131,7 @@ private object BetfairProtocolActor {
           def handle(message: IncomingBetfairSocketMessage): List[IncomingBetfairSocketMessage] =
             message match {
               case mcm: MarketChangeMessage => List(mcm)
-              case _ => List.empty
+              case _                        => List.empty
             }
 
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] { case Question(message, replyTo) =>
@@ -136,11 +142,10 @@ private object BetfairProtocolActor {
 
         context.pipeToSelf(globalMarketFilterRepository.getCurrentGlobalFilter()) {
           case scala.util.Success(globalMarketFilter) => SetGlobalMarketFilter(globalMarketFilter)
-          case scala.util.Failure(cause) => InitializationError(cause)
+          case scala.util.Failure(cause)              => InitializationError(cause)
         }
 
         initializing()
       }
     }
-  }
 }
