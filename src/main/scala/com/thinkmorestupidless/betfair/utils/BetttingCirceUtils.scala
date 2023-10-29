@@ -1,8 +1,7 @@
 package com.thinkmorestupidless.betfair.utils
 
-import com.thinkmorestupidless.betfair.core._
 import com.thinkmorestupidless.betfair.core.domain.{Money, Price}
-import com.thinkmorestupidless.utils.CirceUtils._
+import com.thinkmorestupidless.extensions.circe.CirceUtils._
 import io.circe.{Codec, Decoder, Encoder}
 
 object BettingCirceUtils {

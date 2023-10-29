@@ -1,16 +1,9 @@
 package com.thinkmorestupidless.betfair.auth.impl
 
+import com.thinkmorestupidless.betfair.auth.domain._
+import com.thinkmorestupidless.extensions.circe.CirceUtils._
 import io.circe.Decoder.Result
-import io.circe.{Codec, Decoder, Encoder, HCursor, Json}
-import com.thinkmorestupidless.betfair.auth.domain.{
-  ApplicationKey,
-  LoginFailure,
-  LoginResponse,
-  LoginStatus,
-  LoginSuccess,
-  SessionToken
-}
-import com.thinkmorestupidless.betfair.extensions.circe.CirceUtils._
+import io.circe._
 
 object JsonCodecs {
 

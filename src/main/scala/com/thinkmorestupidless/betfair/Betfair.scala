@@ -15,7 +15,7 @@ import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class Betfair(session: BetfairSession, exchange: BetfairExchangeService) {
+final class Betfair(val config: BetfairConfig, session: BetfairSession, exchange: BetfairExchangeService) {
   def cancelOrders(
       marketId: MarketId,
       instructions: List[CancelInstruction],
@@ -128,12 +128,7 @@ object Betfair {
   def apply()(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, Betfair] =
     authenticate().map { case (config, session) =>
       val exchange = new AkkaHttpBetfairExchangeService(config)(system.classicSystem)
-      new Betfair(session, exchange)
-    }
-
-  def auth()(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, BetfairSession] =
-    authenticate().map { case (_, session) =>
-      session
+      new Betfair(config, session, exchange)
     }
 
   private def authenticate()(implicit

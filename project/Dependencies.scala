@@ -11,12 +11,14 @@ object DependencyVersions {
   val sbtioVersion = "1.7.0"
   val scalaVersion = "2.13.9"
   val scalaTestVersion = "3.1.0"
+  val wiremockVersion = "2.35.0"
 }
 
 object Dependencies {
   import DependencyVersions._
 
   private val akka = Seq(
+    "com.typesafe.akka" %% "akka-actor-testkit-typed",
     "com.typesafe.akka" %% "akka-stream-typed"
   ).map(_ % akkaVersion)
 
@@ -44,6 +46,10 @@ object Dependencies {
     "com.beachape" %% "enumeratum"
   ).map(_ % enumeratumVersion)
 
+  private val logging = Seq(
+    "ch.qos.logback" % "logback-classic"
+  ).map(_ % logbackVersion)
+
   private val pureConfig = Seq(
     "com.github.pureconfig" %% "pureconfig"
   ).map(_ % pureConfigVersion)
@@ -56,8 +62,24 @@ object Dependencies {
     "org.scalatest" %% "scalatest"
   ).map(_ % scalaTestVersion % Test)
 
-  val production = akka ++ akkaHttp ++ akkaHttpJson ++ circe ++ enumeratum ++ pureConfig ++ sbtio
-  val test = akkaTesting ++ scalatest
+  private val wiremock = Seq(
+    "com.github.tomakehurst" % "wiremock-jre8"
+  ).map(_ % wiremockVersion % Test)
+
+  val production =
+    akka ++
+      akkaHttp ++
+      akkaHttpJson ++
+      circe ++
+      logging ++
+      enumeratum ++
+      pureConfig ++
+      sbtio
+
+  val test =
+    akkaTesting ++
+      scalatest ++
+      wiremock
 
   val all = production ++ test
 }

@@ -25,8 +25,6 @@ final class AkkaHttpBetfairAuthenticationService(config: BetfairConfig)(implicit
 
   private val log = LoggerFactory.getLogger(getClass)
 
-//  initialiseSslContext(system.settings.config)
-
   def login(): EitherT[Future, LoginError, SessionToken] = {
     val body =
       Map("username" -> config.login.credentials.username.value, "password" -> config.login.credentials.password.value)
@@ -34,11 +32,6 @@ final class AkkaHttpBetfairAuthenticationService(config: BetfairConfig)(implicit
     val headers = List(RawHeader(config.headerKeys.applicationKey.value, config.login.credentials.applicationKey.value))
 
     val request = Post(uri = config.login.uri.value, entity = entity).withHeaders(headers)
-
-    log.info(s"auth request: $request")
-    log.info(s"""the keystore is ${new scala.sys.SystemProperties().foreach(x => println(x))}""")
-
-//    EitherT(Http().singleRequest(request).map(_.asRight)).flatMap(handleLoginResponse)
 
     for {
       response <- EitherT(Http().singleRequest(request).map(_.asRight))

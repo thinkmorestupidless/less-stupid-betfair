@@ -1,11 +1,11 @@
 package com.thinkmorestupidless.betfair.exchange.impl
 
-import io.circe.Codec
-import io.circe.generic.semiauto._
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
-import com.thinkmorestupidless.utils.CirceUtils._
 import com.thinkmorestupidless.betfair.utils.BettingCirceUtils._
+import com.thinkmorestupidless.extensions.circe.CirceUtils._
+import io.circe.Codec
+import io.circe.generic.semiauto._
 
 object JsonCodecs {
 

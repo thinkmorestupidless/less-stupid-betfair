@@ -1,4 +1,4 @@
-package com.thinkmorestupidless.betfair.extensions.circe
+package com.thinkmorestupidless.extensions.circe
 
 import io.circe.{Codec, Decoder, Encoder}
 

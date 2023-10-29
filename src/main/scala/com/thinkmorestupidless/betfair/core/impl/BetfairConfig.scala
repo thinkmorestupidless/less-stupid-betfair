@@ -2,6 +2,7 @@ package com.thinkmorestupidless.betfair.core.impl
 
 import akka.http.scaladsl.model.headers.RawHeader
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
+import com.typesafe.config.Config
 import pureconfig.generic.auto._
 import pureconfig.{ConfigReader, ConfigSource}
 
@@ -71,4 +72,7 @@ object BetfairConfig {
 
   def load(): ConfigReader.Result[BetfairConfig] =
     ConfigSource.default.at(namespace = "betfair").load[BetfairConfig]
+
+  def load(config: Config): ConfigReader.Result[BetfairConfig] =
+    ConfigSource.fromConfig(config).load[BetfairConfig]
 }
