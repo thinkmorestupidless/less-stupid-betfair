@@ -7,10 +7,14 @@ object DependencyVersions {
   val logbackVersion = "1.2.3"
   val circeVersion = "0.14.1"
   val enumeratumVersion = "1.6.1"
+  val postgresVersion = "42.1.4"
   val pureConfigVersion = "0.17.1"
   val sbtioVersion = "1.7.0"
   val scalaVersion = "2.13.9"
   val scalaTestVersion = "3.1.0"
+  val slickVersion = "3.3.3"
+  val slickPgVersion = "0.19.3"
+  val slickMigrationApiVersion = "0.7.0"
   val wiremockVersion = "2.35.0"
 }
 
@@ -50,6 +54,10 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic"
   ).map(_ % logbackVersion)
 
+  private val postgres = Seq(
+    "org.postgresql" % "postgresql"
+  ).map(_ % postgresVersion)
+
   private val pureConfig = Seq(
     "com.github.pureconfig" %% "pureconfig"
   ).map(_ % pureConfigVersion)
@@ -62,6 +70,15 @@ object Dependencies {
     "org.scalatest" %% "scalatest"
   ).map(_ % scalaTestVersion % Test)
 
+  private val slick = Seq(
+    "com.typesafe.slick" %% "slick-hikaricp"
+  ).map(_ % slickVersion) ++ Seq(
+    "com.github.tminglei" %% "slick-pg",
+    "com.github.tminglei" %% "slick-pg_circe-json"
+  ).map(_ % slickPgVersion) ++ Seq(
+    "io.github.nafg.slick-migration-api" %% "slick-migration-api-flyway"
+  ).map(_ % slickMigrationApiVersion)
+
   private val wiremock = Seq(
     "com.github.tomakehurst" % "wiremock-jre8"
   ).map(_ % wiremockVersion % Test)
@@ -73,8 +90,10 @@ object Dependencies {
       circe ++
       logging ++
       enumeratum ++
+      postgres ++
       pureConfig ++
-      sbtio
+      sbtio ++
+      slick
 
   val test =
     akkaTesting ++
