@@ -1,10 +1,15 @@
-package com.thinkmorestupidless.betfair.utils
+package com.thinkmorestupidless.extensions.slick
+
+import com.github.tminglei.slickpg.{ExPostgresProfile, PgCirceJsonSupport, PgDate2Support}
+import com.thinkmorestupidless.utils.Direction
+import com.thinkmorestupidless.utils.Direction.{Ascending, Descending}
+import slick.ast.TypedType
+import slick.basic.Capability
+import slick.jdbc.{JdbcCapabilities, JdbcType}
+import slick.lifted.ColumnOrdered
 
 import java.sql.ResultSet
 import java.time.OffsetDateTime
-import com.github.tminglei.slickpg.ExPostgresProfile
-import com.github.tminglei.slickpg.PgDate2Support
-import com.github.tminglei.slickpg.PgCirceJsonSupport
 
 trait CustomPostgresProfile extends ExPostgresProfile with PgCirceJsonSupport with PgDate2Support {
   override def pgjson = "jsonb"
@@ -28,7 +33,7 @@ trait CustomPostgresProfile extends ExPostgresProfile with PgCirceJsonSupport wi
 
   // https://github.com/tminglei/slick-pg/issues/493
   private object CustomOffsetDateTimeMapper
-    extends GenericDateJdbcType[OffsetDateTime]("timestamptz", java.sql.Types.TIMESTAMP_WITH_TIMEZONE) {
+      extends GenericDateJdbcType[OffsetDateTime]("timestamptz", java.sql.Types.TIMESTAMP_WITH_TIMEZONE) {
 
     override def getValue(r: ResultSet, idx: Int): OffsetDateTime =
       classTag.runtimeClass match {

@@ -15,6 +15,7 @@ object DependencyVersions {
   val slickVersion = "3.3.3"
   val slickPgVersion = "0.19.3"
   val slickMigrationApiVersion = "0.7.0"
+  val testContainersVersion = "1.17.5"
   val wiremockVersion = "2.35.0"
 }
 
@@ -79,6 +80,10 @@ object Dependencies {
     "io.github.nafg.slick-migration-api" %% "slick-migration-api-flyway"
   ).map(_ % slickMigrationApiVersion)
 
+  private val testcontainers = Seq(
+    "org.testcontainers" % "postgresql"
+  ).map(_ % testContainersVersion)
+
   private val wiremock = Seq(
     "com.github.tomakehurst" % "wiremock-jre8"
   ).map(_ % wiremockVersion % Test)
@@ -98,7 +103,8 @@ object Dependencies {
   val test =
     akkaTesting ++
       scalatest ++
+      testcontainers ++
       wiremock
 
-  val all = production ++ test
+  val libDependencies = production ++ test
 }

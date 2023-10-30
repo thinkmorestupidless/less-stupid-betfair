@@ -1,27 +1,43 @@
-import ReleaseTransformations._
+import ReleaseTransformations.*
+import com.jsuereth.sbtpgp.SbtPgp.autoImport.PgpKeys
+import sbtrelease.ReleasePlugin.autoImport.releasePublishArtifactsAction
 
-ThisBuild / name := "less-stupid-betfair"
 ThisBuild / organization := "com.thinkmorestupidless"
-ThisBuild / scalaVersion := "2.13.11"
 ThisBuild / dynverSeparator := "-"
 ThisBuild / scalaVersion := DependencyVersions.scalaVersion
 
-libraryDependencies ++= Dependencies.all
+lazy val root = project.in(file("."))
+  .enablePlugins(BuildInfoPlugin)
+  .aggregate(
+    lib
+  )
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-releaseCrossBuild := false
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  // For non cross-build projects, use releaseStepCommand("publishSigned")
-  releaseStepCommandAndRemaining("publishSigned"),
-  releaseStepCommand("sonatypeBundleRelease"),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges
-)
+lazy val lib = project.in(file("lib"))
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    name := "less-stupid-betfair",
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "com.thinkmorestupidless",
+    libraryDependencies := Dependencies.libDependencies,
+    releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+    releaseCrossBuild := false,
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      releaseStepCommandAndRemaining("publishSigned"),
+      releaseStepCommand("sonatypeBundleRelease"),
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    )
+  )
+
+lazy val `example-websocket` = project.in(file("examples/websocket"))
+  .settings(
+    publish := false
+  )
