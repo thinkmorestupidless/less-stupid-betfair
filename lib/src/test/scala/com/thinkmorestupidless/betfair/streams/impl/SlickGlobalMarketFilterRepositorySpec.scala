@@ -6,7 +6,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funspec.AnyFunSpecLike
 import org.scalatest.matchers.should.Matchers
 
-final class SlickMarketFilterRepositorySpec
+final class SlickGlobalMarketFilterRepositorySpec
     extends AnyFunSpecLike
     with Matchers
     with FutureSupport

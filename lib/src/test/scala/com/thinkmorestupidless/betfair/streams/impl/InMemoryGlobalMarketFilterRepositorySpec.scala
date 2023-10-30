@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext
 
-class GlobalMarketFilterRepositorySpec
+class InMemoryGlobalMarketFilterRepositorySpec
     extends AnyFunSpecLike
     with Matchers
     with FutureSupport

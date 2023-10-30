@@ -8,6 +8,9 @@ ThisBuild / scalaVersion := DependencyVersions.scalaVersion
 
 lazy val root = project.in(file("."))
   .enablePlugins(BuildInfoPlugin)
+  .settings(
+    publish := false
+  )
   .aggregate(
     lib
   )
