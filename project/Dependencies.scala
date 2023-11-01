@@ -12,6 +12,7 @@ object DependencyVersions {
   val sbtioVersion = "1.7.0"
   val scalaVersion = "2.13.9"
   val scalaTestVersion = "3.1.0"
+  val slf4jVersion = "1.7.30"
   val slickVersion = "3.3.3"
   val slickPgVersion = "0.19.3"
   val slickMigrationApiVersion = "0.7.0"
@@ -88,23 +89,28 @@ object Dependencies {
     "com.github.tomakehurst" % "wiremock-jre8"
   ).map(_ % wiremockVersion % Test)
 
-  val production =
-    akka ++
-      akkaHttp ++
-      akkaHttpJson ++
-      circe ++
-      logging ++
-      enumeratum ++
-      postgres ++
-      pureConfig ++
-      sbtio ++
-      slick
+  val libDependencies = {
+    val production =
+      akka ++
+        akkaHttp ++
+        akkaHttpJson ++
+        circe ++
+        logging ++
+        enumeratum ++
+        postgres ++
+        pureConfig ++
+        sbtio ++
+        slick
 
-  val test =
-    akkaTesting ++
-      scalatest ++
-      testcontainers ++
-      wiremock
+    val test =
+      akkaTesting ++
+        scalatest ++
+        testcontainers ++
+        wiremock
 
-  val libDependencies = production ++ test
+    production ++ test
+  }
+
+  val websocketExampleDependencies =
+    logging
 }

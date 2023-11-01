@@ -21,7 +21,7 @@ lazy val lib = project.in(file("lib"))
     name := "less-stupid-betfair",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     buildInfoPackage := "com.thinkmorestupidless",
-    libraryDependencies := Dependencies.libDependencies,
+    libraryDependencies ++= Dependencies.libDependencies,
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseCrossBuild := false,
     releaseProcess := Seq[ReleaseStep](
@@ -41,6 +41,9 @@ lazy val lib = project.in(file("lib"))
   )
 
 lazy val `example-websocket` = project.in(file("examples/websocket"))
+  .dependsOn(lib)
   .settings(
-    publish := false
+    publish := false,
+    libraryDependencies ++= Dependencies.websocketExampleDependencies,
+    run / fork := true
   )
