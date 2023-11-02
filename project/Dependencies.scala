@@ -8,6 +8,7 @@ object DependencyVersions {
   val circeVersion = "0.14.1"
   val enumeratumVersion = "1.6.1"
   val pekkoVersion = "1.0.1"
+  val pekkoHttpVersion = "1.0.0"
   val playWsVersion = "3.0.0"
   val postgresVersion = "42.1.4"
   val pureConfigVersion = "0.17.1"
@@ -61,6 +62,10 @@ object Dependencies {
   private val pekko = Seq(
     "org.apache.pekko" %% "pekko-testkit"
   ).map(_ % pekkoVersion)
+
+  private val pekkoHttp = Seq(
+    "org.apache.pekko" %% "pekko-http"
+  ).map(_ % pekkoHttpVersion)
 
   private val playWs = Seq(
     "org.playframework" %% "play-ahc-ws-standalone",
@@ -126,4 +131,8 @@ object Dependencies {
 
   val websocketExampleDependencies =
     logging
+
+  val grpcExampleDependencies =
+    logging ++
+    pekkoHttp
 }

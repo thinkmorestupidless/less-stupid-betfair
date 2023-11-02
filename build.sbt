@@ -12,7 +12,9 @@ lazy val root = project.in(file("."))
     publish := false
   )
   .aggregate(
-    lib
+    lib,
+    `example-websocket`,
+    `example-grpc`
   )
 
 lazy val lib = project.in(file("lib"))
@@ -45,5 +47,14 @@ lazy val `example-websocket` = project.in(file("examples/websocket"))
   .settings(
     publish := false,
     libraryDependencies ++= Dependencies.websocketExampleDependencies,
+    run / fork := true
+  )
+
+lazy val `example-grpc` = project.in(file("examples/grpc"))
+  .enablePlugins(PekkoGrpcPlugin)
+  .dependsOn(lib)
+  .settings(
+    publish := false,
+    libraryDependencies ++= Dependencies.grpcExampleDependencies,
     run / fork := true
   )
