@@ -55,3 +55,6 @@ project/plugins/project/
 # Other
 Preci*.pdf
 logs
+.env
+tools/certs/password
+tools/certs/client*

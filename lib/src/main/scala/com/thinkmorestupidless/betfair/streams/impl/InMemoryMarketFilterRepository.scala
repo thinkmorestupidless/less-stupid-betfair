@@ -5,8 +5,7 @@ import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class InMemoryMarketFilterRepository()(implicit ec: ExecutionContext)
-    extends GlobalMarketFilterRepository {
+final class InMemoryMarketFilterRepository()(implicit ec: ExecutionContext) extends GlobalMarketFilterRepository {
 
   private var maybeFilter: Option[MarketFilter] = None
 

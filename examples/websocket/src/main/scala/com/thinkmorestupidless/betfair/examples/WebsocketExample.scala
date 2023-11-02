@@ -1,10 +1,11 @@
 package com.thinkmorestupidless.betfair.examples
 
-import akka.actor.typed.scaladsl.adapter._
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
 import com.thinkmorestupidless.betfair.Betfair
+import com.typesafe.sslconfig.akka.AkkaSSLConfig
+import org.apache.pekko.actor.ActorSystem
 import org.slf4j.LoggerFactory
+
+import scala.jdk.CollectionConverters._
 
 object WebsocketExample {
 
@@ -14,12 +15,14 @@ object WebsocketExample {
     log.info("websocket example starting")
     println("starting")
 
-//    implicit val typedSystem = ActorSystem(Behaviors.ignore, "samples-websocket")
-//    implicit val classicSystem = typedSystem.toClassic
-//    implicit val ec = typedSystem.executionContext
-//
-//    Betfair().map { betfair =>
-//      log.info("betfair is ready {}", betfair)
-//    }
+    implicit val system = ActorSystem("websocket-example")
+    implicit val ec = system.dispatcher
+
+//    System.getProperties.asScala.map { case (k, v) => println(s"$k => $v") }
+
+    Betfair().map { betfair =>
+      log.info("betfair is ready {}", betfair)
+    }
+      .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
   }
 }

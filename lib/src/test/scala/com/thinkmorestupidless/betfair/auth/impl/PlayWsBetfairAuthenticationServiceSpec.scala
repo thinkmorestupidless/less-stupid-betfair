@@ -1,7 +1,5 @@
 package com.thinkmorestupidless.betfair.auth.impl
 
-import akka.actor.testkit.typed.scaladsl.{ActorTestKit, LogCapturing}
-import akka.actor.typed.scaladsl.adapter._
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
@@ -15,28 +13,26 @@ import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.utils.{ConfigSupport, FutureSupport}
 import io.circe.CursorOp.DownField
 import io.circe.DecodingFailure
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funspec.AnyFunSpecLike
 import org.scalatest.matchers.should.Matchers
 
-final class AkkaHttpBetfairAuthenticationServiceSpec
-    extends AnyFunSpecLike
+final class PlayWsBetfairAuthenticationServiceSpec
+    extends TestKit(ActorSystem("AkkaHttpBetfairAuthenticationServiceSpec"))
+    with AnyFunSpecLike
     with Matchers
     with BeforeAndAfterAll
-    with FutureSupport
-    with LogCapturing {
+    with FutureSupport {
 
   protected val httpServer: WireMockServer = new WireMockServer(wireMockConfig().dynamicPort())
-
-  private val testkit = ActorTestKit()
-
-  protected implicit val system = testkit.system.toClassic
 
   override def beforeAll(): Unit =
     httpServer.start()
 
   override def afterAll(): Unit = {
-    testkit.shutdownTestKit()
+    TestKit.shutdownActorSystem(system)
     httpServer.stop()
   }
 
@@ -48,7 +44,7 @@ final class AkkaHttpBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus: }"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = new AkkaHttpBetfairAuthenticationService(betfairConfig)
+      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe FailedToParseLoginResponseAsJson(responseBody, "exhausted input")
@@ -60,7 +56,7 @@ final class AkkaHttpBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus":"GIGANTIC_MAN_EATING_TIGER"}"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = new AkkaHttpBetfairAuthenticationService(betfairConfig)
+      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
       val error = awaitLeft(authenticator.login())
 
       val failure = DecodingFailure(
@@ -77,7 +73,7 @@ final class AkkaHttpBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"ACCOUNT_PENDING_PASSWORD_CHANGE"}""")
 
-      val authenticator = new AkkaHttpBetfairAuthenticationService(betfairConfig)
+      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe LoginRejectedByBetfair(LoginStatus.AccountPendingPasswordChange)
@@ -88,7 +84,7 @@ final class AkkaHttpBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"SUCCESS","sessionToken":"abcd1234"}""")
 
-      val authenticator = new AkkaHttpBetfairAuthenticationService(betfairConfig)
+      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
       val result = awaitRight(authenticator.login())
 
       result shouldBe SessionToken("abcd1234")

@@ -8,8 +8,11 @@ import pureconfig.{ConfigReader, ConfigSource}
 
 final case class BetfairConfig(headerKeys: HeaderKeys, login: LoginConfig, exchange: ExchangeConfig)
 
-final case class LoginConfig(credentials: BetfairCredentials, uri: LoginUri)
+final case class LoginConfig(cert: Cert, credentials: BetfairCredentials, uri: LoginUri)
 final case class LoginUri(value: String)
+final case class Cert(file: CertFile, password: CertPassword)
+final case class CertFile(value: String)
+final case class CertPassword(value: String)
 
 final case class ExchangeConfig(requiredHeaders: List[RawHeader], socket: SocketConfig, uris: ExchangeUris)
 final case class HeaderKeys(applicationKey: ApplicationKeyHeaderKey, sessionToken: SessionTokenHeaderKey)
@@ -50,6 +53,8 @@ object BetfairConfig {
   implicit val passwordReader = ConfigReader[String].map(Password(_))
   implicit val applicationKeyReader = ConfigReader[String].map(ApplicationKey(_))
   implicit val loginUriReader = ConfigReader[String].map(LoginUri(_))
+  implicit val certFileReader = ConfigReader[String].map(CertFile(_))
+  implicit val certPasswordReader = ConfigReader[String].map(CertPassword(_))
   implicit val socketUriReader = ConfigReader[String].map(SocketUri(_))
   implicit val socketPortReader = ConfigReader[Int].map(SocketPort(_))
   implicit val cancelOrdersReader = ConfigReader[String].map(CancelOrdersUri(_))

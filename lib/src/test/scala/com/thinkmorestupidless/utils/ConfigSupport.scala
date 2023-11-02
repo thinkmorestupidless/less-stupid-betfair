@@ -9,6 +9,10 @@ object ConfigSupport {
   def generateConfig(baseUri: String) = BetfairConfig(
     HeaderKeys(ApplicationKeyHeaderKey("X-Application"), SessionTokenHeaderKey("X-Authentication")),
     LoginConfig(
+      Cert(
+        CertFile("certfile.pkcs12"),
+        CertPassword("top-secret")
+      ),
       BetfairCredentials(
         Username("bigjohn"),
         Password("changeme"),

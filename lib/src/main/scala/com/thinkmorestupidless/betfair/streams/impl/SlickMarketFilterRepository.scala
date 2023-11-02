@@ -6,7 +6,10 @@ import akka.actor.typed.ActorSystem
 import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, MarketFilter}
 import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
-import com.thinkmorestupidless.betfair.streams.impl.less.stupid.betting.betfair.socket.impl.SlickMarketFilterRepository.{SocketChannelMarketFilterRow, SocketChannelMarketFilterTable}
+import com.thinkmorestupidless.betfair.streams.impl.less.stupid.betting.betfair.socket.impl.SlickMarketFilterRepository.{
+  SocketChannelMarketFilterRow,
+  SocketChannelMarketFilterTable
+}
 import com.thinkmorestupidless.extensions.slick.CustomPostgresProfile.api._
 import io.circe.Json
 import io.circe.syntax._
@@ -16,7 +19,7 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.{ExecutionContext, Future}
 
 final class SlickMarketFilterRepository(dbConfig: DatabaseConfig[JdbcProfile])(implicit
-                                                                               ec: ExecutionContext
+    ec: ExecutionContext
 ) extends GlobalMarketFilterRepository {
   private val db = dbConfig.db
 
@@ -25,8 +28,8 @@ final class SlickMarketFilterRepository(dbConfig: DatabaseConfig[JdbcProfile])(i
   override def upsertGlobalMarketFilter(marketFilter: MarketFilter): Future[Unit] = {
     val query = for {
       maybeExisting <- marketFilters.filter(_.id === SlickMarketFilterRepository.Id).result.headOption
-      newOrMerged = maybeExisting.fold(SocketChannelMarketFilterRow(SlickMarketFilterRepository.Id, marketFilter))(existing =>
-        existing.copy(marketFilter = existing.marketFilter.mergeWith(marketFilter))
+      newOrMerged = maybeExisting.fold(SocketChannelMarketFilterRow(SlickMarketFilterRepository.Id, marketFilter))(
+        existing => existing.copy(marketFilter = existing.marketFilter.mergeWith(marketFilter))
       )
       _ <- marketFilters.insertOrUpdate(newOrMerged)
     } yield newOrMerged.marketFilter
@@ -35,7 +38,13 @@ final class SlickMarketFilterRepository(dbConfig: DatabaseConfig[JdbcProfile])(i
   }
 
   override def getCurrentGlobalFilter(): Future[MarketFilter] =
-    db.run(marketFilters.filter(_.id === SlickMarketFilterRepository.Id).result.headOption.map(_.map(_.marketFilter).getOrElse(MarketFilter.empty)))
+    db.run(
+      marketFilters
+        .filter(_.id === SlickMarketFilterRepository.Id)
+        .result
+        .headOption
+        .map(_.map(_.marketFilter).getOrElse(MarketFilter.empty))
+    )
 }
 
 object SlickMarketFilterRepository {
@@ -51,7 +60,7 @@ object SlickMarketFilterRepository {
   private final case class SocketChannelMarketFilterRow(id: String, marketFilter: MarketFilter)
 
   private class SocketChannelMarketFilterTable(tag: Tag)
-    extends Table[SocketChannelMarketFilterRow](tag, "global_market_filter") {
+      extends Table[SocketChannelMarketFilterRow](tag, "global_market_filter") {
     def id = column[String]("id", O.PrimaryKey, O.AutoInc)
     def filter = column[MarketFilter]("market_filter")
     def * = (id, filter).mapTo[SocketChannelMarketFilterRow]

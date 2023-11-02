@@ -1,17 +1,16 @@
 package com.thinkmorestupidless.betfair
 
-import akka.actor.ActorSystem
-import akka.actor.typed
 import cats.data.EitherT
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.LoginError
 import com.thinkmorestupidless.betfair.auth.domain.{BetfairSession, SessionToken}
-import com.thinkmorestupidless.betfair.auth.impl.AkkaHttpBetfairAuthenticationService
+import com.thinkmorestupidless.betfair.auth.impl.PlayWsBetfairAuthenticationService
+import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
+import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
+import org.apache.pekko.actor.ActorSystem
 import org.slf4j.LoggerFactory
 import pureconfig.error.ConfigReaderFailures
-import BetfairExchangeService._
-import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -118,16 +117,16 @@ object Betfair {
     this()
   }
 
-  def apply(system: typed.ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
-    implicit val sys = system.classicSystem
-    implicit val ec = system.executionContext
-
-    this()
-  }
+//  def apply(system: typed.ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
+//    implicit val sys = system.classicSystem
+//    implicit val ec = system.executionContext
+//
+//    this()
+//  }
 
   def apply()(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, Betfair] =
     authenticate().map { case (config, session) =>
-      val exchange = new AkkaHttpBetfairExchangeService(config)(system.classicSystem)
+      val exchange = new AkkaHttpBetfairExchangeService(config)
       new Betfair(config, session, exchange)
     }
 
@@ -144,7 +143,7 @@ object Betfair {
       config: BetfairConfig
   )(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, SessionToken] = {
     log.info("authenticating")
-    val authenticator = new AkkaHttpBetfairAuthenticationService(config)
+    val authenticator = new PlayWsBetfairAuthenticationService(config)
     log.info(s"authenticator: $authenticator")
     authenticator.login().leftMap(FailedBetfairAuthentication(_))
   }

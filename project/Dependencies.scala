@@ -4,9 +4,11 @@ object DependencyVersions {
   val akkaVersion = "2.7.0"
   val akkaHttpVersion = "10.4.0"
   val akkaHttpJsonVersion = "1.39.2"
-  val logbackVersion = "1.2.3"
+  val logbackVersion = "1.4.11"
   val circeVersion = "0.14.1"
   val enumeratumVersion = "1.6.1"
+  val pekkoVersion = "1.0.1"
+  val playWsVersion = "3.0.0"
   val postgresVersion = "42.1.4"
   val pureConfigVersion = "0.17.1"
   val sbtioVersion = "1.7.0"
@@ -56,6 +58,15 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic"
   ).map(_ % logbackVersion)
 
+  private val pekko = Seq(
+    "org.apache.pekko" %% "pekko-testkit"
+  ).map(_ % pekkoVersion)
+
+  private val playWs = Seq(
+    "org.playframework" %% "play-ahc-ws-standalone",
+    "org.playframework" %% "play-ws-standalone-json"
+  ).map(_ % playWsVersion)
+
   private val postgres = Seq(
     "org.postgresql" % "postgresql"
   ).map(_ % postgresVersion)
@@ -97,6 +108,8 @@ object Dependencies {
         circe ++
         logging ++
         enumeratum ++
+        pekko ++
+        playWs ++
         postgres ++
         pureConfig ++
         sbtio ++
