@@ -135,4 +135,18 @@ object Dependencies {
   val grpcExampleDependencies =
     logging ++
     pekkoHttp
+
+  private val gentePekko = Seq(
+    "org.apache.pekko" %% "pekko-persistence-typed",
+    "org.apache.pekko" %% "pekko-cluster-sharding-typed"
+  ).map(_ % pekkoVersion)
+
+  private val gentePekkoTest = Seq(
+    "org.apache.pekko" %% "pekko-persistence-testkit"
+  ).map(_ % pekkoVersion % Test)
+
+  val genteDependencies =
+    gentePekko ++
+    gentePekkoTest
+
 }

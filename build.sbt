@@ -58,3 +58,11 @@ lazy val `example-grpc` = project.in(file("examples/grpc"))
     libraryDependencies ++= Dependencies.grpcExampleDependencies,
     run / fork := true
   )
+
+lazy val gente = project.in(file("gente"))
+  .dependsOn(lib)
+  .settings(
+    publish := false,
+    libraryDependencies ++= Dependencies.genteDependencies,
+    run / fork := true
+  )
