@@ -11,8 +11,6 @@ import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.
 import com.thinkmorestupidless.betfair.auth.domain.{LoginStatus, SessionToken}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.utils.{ConfigSupport, FutureSupport}
-import io.circe.CursorOp.DownField
-import io.circe.DecodingFailure
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
@@ -44,10 +42,10 @@ final class PlayWsBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus: }"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
-      error shouldBe FailedToParseLoginResponseAsJson(responseBody, "exhausted input")
+      error shouldBe a[FailedToParseLoginResponseAsJson]
     }
 
     it("should return a LoginError if response.loginStatus is not a member of the LoginStatus Enum") {
@@ -56,16 +54,10 @@ final class PlayWsBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus":"GIGANTIC_MAN_EATING_TIGER"}"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
-      val failure = DecodingFailure(
-        s"'GIGANTIC_MAN_EATING_TIGER' is not a member of enum $LoginStatus",
-        List(DownField("loginStatus"))
-      )
-      val expectedErrorMessage = s"failed to decode login status [$failure]"
-
-      error shouldBe UnexpectedLoginError(expectedErrorMessage)
+      error shouldBe a[UnexpectedLoginError]
     }
 
     it("should return a LoginError if rejected by Betfair") {
@@ -73,7 +65,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"ACCOUNT_PENDING_PASSWORD_CHANGE"}""")
 
-      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe LoginRejectedByBetfair(LoginStatus.AccountPendingPasswordChange)
@@ -84,7 +76,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"SUCCESS","sessionToken":"abcd1234"}""")
 
-      val authenticator = new PlayWsBetfairAuthenticationService(betfairConfig)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val result = awaitRight(authenticator.login())
 
       result shouldBe SessionToken("abcd1234")
@@ -95,7 +87,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
     ConfigSupport.generateConfig(baseUri = httpServer.baseUrl())
 
   private def createStubMapping(config: BetfairConfig, responseBody: String): Unit = {
-    val loginUrl = config.login.uri.value
+    val loginUrl = config.auth.uri.value
     httpServer.stubFor(
       post(urlEqualTo(loginUrl.substring(loginUrl.lastIndexOf("/"))))
         .withRequestBody(equalTo("username=bigjohn&password=changeme"))

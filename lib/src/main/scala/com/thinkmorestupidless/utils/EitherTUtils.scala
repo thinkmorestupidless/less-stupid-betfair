@@ -1,10 +1,9 @@
 package com.thinkmorestupidless.utils
 
-import scala.concurrent.Future
-import scala.language.higherKinds
-
 import cats.Applicative
 import cats.data.EitherT
+
+import scala.concurrent.Future
 
 /** A trick based off [[cats.NotNull]], exploiting the Scala's requirement that if there's a matching implicit value in
   * the scope, there should be EXACTLY ONE - in case there's two or more matching implicit values, a compilation error

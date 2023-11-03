@@ -25,7 +25,7 @@ trait GlobalMarketFilterRepositoryBehaviour {
     describe("upsertGlobalMarketFilter") {
       it("should return the passed market filter on first upsert") {
         val repository = repositoryFactory()
-        val expectedFilter = MarketFilter(Set(MarketId("foo"), MarketId("bar")))
+        val expectedFilter = MarketFilter(List(MarketId("foo"), MarketId("bar")))
 
         await(repository.upsertGlobalMarketFilter(expectedFilter))
 
@@ -38,9 +38,9 @@ trait GlobalMarketFilterRepositoryBehaviour {
         "should return the result of merging existing market filter with passed market filter on subsequent upsert(s)"
       ) {
         val repository = repositoryFactory()
-        val firstFilter = MarketFilter(Set(MarketId("alice"), MarketId("bob")))
-        val secondFilter = MarketFilter(Set(MarketId("charlie")))
-        val expectedFilter = MarketFilter(Set(MarketId("alice"), MarketId("bob"), MarketId("charlie")))
+        val firstFilter = MarketFilter(List(MarketId("alice"), MarketId("bob")))
+        val secondFilter = MarketFilter(List(MarketId("charlie")))
+        val expectedFilter = MarketFilter(List(MarketId("alice"), MarketId("bob"), MarketId("charlie")))
 
         await(repository.upsertGlobalMarketFilter(firstFilter))
 

@@ -1,20 +1,47 @@
 package com.thinkmorestupidless.betfair.core.impl
 
-import akka.http.scaladsl.model.headers.RawHeader
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
-import com.typesafe.config.Config
+import enumeratum.EnumEntry.Hyphencase
+import enumeratum.{Enum, EnumEntry}
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import pureconfig.generic.auto._
 import pureconfig.{ConfigReader, ConfigSource}
 
-final case class BetfairConfig(headerKeys: HeaderKeys, login: LoginConfig, exchange: ExchangeConfig)
+final case class BetfairConfig(
+    headerKeys: HeaderKeys,
+    auth: AuthConfig,
+    exchange: ExchangeConfig,
+    navigation: NavigationConfig
+)
 
-final case class LoginConfig(cert: Cert, credentials: BetfairCredentials, uri: LoginUri)
+final case class AuthConfig(
+    cert: Cert,
+    credentials: BetfairCredentials,
+    uri: LoginUri,
+    sessionStore: SessionStoreConfig
+)
 final case class LoginUri(value: String)
 final case class Cert(file: CertFile, password: CertPassword)
 final case class CertFile(value: String)
 final case class CertPassword(value: String)
 
-final case class ExchangeConfig(requiredHeaders: List[RawHeader], socket: SocketConfig, uris: ExchangeUris)
+sealed trait SessionStoreProviderType extends EnumEntry with Hyphencase
+case object SessionStoreProviderType extends Enum[SessionStoreProviderType] {
+  override def values: IndexedSeq[SessionStoreProviderType] = findValues
+  case object InMem extends SessionStoreProviderType
+  case object File extends SessionStoreProviderType
+}
+
+final case class FileProviderConfig(filePath: FileProviderFilePath)
+final case class FileProviderFilePath(value: String)
+final case class SessionStoreConfig(providerType: SessionStoreProviderType, fileProvider: FileProviderConfig)
+
+final case class ExchangeConfig(
+    requiredHeaders: List[RawHeader],
+    socket: SocketConfig,
+    uris: ExchangeUris,
+    logging: ExchangeLogging
+)
 final case class HeaderKeys(applicationKey: ApplicationKeyHeaderKey, sessionToken: SessionTokenHeaderKey)
 final case class ApplicationKeyHeaderKey(value: String)
 final case class SessionTokenHeaderKey(value: String)
@@ -30,6 +57,9 @@ final case class ExchangeUris(
     listMarketBook: ListMarketBookUri,
     placeOrders: PlaceOrdersUri
 )
+final case class ExchangeLogging(logRequests: LogExchangeRequests, logResponses: LogExchangeResponses)
+final case class LogExchangeRequests(value: Boolean)
+final case class LogExchangeResponses(value: Boolean)
 final case class AuthenticationUri(value: String)
 final case class CancelOrdersUri(value: String)
 final case class ListClearedOrdersUri(value: String)
@@ -41,9 +71,18 @@ final case class ListEventsUri(value: String)
 final case class ListMarketCatalogueUri(value: String)
 final case class ListMarketBookUri(value: String)
 final case class PlaceOrdersUri(value: String)
-final case class SocketConfig(uri: SocketUri, port: SocketPort)
+final case class SocketConfig(
+    frameSize: SocketFrameSize,
+    uri: SocketUri,
+    port: SocketPort,
+    outgoingHeartbeat: OutgoingHeartbeat
+)
+final case class SocketFrameSize(value: Int)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
+final case class OutgoingHeartbeat(value: Boolean)
+final case class NavigationConfig(uri: MenuUri)
+final case class MenuUri(value: String)
 
 object BetfairConfig {
 
@@ -67,6 +106,14 @@ object BetfairConfig {
   implicit val listMarketCatalogueReader = ConfigReader[String].map(ListMarketCatalogueUri(_))
   implicit val listMarketBookReader = ConfigReader[String].map(ListMarketBookUri(_))
   implicit val placeOrdersReader = ConfigReader[String].map(PlaceOrdersUri(_))
+  implicit val menuUriReader = ConfigReader[String].map(MenuUri(_))
+  implicit val fileProviderFilePathReader = ConfigReader[String].map(FileProviderFilePath(_))
+  implicit val sessionStoreProviderTypeReader =
+    ConfigReader[String].map(SessionStoreProviderType.withNameInsensitive(_))
+  implicit val logExchangeRequestsReader = ConfigReader[Boolean].map(LogExchangeRequests(_))
+  implicit val logExchangeResponsesReader = ConfigReader[Boolean].map(LogExchangeResponses(_))
+  implicit val socketFrameSizeReader = ConfigReader[Int].map(SocketFrameSize(_))
+  implicit val outgoingHeartbeatReader = ConfigReader[Boolean].map(OutgoingHeartbeat(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {
@@ -77,7 +124,4 @@ object BetfairConfig {
 
   def load(): ConfigReader.Result[BetfairConfig] =
     ConfigSource.default.at(namespace = "betfair").load[BetfairConfig]
-
-  def load(config: Config): ConfigReader.Result[BetfairConfig] =
-    ConfigSource.fromConfig(config).load[BetfairConfig]
 }

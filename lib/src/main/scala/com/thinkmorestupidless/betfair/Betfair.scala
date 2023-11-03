@@ -1,151 +1,176 @@
 package com.thinkmorestupidless.betfair
 
 import cats.data.EitherT
-import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.LoginError
-import com.thinkmorestupidless.betfair.auth.domain.{BetfairSession, SessionToken}
-import com.thinkmorestupidless.betfair.auth.impl.PlayWsBetfairAuthenticationService
-import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
+import com.thinkmorestupidless.betfair.auth.impl.{PlayWsBetfairAuthenticationService, SessionTokenStore}
+import com.thinkmorestupidless.betfair.auth.usecases.LoginToBetfair
+import com.thinkmorestupidless.betfair.core.impl.{BetfairConfig, OutgoingHeartbeat}
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
-import org.apache.pekko.actor.ActorSystem
-import org.slf4j.LoggerFactory
+import com.thinkmorestupidless.betfair.exchange.usecases.ListAllEventTypesUseCase.ListAllEventTypesUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.{
+  ListAllEventTypesUseCase,
+  ListEventTypesUseCase,
+  ListEventsUseCase
+}
+import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
+import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
+import com.thinkmorestupidless.betfair.streams.domain.{
+  GlobalMarketFilterRepository,
+  MarketChange,
+  MarketChangeMessage,
+  MarketSubscription
+}
+import com.thinkmorestupidless.betfair.streams.impl.TlsSocketFlow.TlsSocketFlow
+import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, InMemoryMarketFilterRepository, TlsSocketFlow}
+import com.thinkmorestupidless.utils.EitherTUtils._
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.adapter._
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.{actor => classic}
 import pureconfig.error.ConfigReaderFailures
 
+import java.time.Clock
 import scala.concurrent.{ExecutionContext, Future}
 
-final class Betfair(val config: BetfairConfig, session: BetfairSession, exchange: BetfairExchangeService) {
-  def cancelOrders(
-      marketId: MarketId,
-      instructions: List[CancelInstruction],
-      customerRef: CustomerRef
-  ): Future[CancelExecutionReport] =
-    exchange.cancelOrders(marketId, instructions, customerRef)(session)
-
-  def listClearedOrders(
-      betStatus: BetStatus,
-      eventTypeIds: Set[EventTypeId],
-      eventIds: Set[EventId],
-      marketIds: Set[MarketId],
-      runnerIds: Set[RunnerId],
-      betIds: Set[BetId],
-      side: Side,
-      customerOrderRefs: Set[CustomerOrderRef],
-      customerStrategyRefs: Set[CustomerStrategyRef],
-      settledDateRange: TimeRange,
-      groupBy: GroupBy,
-      includeItemDescription: Boolean,
-      locale: String,
-      fromRecord: Int,
-      recordCount: Int
-  ): Future[ClearedOrderSummaryReport] =
-    exchange.listClearedOrders(
-      betStatus,
-      eventTypeIds,
-      eventIds,
-      marketIds,
-      runnerIds,
-      betIds,
-      side,
-      customerOrderRefs,
-      customerStrategyRefs,
-      settledDateRange,
-      groupBy,
-      includeItemDescription,
-      locale,
-      fromRecord,
-      recordCount
-    )(session)
-
-  def listCompetitions(filter: MarketFilter): Future[List[CompetitionResult]] =
-    exchange.listCompetitions(filter)(session)
-
-  def listCountries(filter: MarketFilter): Future[List[CountryCodeResult]] =
-    exchange.listCountries(filter)(session)
-
-  def listCurrentOrders(
-      betIds: Set[BetId],
-      marketIds: Set[MarketId],
-      orderProjection: OrderProjection,
-      placedDateRange: TimeRange,
-      dateRange: TimeRange,
-      orderBy: OrderBy,
-      sortDir: SortDir,
-      fromRecord: Int,
-      recordCount: Int
-  ): Future[CurrentOrderSummaryReport] =
-    exchange.listCurrentOrders(
-      betIds,
-      marketIds,
-      orderProjection,
-      placedDateRange,
-      dateRange,
-      orderBy,
-      sortDir,
-      fromRecord,
-      recordCount
-    )(session)
-
-  def listEventTypes(filter: MarketFilter): Future[List[EventTypeResponse]] =
-    exchange.listEventTypes(filter)(session)
-
-  def listEvents(filter: MarketFilter): Future[Set[EventResponse]] =
-    exchange.listEvents(filter)(session)
-
-  def listMarketCatalogue(listMarketCatalogue: ListMarketCatalogue): Future[List[MarketCatalogue]] =
-    exchange.listMarketCatalogue(listMarketCatalogue)(session)
-
-  def listMarketBook(listMarketBook: ListMarketBook): Future[List[MarketBook]] =
-    exchange.listMarketBook(listMarketBook)(session)
-
-  def placeOrders(placeOrders: PlaceOrders): Future[PlaceExecutionReport] =
-    exchange.placeOrders(placeOrders)(session)
+final case class Betfair(
+    getMenu: GetMenuUseCase,
+    listAllEventTypes: ListAllEventTypesUseCase,
+    listEventTypes: ListEventTypesUseCase,
+    listEvents: ListEventsUseCase,
+    socketFlow: BetfairSocketFlow
+) {
+  def subscribeToMarketChanges[T](marketSubscription: MarketSubscription, sink: Sink[MarketChange, T])(implicit
+      mat: Materializer
+  ): T = {
+    socketFlow.marketSubscriptionQueue.offer(marketSubscription)
+    socketFlow.source
+      .collect { case mcm: MarketChangeMessage =>
+        mcm.mc
+      }
+      .collect { case Some(marketChanges) =>
+        marketChanges
+      }
+      .flatMapConcat(Source(_))
+      .runWith(sink)
+  }
 }
 
 object Betfair {
 
-  private val log = LoggerFactory.getLogger(getClass)
-
   sealed trait BetfairError
   final case class FailedToLoadBetfairConfig(cause: ConfigReaderFailures) extends BetfairError
-  final case class FailedBetfairAuthentication(cause: LoginError) extends BetfairError
+  final case class FailedToLoginToBetfair(error: AuthenticationError) extends BetfairError
 
-  def apply(system: ActorSystem): EitherT[Future, BetfairError, Betfair] = {
-    implicit val sys = system
-    implicit val ec = system.dispatcher
+  def create(
+      maybeSocketFlow: Option[TlsSocketFlow] = None,
+      maybeGlobalMarketFilterRepository: Option[GlobalMarketFilterRepository] = None
+  )(implicit clock: Clock, system: ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
+    implicit val ec = system.executionContext
+    implicit val classicSystem = system.toClassic
 
-    this()
-  }
-
-//  def apply(system: typed.ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
-//    implicit val sys = system.classicSystem
-//    implicit val ec = system.executionContext
-//
-//    this()
-//  }
-
-  def apply()(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, Betfair] =
-    authenticate().map { case (config, session) =>
-      val exchange = new AkkaHttpBetfairExchangeService(config)
-      new Betfair(config, session, exchange)
-    }
-
-  private def authenticate()(implicit
-      system: ActorSystem,
-      ec: ExecutionContext
-  ): EitherT[Future, BetfairError, (BetfairConfig, BetfairSession)] =
     for {
       config <- loadConfig()
-      sessionToken <- authenticate(config)
-    } yield (config, BetfairSession(config.login.credentials.applicationKey, sessionToken))
+      authenticationService = createAuthenticationService(config)
+      loginToBetfair = LoginToBetfair(authenticationService)
+      sessionToken <- loginToBetfair().leftMap(FailedToLoginToBetfair(_)).leftUpcast[BetfairError]
+    } yield {
+      val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
+      val applicationKey = config.auth.credentials.applicationKey
+      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
+      val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
 
-  private def authenticate(
+      create(
+        navigationService,
+        exchangeService,
+        applicationKey,
+        sessionToken,
+        globalMarketFilterRepository,
+        socketFlow,
+        config.exchange.socket.outgoingHeartbeat
+      )
+    }
+  }
+
+//  def createClustered(
+//      maybeSocketFlow: Option[TlsSocketFlow] = None,
+//      maybeGlobalMarketFilterRepository: Option[GlobalMarketFilterRepository] = None
+//  )(implicit clock: Clock, system: ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
+//    implicit val ec = system.executionContext
+//    implicit val classicSystem = system.toClassic
+//
+//
+//
+//    loadConfig().flatMap { config =>
+//      val underlyingAuthenticationService = createAuthenticationService(config)
+//      val authenticationService = ClusterSingletonBetfairAuthenticationService(underlyingAuthenticationService)
+//      authenticationService.login().map { sessionToken =>
+//        val (underlyingNavigationService, underlyingExchangeService) =
+//          createUnderlyingServices(config, authenticationService)
+//        val navigationService = ClusterSingletonBetfairNavigationService(underlyingNavigationService)
+//        val exchangeService = ClusterSingletonBetfairExchangeService(underlyingExchangeService)
+//        val applicationKey = config.auth.credentials.applicationKey
+//        val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
+//        val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
+//
+//        create(
+//          navigationService,
+//          exchangeService,
+//          applicationKey,
+//          sessionToken,
+//          socketFlow,
+//          globalMarketFilterRepository
+//        )
+//      }.leftMap(FailedToLoginToBetfair(_))
+//    }
+//  }
+
+  private def create(
+      navigationService: BetfairNavigationService,
+      exchangeService: BetfairExchangeService,
+      applicationKey: ApplicationKey,
+      sessionToken: SessionToken,
+      globalMarketFilterRepository: GlobalMarketFilterRepository,
+      socketFlow: TlsSocketFlow.TlsSocketFlow,
+      outgoingHeartbeat: OutgoingHeartbeat
+  )(implicit
+      ec: ExecutionContext,
+      system: ActorSystem[_]
+  ): Betfair = {
+    val getMenu = GetMenuUseCase(navigationService)
+
+    val listAllEventTypes = ListAllEventTypesUseCase(exchangeService)
+    val listEventTypes = ListEventTypesUseCase(exchangeService)
+    val listEvents = ListEventsUseCase(exchangeService)
+
+    val betfairSocketFlow =
+      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat)
+
+    Betfair(getMenu, listAllEventTypes, listEventTypes, listEvents, betfairSocketFlow)
+  }
+
+  private def createAuthenticationService(
       config: BetfairConfig
-  )(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, SessionToken] = {
-    log.info("authenticating")
-    val authenticator = new PlayWsBetfairAuthenticationService(config)
-    log.info(s"authenticator: $authenticator")
-    authenticator.login().leftMap(FailedBetfairAuthentication(_))
+  )(implicit clock: Clock, system: classic.ActorSystem, ec: ExecutionContext): BetfairAuthenticationService = {
+    val sessionTokenStore = SessionTokenStore.fromConfig(config.auth.sessionStore)
+    PlayWsBetfairAuthenticationService(config, sessionTokenStore)
+  }
+
+  private def createUnderlyingServices(config: BetfairConfig, authenticationService: BetfairAuthenticationService)(
+      implicit system: ActorSystem[_]
+  ): (BetfairNavigationService, BetfairExchangeService) = {
+    implicit val ec = system.executionContext
+    implicit val classicSystem = system.toClassic
+    val navigationService = PlayWsBetfairNavigationService(config, authenticationService)
+    val exchangeService = new AkkaHttpBetfairExchangeService(config, authenticationService)
+
+    (navigationService, exchangeService)
   }
 
   private def loadConfig()(implicit ec: ExecutionContext): EitherT[Future, BetfairError, BetfairConfig] =

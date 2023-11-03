@@ -1,0 +1,23 @@
+name: Compile, Test & Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  compile-and-test:
+    name: compile-test-deploy
+    runs-on: ubuntu-latest
+    env:
+      HEROKU_AUTH_TOKEN: ${{ secrets.HEROKU_AUTH_TOKEN }}
+      KAMON_API_KEY: ${{ secrets.KAMON_API_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile and Test
+        run: make unit-test
+      - name: Deploy
+        run: ./ci/deploy.sh
+        shell: bash

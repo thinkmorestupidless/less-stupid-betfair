@@ -1,7 +1,8 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import com.thinkmorestupidless.betfair.streams.domain.MarketFilter
-import com.thinkmorestupidless.utils.OptionalSetUtils._
+import com.thinkmorestupidless.betfair.navigation.domain.Market
+import com.thinkmorestupidless.betfair.streams.domain.{MarketFilter, MarketId, MarketSubscription}
+import com.thinkmorestupidless.utils.OptionalListUtils._
 
 object MarketFilterUtils {
 
@@ -33,5 +34,16 @@ object MarketFilterUtils {
         self.countryCodes + other.countryCodes,
         self.raceTypes + other.raceTypes
       )
+
+    def isEmpty(): Boolean =
+      self == MarketFilter.empty
+
+    def isNotEmpty(): Boolean =
+      !self.isEmpty()
+  }
+
+  implicit class MenuMarketListOps(self: List[Market]) {
+    def toMarketSubscription(): MarketSubscription =
+      MarketSubscription(MarketFilter(self.map(_.id).map(x => MarketId(x.value))))
   }
 }
