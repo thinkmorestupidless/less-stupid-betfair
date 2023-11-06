@@ -14,11 +14,13 @@ object GrpcExample {
     implicit val system = ActorSystem("grpc-example")
     implicit val ec = system.dispatcher
 
-    Betfair().map { betfair =>
-      log.info("betfair is ready {}", betfair)
+    Betfair()
+      .map { betfair =>
+        log.info("betfair is ready {}", betfair)
 
-      val binding = new GrpcExampleServer(system).run()
+        val binding = new GrpcExampleServer(system).run()
 
-    }.leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
+      }
+      .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
   }
 }

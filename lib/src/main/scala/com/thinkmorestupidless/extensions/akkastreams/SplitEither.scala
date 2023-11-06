@@ -1,8 +1,8 @@
 package com.thinkmorestupidless.extensions.akkastreams
 
-import akka.NotUsed
-import akka.stream.Graph
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.{Broadcast, Flow, GraphDSL}
+import org.apache.pekko.stream.{FanOutShape, Graph, Inlet, Outlet}
 
 object SplitEither {
 
@@ -20,8 +20,6 @@ object SplitEither {
       new EitherFanOutShape(broadcast.in, leftOut.out, rightOut.out)
     }
 }
-
-import akka.stream.{FanOutShape, Inlet, Outlet}
 
 class EitherFanOutShape[In, L, R](_init: FanOutShape.Init[In]) extends FanOutShape[In](_init) {
   def this(name: String) = this(FanOutShape.Name[In](name))

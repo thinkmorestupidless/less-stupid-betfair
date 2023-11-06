@@ -5,7 +5,17 @@ import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.JsonCodecs._
-import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport._
+import com.thinkmorestupidless.utils.CirceSupport
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
+import org.apache.pekko.http.scaladsl.coding.Coders
+import org.apache.pekko.http.scaladsl.marshalling.ToEntityMarshaller
+import org.apache.pekko.http.scaladsl.model.{HttpHeader, HttpResponse}
+import org.apache.pekko.http.scaladsl.model.headers.{HttpEncodings, RawHeader}
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+
+import scala.concurrent.ExecutionContext
+//import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport._
 import io.circe.Decoder
 import io.circe.parser.decode
 import org.apache.pekko.actor.ActorSystem
@@ -13,18 +23,18 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
 import scala.concurrent.Future
 
-final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit system: ActorSystem)
-    extends BetfairExchangeService {
+final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit system: ActorSystem, ec: ExecutionContext)
+    extends BetfairExchangeService with CirceSupport {
 
   private val wsClient = StandaloneAhcWSClient()
 
   override def cancelOrders(marketId: MarketId, instructions: List[CancelInstruction], customerRef: CustomerRef)(
       implicit session: BetfairSession
-  ): Future[CancelExecutionReport] = ???
-//    execute[CancelOrders, CancelExecutionReport](
-//      CancelOrders(marketId, instructions, customerRef),
-//      config.exchange.uris.cancelOrders.value
-//    )
+  ): Future[CancelExecutionReport] =
+    execute[CancelOrders, CancelExecutionReport](
+      CancelOrders(marketId, instructions, customerRef),
+      config.exchange.uris.cancelOrders.value
+    )
 
   override def listClearedOrders(
       betStatus: BetStatus,
@@ -130,37 +140,37 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
     ???
 //    execute[PlaceOrders, PlaceExecutionReport](placeOrders, config.exchange.uris.placeOrders.value)
 
-//  private def execute[REQUEST, RESPONSE](content: REQUEST, uri: String)(implicit
-//      decoder: Decoder[RESPONSE],
-//      m: ToEntityMarshaller[REQUEST],
-//      session: BetfairSession
-//  ): Future[RESPONSE] = {
-//    val headers = config.exchange.requiredHeaders ++ List(
-//      RawHeader(config.headerKeys.applicationKey.value, session.applicationKey.value),
-//      RawHeader(config.headerKeys.sessionToken.value, session.sessionToken.value)
-//    )
-//    val request = Post(uri = uri, content = content).withHeaders(headers)
-//    for {
-//      response <- Http().singleRequest(request).map(decodeResponse)
-//      resultString <- Unmarshal(response.entity).to[String]
-//      _ = println(resultString)
-//      result = decode[RESPONSE](resultString).getOrElse(throw new IllegalStateException("failed thingy"))
-//    } yield result
-//  }
-//
-//  private def decodeResponse(response: HttpResponse): HttpResponse = {
-//    val decoder = response.encoding match {
-//      case HttpEncodings.gzip =>
-//        Coders.Gzip
-//      case HttpEncodings.deflate =>
-//        Coders.Deflate
-//      case HttpEncodings.identity =>
-//        Coders.NoCoding
-//      case other =>
-//        system.log.warning(s"Unknown encoding [$other], not decoding")
-//        Coders.NoCoding
-//    }
-//
-//    decoder.decodeMessage(response)
-//  }
+  private def execute[REQUEST, RESPONSE](content: REQUEST, uri: String)(implicit
+                                                                        decoder: Decoder[RESPONSE],
+                                                                        m: ToEntityMarshaller[REQUEST],
+                                                                        session: BetfairSession
+  ): Future[RESPONSE] = {
+    val headers: Seq[HttpHeader] = config.exchange.requiredHeaders ++ List(
+      RawHeader(config.headerKeys.applicationKey.value, session.applicationKey.value),
+      RawHeader(config.headerKeys.sessionToken.value, session.sessionToken.value)
+    )
+    val request = RequestBuilding.Post(uri = uri, content = content).withHeaders(headers)
+    for {
+      response <- Http().singleRequest(request).map(decodeResponse)
+      resultString <- Unmarshal(response.entity).to[String]
+      _ = println(resultString)
+      result = decode[RESPONSE](resultString).getOrElse(throw new IllegalStateException("failed thingy"))
+    } yield result
+  }
+
+  private def decodeResponse(response: HttpResponse): HttpResponse = {
+    val decoder = response.encoding match {
+      case HttpEncodings.gzip =>
+        Coders.Gzip
+      case HttpEncodings.deflate =>
+        Coders.Deflate
+      case HttpEncodings.identity =>
+        Coders.NoCoding
+      case other =>
+        system.log.warning(s"Unknown encoding [$other], not decoding")
+        Coders.NoCoding
+    }
+
+    decoder.decodeMessage(response)
+  }
 }

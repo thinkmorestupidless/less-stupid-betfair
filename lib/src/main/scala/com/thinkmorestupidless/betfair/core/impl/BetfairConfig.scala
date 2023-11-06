@@ -1,6 +1,6 @@
 package com.thinkmorestupidless.betfair.core.impl
 
-import akka.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
 import com.typesafe.config.Config
 import pureconfig.generic.auto._
@@ -68,11 +68,11 @@ object BetfairConfig {
   implicit val listMarketBookReader = ConfigReader[String].map(ListMarketBookUri(_))
   implicit val placeOrdersReader = ConfigReader[String].map(PlaceOrdersUri(_))
 
-  implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
+  implicit val rawHeaderReader = ConfigReader.fromCursor[(String, String)] { cur =>
     for {
       key <- cur.fluent.at("key").asString
       value <- cur.fluent.at("value").asString
-    } yield RawHeader(key, value)
+    } yield (key, value)
   }
 
   def load(): ConfigReader.Result[BetfairConfig] =

@@ -1,10 +1,10 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, Tcp}
-import akka.util.ByteString
 import com.thinkmorestupidless.betfair.core.impl.SocketConfig
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.{Flow, Tcp}
+import org.apache.pekko.util.ByteString
 
 import java.net.InetSocketAddress
 import javax.net.ssl.{SSLContext, SSLEngine}

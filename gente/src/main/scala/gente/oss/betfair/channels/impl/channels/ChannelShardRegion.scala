@@ -1,6 +1,6 @@
-package gente.oss.betfair.channels.impl
+package gente.oss.betfair.channels.impl.channels
 
-import gente.oss.betfair.channels.impl.ChannelProtocol.Command
+import gente.oss.betfair.channels.impl.channels.ChannelProtocol.Command
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.{ActorSystem, Behavior, SupervisorStrategy}
 import org.apache.pekko.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
@@ -10,12 +10,11 @@ object ChannelShardRegion {
 
   val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("Channel")
 
-  def initSharding(system: ActorSystem[_]): Unit = {
+  def init()(implicit system: ActorSystem[_]): Unit = {
     val entity = Entity(TypeKey) { entityContext =>
       ChannelShardRegion(PersistenceId.ofUniqueId(entityContext.entityId))
     }
-    ClusterSharding(system)
-      .init(entity)
+    ClusterSharding(system).init(entity)
   }
 
   def apply(persistenceId: PersistenceId): Behavior[Command] =

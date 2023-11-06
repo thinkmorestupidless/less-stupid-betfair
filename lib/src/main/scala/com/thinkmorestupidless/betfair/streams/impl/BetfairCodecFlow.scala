@@ -1,12 +1,12 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import akka.NotUsed
-import akka.stream.scaladsl.{BidiFlow, Flow}
-import akka.util.ByteString
 import com.thinkmorestupidless.betfair.streams.domain.{IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage}
 import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs._
 import io.circe.parser._
 import io.circe.syntax._
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.{BidiFlow, Flow}
+import org.apache.pekko.util.ByteString
 import org.slf4j.LoggerFactory
 
 object BetfairCodecFlow {

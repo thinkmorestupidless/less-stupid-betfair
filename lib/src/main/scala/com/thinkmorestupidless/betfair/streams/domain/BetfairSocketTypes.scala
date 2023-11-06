@@ -90,7 +90,7 @@ object MarketFilter {
       raceTypes = None
     )
 
-  def empty: MarketFilter = MarketFilter(Set.empty)
+  val empty: MarketFilter = MarketFilter(Set.empty)
 }
 
 final case class MarketChange(

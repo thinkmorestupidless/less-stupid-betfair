@@ -14,7 +14,8 @@ lazy val root = project.in(file("."))
   .aggregate(
     lib,
     `example-websocket`,
-    `example-grpc`
+    `example-grpc`,
+    gente
   )
 
 lazy val lib = project.in(file("lib"))
@@ -64,5 +65,13 @@ lazy val gente = project.in(file("gente"))
   .settings(
     publish := false,
     libraryDependencies ++= Dependencies.genteDependencies,
+    run / fork := true
+  )
+
+lazy val `gente-example-grpc` = project.in(file("gente-example-grpc"))
+  .dependsOn(gente)
+  .settings(
+    publish := false,
+    libraryDependencies ++= Dependencies.genteExampleGrpcDependencies,
     run / fork := true
   )

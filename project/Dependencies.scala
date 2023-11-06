@@ -26,22 +26,22 @@ object DependencyVersions {
 object Dependencies {
   import DependencyVersions._
 
-  private val akka = Seq(
-    "com.typesafe.akka" %% "akka-actor-testkit-typed",
-    "com.typesafe.akka" %% "akka-stream-typed"
-  ).map(_ % akkaVersion)
-
-  private val akkaHttp = Seq(
-    "com.typesafe.akka" %% "akka-http"
-  ).map(_ % akkaHttpVersion)
-
-  private val akkaHttpJson = Seq(
-    "de.heikoseeberger" %% "akka-http-circe"
-  ).map(_ % akkaHttpJsonVersion)
-
-  private val akkaTesting = Seq(
-    "com.typesafe.akka" %% "akka-stream-testkit"
-  ).map(_ % akkaVersion % Test)
+//  private val akka = Seq(
+//    "com.typesafe.akka" %% "akka-actor-testkit-typed",
+//    "com.typesafe.akka" %% "akka-stream-typed"
+//  ).map(_ % akkaVersion)
+//
+//  private val akkaHttp = Seq(
+//    "com.typesafe.akka" %% "akka-http"
+//  ).map(_ % akkaHttpVersion)
+//
+//  private val akkaHttpJson = Seq(
+//    "de.heikoseeberger" %% "akka-http-circe"
+//  ).map(_ % akkaHttpJsonVersion)
+//
+//  private val akkaTesting = Seq(
+//    "com.typesafe.akka" %% "akka-stream-testkit"
+//  ).map(_ % akkaVersion % Test)
 
   private val circe = Seq(
     "io.circe" %% "circe-core",
@@ -60,6 +60,10 @@ object Dependencies {
   ).map(_ % logbackVersion)
 
   private val pekko = Seq(
+    "org.apache.pekko" %% "pekko-actor-typed",
+    "org.apache.pekko" %% "pekko-persistence-typed",
+    "org.apache.pekko" %% "pekko-cluster-sharding-typed",
+    "org.apache.pekko" %% "pekko-stream",
     "org.apache.pekko" %% "pekko-testkit"
   ).map(_ % pekkoVersion)
 
@@ -107,13 +111,14 @@ object Dependencies {
 
   val libDependencies = {
     val production =
-      akka ++
-        akkaHttp ++
-        akkaHttpJson ++
+//      akka ++
+//        akkaHttp ++
+//        akkaHttpJson ++
         circe ++
         logging ++
         enumeratum ++
         pekko ++
+        pekkoHttp ++
         playWs ++
         postgres ++
         pureConfig ++
@@ -121,7 +126,7 @@ object Dependencies {
         slick
 
     val test =
-      akkaTesting ++
+//      akkaTesting ++
         scalatest ++
         testcontainers ++
         wiremock
@@ -138,15 +143,24 @@ object Dependencies {
 
   private val gentePekko = Seq(
     "org.apache.pekko" %% "pekko-persistence-typed",
-    "org.apache.pekko" %% "pekko-cluster-sharding-typed"
+    "org.apache.pekko" %% "pekko-cluster-sharding-typed",
+    "org.apache.pekko" %% "pekko-stream"
   ).map(_ % pekkoVersion)
 
+  private val gentePekkoHttp = Seq(
+    "org.apache.pekko" %% "pekko-http"
+  ).map(_ % pekkoHttpVersion)
+
   private val gentePekkoTest = Seq(
-    "org.apache.pekko" %% "pekko-persistence-testkit"
+    "org.apache.pekko" %% "pekko-persistence-testkit",
+    "org.apache.pekko" %% "pekko-stream-testkit"
   ).map(_ % pekkoVersion % Test)
 
   val genteDependencies =
     gentePekko ++
     gentePekkoTest
+
+  val genteExampleGrpcDependencies =
+    gentePekkoHttp
 
 }

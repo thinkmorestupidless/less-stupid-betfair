@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "gente.oss.betfair.examples.grpc";
+option java_outer_classname = "GrpcExampleProto";
+
+message Empty {}
+
+message GetEventsRequest {
+  string event_type_id = 1;
+}
+
+message GetEventsResponse {
+  repeated Event events = 1;
+}
+
+message Event {
+  string event_id = 1;
+  string name = 2;
+  string start_date = 3;
+}
+
+service GrpcExampleService {
+  rpc GetEvents(GetEventsRequest) returns (GetEventsResponse) {}
+}
