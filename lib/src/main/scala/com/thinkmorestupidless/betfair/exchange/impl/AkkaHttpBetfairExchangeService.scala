@@ -52,42 +52,41 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
       locale: String,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[ClearedOrderSummaryReport] = ???
-//    execute[ListClearedOrders, ClearedOrderSummaryReport](
-//      ListClearedOrders(
-//        betStatus,
-//        eventTypeIds,
-//        eventIds,
-//        marketIds,
-//        runnerIds,
-//        betIds,
-//        customerOrderRefs,
-//        customerStrategyRefs,
-//        side,
-//        settledDateRange,
-//        groupBy,
-//        includeItemDescription,
-//        locale,
-//        fromRecord,
-//        recordCount
-//      ),
-//      config.exchange.uris.listClearedOrders.value
-//    )
+  )(implicit session: BetfairSession): Future[ClearedOrderSummaryReport] =
+    execute[ListClearedOrders, ClearedOrderSummaryReport](
+      ListClearedOrders(
+        betStatus,
+        eventTypeIds,
+        eventIds,
+        marketIds,
+        runnerIds,
+        betIds,
+        customerOrderRefs,
+        customerStrategyRefs,
+        side,
+        settledDateRange,
+        groupBy,
+        includeItemDescription,
+        locale,
+        fromRecord,
+        recordCount
+      ),
+      config.exchange.uris.listClearedOrders.value
+    )
 
   override def listCompetitions(
       filter: MarketFilter
-  )(implicit session: BetfairSession): Future[List[CompetitionResult]] = ???
-//    execute[ListCompetitions, List[CompetitionResult]](
-//      ListCompetitions(filter, locale = None),
-//      config.exchange.uris.listCompetitions.value
-//    )
+  )(implicit session: BetfairSession): Future[List[CompetitionResult]] =
+    execute[ListCompetitions, List[CompetitionResult]](
+      ListCompetitions(filter, locale = None),
+      config.exchange.uris.listCompetitions.value
+    )
 
   override def listCountries(filter: MarketFilter)(implicit session: BetfairSession): Future[List[CountryCodeResult]] =
-    ???
-//    execute[ListCountries, List[CountryCodeResult]](
-//      ListCountries(filter, locale = None),
-//      config.exchange.uris.listCountries.value
-//    )
+    execute[ListCountries, List[CountryCodeResult]](
+      ListCountries(filter, locale = None),
+      config.exchange.uris.listCountries.value
+    )
 
   override def listCurrentOrders(
       betIds: Set[BetId],
@@ -99,46 +98,45 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
       sortDir: SortDir,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[CurrentOrderSummaryReport] = ???
-//    execute[ListCurrentOrders, CurrentOrderSummaryReport](
-//      ListCurrentOrders(
-//        betIds,
-//        marketIds,
-//        orderProjection,
-//        placedDateRange,
-//        dateRange,
-//        orderBy,
-//        sortDir,
-//        fromRecord,
-//        recordCount
-//      ),
-//      config.exchange.uris.listCurrentOrders.value
-//    )
+  )(implicit session: BetfairSession): Future[CurrentOrderSummaryReport] =
+    execute[ListCurrentOrders, CurrentOrderSummaryReport](
+      ListCurrentOrders(
+        betIds,
+        marketIds,
+        orderProjection,
+        placedDateRange,
+        dateRange,
+        orderBy,
+        sortDir,
+        fromRecord,
+        recordCount
+      ),
+      config.exchange.uris.listCurrentOrders.value
+    )
 
   override def listEventTypes(
       filter: MarketFilter
-  )(implicit session: BetfairSession): Future[List[EventTypeResponse]] = ???
-//    execute[ListEventTypes, List[EventTypeResponse]](ListEventTypes(filter), config.exchange.uris.listEventTypes.value)
+  )(implicit session: BetfairSession): Future[List[EventTypeResponse]] =
+    execute[ListEventTypes, List[EventTypeResponse]](ListEventTypes(filter), config.exchange.uris.listEventTypes.value)
 
-  override def listEvents(filter: MarketFilter)(implicit session: BetfairSession): Future[Set[EventResponse]] = ???
-//    execute[ListEvents, Set[EventResponse]](ListEvents(filter), config.exchange.uris.listEvents.value)
+  override def listEvents(filter: MarketFilter)(implicit session: BetfairSession): Future[Set[EventResponse]] =
+    execute[ListEvents, Set[EventResponse]](ListEvents(filter), config.exchange.uris.listEvents.value)
 
   override def listMarketCatalogue(
       listMarketCatalogue: ListMarketCatalogue
-  )(implicit session: BetfairSession): Future[List[MarketCatalogue]] = ???
-//    execute[ListMarketCatalogue, List[MarketCatalogue]](
-//      listMarketCatalogue,
-//      config.exchange.uris.listMarketCatalogue.value
-//    )
+  )(implicit session: BetfairSession): Future[List[MarketCatalogue]] =
+    execute[ListMarketCatalogue, List[MarketCatalogue]](
+      listMarketCatalogue,
+      config.exchange.uris.listMarketCatalogue.value
+    )
 
   override def listMarketBook(listMarketBook: ListMarketBook)(implicit
       session: BetfairSession
-  ): Future[List[MarketBook]] = ???
-//    execute[ListMarketBook, List[MarketBook]](listMarketBook, config.exchange.uris.listMarketBook.value)
+  ): Future[List[MarketBook]] =
+    execute[ListMarketBook, List[MarketBook]](listMarketBook, config.exchange.uris.listMarketBook.value)
 
   override def placeOrders(placeOrders: PlaceOrders)(implicit session: BetfairSession): Future[PlaceExecutionReport] =
-    ???
-//    execute[PlaceOrders, PlaceExecutionReport](placeOrders, config.exchange.uris.placeOrders.value)
+    execute[PlaceOrders, PlaceExecutionReport](placeOrders, config.exchange.uris.placeOrders.value)
 
   private def execute[REQUEST, RESPONSE](content: REQUEST, uri: String)(implicit
                                                                         decoder: Decoder[RESPONSE],
