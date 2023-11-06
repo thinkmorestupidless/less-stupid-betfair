@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import pureconfig.generic.auto._
 import pureconfig.{ConfigReader, ConfigSource}
 
-final case class BetfairConfig(headerKeys: HeaderKeys, login: LoginConfig, exchange: ExchangeConfig)
+final case class BetfairConfig(headerKeys: HeaderKeys, login: LoginConfig, exchange: ExchangeConfig, navigation: Navigation)
 
 final case class LoginConfig(cert: Cert, credentials: BetfairCredentials, uri: LoginUri)
 final case class LoginUri(value: String)
@@ -44,6 +44,8 @@ final case class PlaceOrdersUri(value: String)
 final case class SocketConfig(uri: SocketUri, port: SocketPort)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
+final case class Navigation(uri: MenuUri)
+final case class MenuUri(value: String)
 
 object BetfairConfig {
 
@@ -67,6 +69,7 @@ object BetfairConfig {
   implicit val listMarketCatalogueReader = ConfigReader[String].map(ListMarketCatalogueUri(_))
   implicit val listMarketBookReader = ConfigReader[String].map(ListMarketBookUri(_))
   implicit val placeOrdersReader = ConfigReader[String].map(PlaceOrdersUri(_))
+  implicit val manuUriReader = ConfigReader[String].map(MenuUri(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[(String, String)] { cur =>
     for {

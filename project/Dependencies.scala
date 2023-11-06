@@ -7,6 +7,7 @@ object DependencyVersions {
   val logbackVersion = "1.4.11"
   val circeVersion = "0.14.1"
   val enumeratumVersion = "1.6.1"
+  val kebsVersion = "1.8.1"
   val pekkoVersion = "1.0.1"
   val pekkoHttpVersion = "1.0.0"
   val playWsVersion = "3.0.0"
@@ -19,6 +20,7 @@ object DependencyVersions {
   val slickVersion = "3.3.3"
   val slickPgVersion = "0.19.3"
   val slickMigrationApiVersion = "0.7.0"
+  val sprayVersion = "1.3.6"
   val testContainersVersion = "1.17.5"
   val wiremockVersion = "2.35.0"
 }
@@ -54,6 +56,10 @@ object Dependencies {
   private val enumeratum = Seq(
     "com.beachape" %% "enumeratum"
   ).map(_ % enumeratumVersion)
+
+  private val kebs = Seq(
+    "pl.iterators" %% "kebs-spray-json"
+  ).map(_ % kebsVersion)
 
   private val logging = Seq(
     "ch.qos.logback" % "logback-classic"
@@ -101,6 +107,10 @@ object Dependencies {
     "io.github.nafg.slick-migration-api" %% "slick-migration-api-flyway"
   ).map(_ % slickMigrationApiVersion)
 
+  private val spray = Seq(
+    "io.spray" %% "spray-json"
+  ).map(_ % sprayVersion)
+
   private val testcontainers = Seq(
     "org.testcontainers" % "postgresql"
   ).map(_ % testContainersVersion)
@@ -117,13 +127,15 @@ object Dependencies {
         circe ++
         logging ++
         enumeratum ++
+        kebs ++
         pekko ++
         pekkoHttp ++
         playWs ++
         postgres ++
         pureConfig ++
         sbtio ++
-        slick
+        slick ++
+        spray
 
     val test =
 //      akkaTesting ++
