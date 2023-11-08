@@ -20,6 +20,7 @@ lazy val root = project.in(file("."))
 
 lazy val lib = project.in(file("lib"))
   .enablePlugins(BuildInfoPlugin)
+  .dependsOn(protobufs)
   .settings(
     name := "less-stupid-betfair",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
@@ -75,3 +76,6 @@ lazy val `gente-example-grpc` = project.in(file("gente-example-grpc"))
     libraryDependencies ++= Dependencies.genteExampleGrpcDependencies,
     run / fork := true
   )
+
+lazy val protobufs = project.in(file("protobufs"))
+  .enablePlugins(PekkoGrpcPlugin)

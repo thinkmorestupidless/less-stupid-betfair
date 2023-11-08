@@ -1,6 +1,6 @@
 package com.thinkmorestupidless.utils
 
-import akka.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
 import com.thinkmorestupidless.betfair.core.impl._
 
@@ -40,6 +40,7 @@ object ConfigSupport {
         ListMarketBookUri(s"$baseUri/listMarketBook"),
         PlaceOrdersUri(s"$baseUri/placeOrders")
       )
-    )
+    ),
+    Navigation(MenuUri(s"$baseUri/navigation/menu.json"))
   )
 }

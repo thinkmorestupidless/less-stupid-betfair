@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.navigation;
+
+message Market {
+  string id = 1;
+  string market_name = 2;
+  string market_type = 3;
+  string market_start_time = 4;
+  string number_of_winners = 5;
+}
+
+message Event {
+  string id = 1;
+  string name = 2;
+  string country_code = 3;
+  repeated string children = 4;
+}
+
+message Group {
+  string id = 1;
+  string name = 2;
+  string children = 3;
+}
+
+message Race {
+  string id = 1;
+  string name = 2;
+  string country_code = 3;
+  string start_time = 4;
+  repeated string children = 5;
+}
+
+message Menu {
+  repeated string children = 1;
+}

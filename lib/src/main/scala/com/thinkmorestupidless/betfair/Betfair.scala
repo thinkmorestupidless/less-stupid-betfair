@@ -14,7 +14,7 @@ import pureconfig.error.ConfigReaderFailures
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class Betfair(val config: BetfairConfig, session: BetfairSession, exchange: BetfairExchangeService) {
+final class Betfair(val config: BetfairConfig, val session: BetfairSession, exchange: BetfairExchangeService) {
   def cancelOrders(
       marketId: MarketId,
       instructions: List[CancelInstruction],

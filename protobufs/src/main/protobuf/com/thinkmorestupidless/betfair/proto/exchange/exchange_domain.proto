@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.exchange;
+
+import "com/thinkmorestupidless/betfair/proto/date.proto";
+
+message TimeRange {
+  Date from = 1;
+  Date to = 2;
+}
+
+message MarketFilter {
+  enum MarketBettingType {
+    ODDS = 0;
+    LINE = 1;
+    RANGE = 2;
+    ASIAN_HANDICAP_DOUBLE_LINE = 3;
+    ASIAN_HANDICAP_SINGLE_LINE = 4;
+    FIXED_ODDS = 5;
+  }
+
+  enum OrderStatus {
+    EXECUTION_COMPLETE = 0;
+    EXECUTABLE = 1;
+  }
+
+    optional string textQuery = 1;
+    repeated string eventTypeIds = 2;
+    repeated string marketIds = 3;
+    optional bool inPlayOnly = 4;
+    repeated string eventIds = 5;
+    repeated string competitionIds = 6;
+    repeated string venues = 7;
+    optional bool bspOnly = 8;
+    optional bool turnInPlayEnabled = 9;
+    repeated MarketBettingType marketBettingTypes = 10;
+    repeated string marketCountries = 11;
+    repeated string marketTypeCodes = 12;
+    optional TimeRange marketStartTime = 13;
+    repeated OrderStatus withOrders = 14;
+}

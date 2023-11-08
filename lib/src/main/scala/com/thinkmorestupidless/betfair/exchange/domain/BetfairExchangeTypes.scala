@@ -450,7 +450,7 @@ object ExecutionReportErrorCode extends Enum[ExecutionReportErrorCode] with Circ
   val values = findValues
 
   case object ErrorInMatcher extends ExecutionReportErrorCode
-  case object FaiProcessedWithErrorslure extends ExecutionReportErrorCode
+  case object ProcessedWithErrors extends ExecutionReportErrorCode
   case object BetActionError extends ExecutionReportErrorCode
   case object InvalidAccountState extends ExecutionReportErrorCode
   case object InvalidWalletStatus extends ExecutionReportErrorCode

@@ -4,7 +4,7 @@ import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
 
 import scala.concurrent.Future
 
-trait NavigationService {
+trait BetfairNavigationService {
 
-  def menu()(session: BetfairSession): Future[Menu]
+  def menu()(implicit session: BetfairSession): Future[Menu]
 }

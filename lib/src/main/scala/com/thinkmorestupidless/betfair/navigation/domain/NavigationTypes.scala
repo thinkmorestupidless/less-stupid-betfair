@@ -31,13 +31,13 @@ final case class MarketStartTime(value: String)
 final case class NumberOfWinners(value: Option[Int])
 
 final case class Market(
-                         id: MarketId,
-                         name: MarketName,
-                         exchangeId: ExchangeId,
-                         marketType: MarketType,
-                         marketStartTime: MarketStartTime,
-                         numberOfWinners: NumberOfWinners)
-  extends MenuItem
+    id: MarketId,
+    name: MarketName,
+    exchangeId: ExchangeId,
+    marketType: MarketType,
+    marketStartTime: MarketStartTime,
+    numberOfWinners: NumberOfWinners
+) extends MenuItem
 
 final case class EventName(value: String)
 object EventName {
@@ -48,14 +48,14 @@ final case class EventId(value: String)
 final case class CountryCode(value: String)
 
 final case class Event(id: EventId, name: EventName, countryCode: CountryCode, children: List[MenuItem])
-  extends MenuItem
+    extends MenuItem
     with HasChildren
 
 final case class EventTypeName(value: String)
 final case class EventTypeId(value: String)
 
 final case class EventType(id: EventTypeId, name: EventTypeName, children: List[MenuItem])
-  extends MenuItem
+    extends MenuItem
     with HasChildren
 
 final case class GroupId(value: String)
@@ -69,13 +69,15 @@ final case class Venue(value: String)
 final case class RaceStartTime(value: String)
 
 final case class Race(
-                       id: RaceId,
-                       name: RaceName,
-                       countryCode: CountryCode,
-                       venue: Venue,
-                       startTime: RaceStartTime,
-                       children: List[Market])
-  extends MenuItem
+    id: RaceId,
+    name: RaceName,
+    countryCode: CountryCode,
+    venue: Venue,
+    startTime: RaceStartTime,
+    children: List[Market]
+) extends MenuItem
 
 final case class RootGroupId(value: Int)
 final case class Menu(children: List[MenuItem]) extends HasChildren
+
+final case class GetMenuRequest()

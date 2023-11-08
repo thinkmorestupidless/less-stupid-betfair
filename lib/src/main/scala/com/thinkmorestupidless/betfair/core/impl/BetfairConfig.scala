@@ -6,7 +6,12 @@ import com.typesafe.config.Config
 import pureconfig.generic.auto._
 import pureconfig.{ConfigReader, ConfigSource}
 
-final case class BetfairConfig(headerKeys: HeaderKeys, login: LoginConfig, exchange: ExchangeConfig, navigation: Navigation)
+final case class BetfairConfig(
+    headerKeys: HeaderKeys,
+    login: LoginConfig,
+    exchange: ExchangeConfig,
+    navigation: Navigation
+)
 
 final case class LoginConfig(cert: Cert, credentials: BetfairCredentials, uri: LoginUri)
 final case class LoginUri(value: String)
@@ -69,18 +74,15 @@ object BetfairConfig {
   implicit val listMarketCatalogueReader = ConfigReader[String].map(ListMarketCatalogueUri(_))
   implicit val listMarketBookReader = ConfigReader[String].map(ListMarketBookUri(_))
   implicit val placeOrdersReader = ConfigReader[String].map(PlaceOrdersUri(_))
-  implicit val manuUriReader = ConfigReader[String].map(MenuUri(_))
+  implicit val menuUriReader = ConfigReader[String].map(MenuUri(_))
 
-  implicit val rawHeaderReader = ConfigReader.fromCursor[(String, String)] { cur =>
+  implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {
       key <- cur.fluent.at("key").asString
       value <- cur.fluent.at("value").asString
-    } yield (key, value)
+    } yield RawHeader(key, value)
   }
 
   def load(): ConfigReader.Result[BetfairConfig] =
     ConfigSource.default.at(namespace = "betfair").load[BetfairConfig]
-
-  def load(config: Config): ConfigReader.Result[BetfairConfig] =
-    ConfigSource.fromConfig(config).load[BetfairConfig]
 }

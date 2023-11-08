@@ -69,9 +69,12 @@ object Dependencies {
     "org.apache.pekko" %% "pekko-actor-typed",
     "org.apache.pekko" %% "pekko-persistence-typed",
     "org.apache.pekko" %% "pekko-cluster-sharding-typed",
-    "org.apache.pekko" %% "pekko-stream",
-    "org.apache.pekko" %% "pekko-testkit"
+    "org.apache.pekko" %% "pekko-stream"
   ).map(_ % pekkoVersion)
+
+  private val pekkoTest = Seq(
+    "org.apache.pekko" %% "pekko-actor-testkit-typed"
+  ).map(_ % pekkoVersion % Test)
 
   private val pekkoHttp = Seq(
     "org.apache.pekko" %% "pekko-http"
@@ -139,6 +142,7 @@ object Dependencies {
 
     val test =
 //      akkaTesting ++
+      pekkoTest ++
         scalatest ++
         testcontainers ++
         wiremock

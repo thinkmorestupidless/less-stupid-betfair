@@ -1,7 +1,11 @@
 package gente.oss.betfair.channels.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
-import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage}
+import com.thinkmorestupidless.betfair.streams.domain.{
+  GlobalMarketFilterRepository,
+  IncomingBetfairSocketMessage,
+  OutgoingBetfairSocketMessage
+}
 import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, TlsSocketFlow}
 import gente.oss.betfair.channels.domain.{ChannelId, ChannelsService}
 import org.apache.pekko.NotUsed
@@ -20,7 +24,7 @@ object ChannelFlowFactory {
   )(implicit
       system: ActorSystem[_]
   ): ChannelFlowFactory = {
-          implicit val ec = system.executionContext
+    implicit val ec = system.executionContext
     val betfairSocketFlow = BetfairSocketFlow(socketFlow, session, globalMarketFilterRepository)
 
     channelId => {

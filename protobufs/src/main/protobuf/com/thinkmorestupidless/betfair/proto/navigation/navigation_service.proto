@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.navigation;
+
+import "com/thinkmorestupidless/betfair/proto/navigation/navigation_domain.proto";
+
+service NavigationService {
+
+  rpc GetMenu (GetMenuRequest) returns (Menu) {}
+}
+
+message GetMenuRequest {}

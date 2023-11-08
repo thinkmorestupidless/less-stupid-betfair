@@ -24,7 +24,8 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import scala.concurrent.Future
 
 final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit system: ActorSystem, ec: ExecutionContext)
-    extends BetfairExchangeService with CirceSupport {
+    extends BetfairExchangeService
+    with CirceSupport {
 
   private val wsClient = StandaloneAhcWSClient()
 
@@ -139,9 +140,9 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
     execute[PlaceOrders, PlaceExecutionReport](placeOrders, config.exchange.uris.placeOrders.value)
 
   private def execute[REQUEST, RESPONSE](content: REQUEST, uri: String)(implicit
-                                                                        decoder: Decoder[RESPONSE],
-                                                                        m: ToEntityMarshaller[REQUEST],
-                                                                        session: BetfairSession
+      decoder: Decoder[RESPONSE],
+      m: ToEntityMarshaller[REQUEST],
+      session: BetfairSession
   ): Future[RESPONSE] = {
     val headers: Seq[HttpHeader] = config.exchange.requiredHeaders ++ List(
       RawHeader(config.headerKeys.applicationKey.value, session.applicationKey.value),

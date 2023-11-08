@@ -1,6 +1,10 @@
 package com.thinkmorestupidless.betfair.examples
 
 import com.thinkmorestupidless.betfair.Betfair
+import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
+import com.thinkmorestupidless.betfair.grpc.BetfairGrpcServer
+import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase
+import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService
 import org.apache.pekko.actor.ActorSystem
 import org.slf4j.LoggerFactory
 
@@ -18,7 +22,14 @@ object GrpcExample {
       .map { betfair =>
         log.info("betfair is ready {}", betfair)
 
-        val binding = new GrpcExampleServer(system).run()
+        implicit val session = betfair.session
+
+        val betfairNavigationService = new PlayWsBetfairNavigationService(betfair.config)
+        val getMenuUseCase = GetMenuUseCase(betfairNavigationService)
+
+        val betfairExchangeService = new AkkaHttpBetfairExchangeService(betfair.config)
+
+        val binding = new BetfairGrpcServer(getMenuUseCase, betfairExchangeService)
 
       }
       .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))

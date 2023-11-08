@@ -36,13 +36,12 @@ object MenuUtils {
   }
 
   private def _allEvents(parent: HasChildren): List[Event] = {
-    def fold(events: List[Event], next: MenuItem): List[Event] = {
+    def fold(events: List[Event], next: MenuItem): List[Event] =
       next match {
         case event: Event        => event.children.foldLeft(events :+ event)(fold)
         case parent: HasChildren => parent.children.foldLeft(events)(fold)
         case _                   => events
       }
-    }
 
     parent.children.foldLeft(List.empty[Event])(fold)
   }
