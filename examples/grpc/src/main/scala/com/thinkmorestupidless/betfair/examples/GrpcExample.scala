@@ -29,7 +29,7 @@ object GrpcExample {
 
         val betfairExchangeService = new AkkaHttpBetfairExchangeService(betfair.config)
 
-        val binding = new BetfairGrpcServer(getMenuUseCase, betfairExchangeService)
+        val binding = new BetfairGrpcServer(getMenuUseCase, betfairExchangeService).run()
 
       }
       .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))

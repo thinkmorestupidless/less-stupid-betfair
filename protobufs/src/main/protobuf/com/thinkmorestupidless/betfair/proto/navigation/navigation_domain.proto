@@ -2,25 +2,30 @@ syntax = "proto3";
 
 package com.thinkmorestupidless.betfair.proto.navigation;
 
-message Market {
+message Menu {
+  repeated EventType event_types = 1;
+}
+
+message EventType {
   string id = 1;
-  string market_name = 2;
-  string market_type = 3;
-  string market_start_time = 4;
-  string number_of_winners = 5;
+  string name = 2;
+  repeated Event events = 3;
+  repeated Group groups = 4;
+  repeated Race races = 5;
 }
 
 message Event {
   string id = 1;
   string name = 2;
   string country_code = 3;
-  repeated string children = 4;
+  repeated Market markets = 4;
 }
 
 message Group {
   string id = 1;
   string name = 2;
-  string children = 3;
+  repeated Event events = 3;
+  repeated Group groups = 4;
 }
 
 message Race {
@@ -28,9 +33,14 @@ message Race {
   string name = 2;
   string country_code = 3;
   string start_time = 4;
-  repeated string children = 5;
+  repeated Market markets = 5;
 }
 
-message Menu {
-  repeated string children = 1;
+message Market {
+  string id = 1;
+  string market_name = 2;
+  string exchange_id = 3;
+  string market_type = 4;
+  string market_start_time = 5;
+  optional uint32 number_of_winners = 6;
 }
