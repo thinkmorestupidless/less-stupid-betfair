@@ -26,12 +26,15 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
       asListOfType[Market](typeName = "MARKET")
 
     private def asListOfType[T <: MenuItem](typeName: String)(implicit reader: JsonReader[T]): List[T] =
-      self.map { child =>
-        child.asJsObject.fields("type") match {
-          case JsString(`typeName`) => Some(child.convertTo[T])
-          case _ => None
+      self
+        .map { child =>
+          child.asJsObject.fields("type") match {
+            case JsString(`typeName`) => Some(child.convertTo[T])
+            case _                    => None
+          }
         }
-      }.flatten.toList
+        .flatten
+        .toList
   }
 
   implicit val eventTypeFormat: RootJsonFormat[EventType] = new RootJsonFormat[EventType] {
@@ -46,43 +49,66 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
         ("type", JsString(MenuItemType.EventType.toString)),
         ("id", JsString(obj.id.value)),
         ("name", JsString(obj.name.value)),
-        ("children", JsArray((obj.events.map(_.toJson)  ++ obj.groups.map(_.toJson) ++ obj.races.map(_.toJson)).toVector))
+        (
+          "children",
+          JsArray((obj.events.map(_.toJson) ++ obj.groups.map(_.toJson) ++ obj.races.map(_.toJson)).toVector)
+        )
       )
   }
 
-  implicit val groupWriter: RootJsonWriter[Group] = (obj: Group) => JsObject(
-    ("type", JsString(MenuItemType.Group.entryName)),
-    ("id", JsString(obj.id.value)),
-    ("name", JsString(obj.name.value)),
-    ("children", JsArray((obj.events.map(_.toJson) ++ obj.groups.map(_.toJson)).toVector))
-  )
+  implicit val groupWriter: RootJsonWriter[Group] = (obj: Group) =>
+    JsObject(
+      ("type", JsString(MenuItemType.Group.entryName)),
+      ("id", JsString(obj.id.value)),
+      ("name", JsString(obj.name.value)),
+      ("children", JsArray((obj.events.map(_.toJson) ++ obj.groups.map(_.toJson)).toVector))
+    )
 
-  implicit val groupReader: RootJsonReader[Group] = (json: JsValue) => json.asJsObject.getFields(fieldNames = "id", "name", "children") match {
-    case Seq(JsString(id), JsString(name), JsArray(children)) =>
-      Group(GroupId(id), GroupName(name), children.asEvents, children.asGroups)
-  }
+  implicit val groupReader: RootJsonReader[Group] = (json: JsValue) =>
+    json.asJsObject.getFields(fieldNames = "id", "name", "children") match {
+      case Seq(JsString(id), JsString(name), JsArray(children)) =>
+        Group(GroupId(id), GroupName(name), children.asEvents, children.asGroups)
+    }
 
   implicit val groupFormat: RootJsonFormat[Group] = rootJsonFormat(groupReader, groupWriter)
 
-  implicit val eventWriter: RootJsonWriter[Event] = (obj: Event) => JsObject(
-    ("type", JsString(MenuItemType.Event.entryName)),
-    ("id", JsString(obj.id.value)),
-    ("name", JsString(obj.name.value)),
-    ("countryCode", JsString(obj.countryCode.value)),
-    ("children", JsArray((obj.events.map(_.toJson) ++ obj.groups.map(_.toJson) ++ obj.markets.map(_.toJson)).toVector))
-  )
+  implicit val eventWriter: RootJsonWriter[Event] = (obj: Event) =>
+    JsObject(
+      ("type", JsString(MenuItemType.Event.entryName)),
+      ("id", JsString(obj.id.value)),
+      ("name", JsString(obj.name.value)),
+      ("countryCode", JsString(obj.countryCode.value)),
+      (
+        "children",
+        JsArray((obj.events.map(_.toJson) ++ obj.groups.map(_.toJson) ++ obj.markets.map(_.toJson)).toVector)
+      )
+    )
 
   implicit val eventReader: RootJsonReader[Event] = (json: JsValue) =>
     json.asJsObject.getFields(fieldNames = "id", "name", "countryCode", "children") match {
       case Seq(JsString(id), JsString(name), JsString(countryCode), JsArray(children)) =>
-        Event(EventId(id), EventName(name), CountryCode(countryCode), children.asEvents, children.asGroups, children.asMarkets)
+        Event(
+          EventId(id),
+          EventName(name),
+          CountryCode(countryCode),
+          children.asEvents,
+          children.asGroups,
+          children.asMarkets
+        )
     }
 
   implicit val eventFormat: RootJsonFormat[Event] = rootJsonFormat(eventReader, eventWriter)
 
   implicit val marketFormat: RootJsonFormat[Market] = new RootJsonFormat[Market] {
     override def read(json: JsValue): Market =
-      json.asJsObject.getFields(fieldNames = "id", "name", "exchangeId", "marketType", "marketStartTime", "numberOfWinners") match {
+      json.asJsObject.getFields(
+        fieldNames = "id",
+        "name",
+        "exchangeId",
+        "marketType",
+        "marketStartTime",
+        "numberOfWinners"
+      ) match {
         case Seq(
               JsString(id),
               JsString(name),

@@ -29,10 +29,11 @@ final class PlayWsBetfairNavigationService(config: BetfairConfig)(implicit syste
       )
       .get()
       .map { response =>
-        try {
+        try
           response.body.parseJson.convertTo[Menu]
-        } catch {
-          case e: Exception => log.error("failed to parse menu")
+        catch {
+          case e: Exception =>
+            log.error("failed to parse menu")
             Menu(List.empty)
         }
       }

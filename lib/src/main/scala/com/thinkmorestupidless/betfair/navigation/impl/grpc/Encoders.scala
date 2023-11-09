@@ -1,20 +1,24 @@
 package com.thinkmorestupidless.betfair.navigation.impl.grpc
 
-import com.thinkmorestupidless.betfair.proto.navigation.{Event => EventProto, EventType => EventTypeProto, Group => GroupProto, Market => MarketProto, Menu => MenuProto, Race => RaceProto}
+import com.thinkmorestupidless.betfair.proto.navigation.{
+  Event => EventProto,
+  EventType => EventTypeProto,
+  Group => GroupProto,
+  Market => MarketProto,
+  Menu => MenuProto,
+  Race => RaceProto
+}
 import com.thinkmorestupidless.betfair.navigation.domain.{Event, EventType, Group, Market, Menu, Race}
 import com.thinkmorestupidless.grpc.Encoder
-import org.slf4j.LoggerFactory
 
 object Encoders {
-
-  private val log = LoggerFactory.getLogger(getClass)
 
   implicit val menuEncoder: Encoder[Menu, MenuProto] =
     menu => {
       val children = menu.children.map { child =>
         child match {
           case eventType: EventType => Some(encodeEventType(eventType))
-          case _ => None
+          case _                    => None
         }
       }.flatten
       MenuProto().withEventTypes(children)

@@ -40,23 +40,38 @@ final case class EventName(value: String)
 final case class EventId(value: String)
 final case class CountryCode(value: String)
 
-final case class Event(id: EventId, name: EventName, countryCode: CountryCode, events: List[Event], groups: List[Group], markets: List[Market])
-    extends MenuItem with HasChildren {
+final case class Event(
+    id: EventId,
+    name: EventName,
+    countryCode: CountryCode,
+    events: List[Event],
+    groups: List[Group],
+    markets: List[Market]
+) extends MenuItem
+    with HasChildren {
   override val children: List[MenuItem] = events ++ groups ++ markets
 }
 
 final case class EventTypeName(value: String)
 final case class EventTypeId(value: String)
 
-final case class EventType(id: EventTypeId, name: EventTypeName, events: List[Event], groups: List[Group], races: List[Race])
-    extends MenuItem with HasChildren {
+final case class EventType(
+    id: EventTypeId,
+    name: EventTypeName,
+    events: List[Event],
+    groups: List[Group],
+    races: List[Race]
+) extends MenuItem
+    with HasChildren {
   override val children: List[MenuItem] = events ++ groups ++ races
 }
 
 final case class GroupId(value: String)
 final case class GroupName(value: String)
 
-final case class Group(id: GroupId, name: GroupName, events: List[Event], groups: List[Group]) extends MenuItem with HasChildren {
+final case class Group(id: GroupId, name: GroupName, events: List[Event], groups: List[Group])
+    extends MenuItem
+    with HasChildren {
   override val children: List[MenuItem] = events ++ groups
 }
 
@@ -72,7 +87,8 @@ final case class Race(
     venue: Venue,
     startTime: RaceStartTime,
     markets: List[Market]
-) extends MenuItem with HasChildren {
+) extends MenuItem
+    with HasChildren {
   override val children: List[MenuItem] = markets
 }
 

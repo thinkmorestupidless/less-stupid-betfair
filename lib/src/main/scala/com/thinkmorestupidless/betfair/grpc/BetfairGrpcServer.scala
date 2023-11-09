@@ -33,10 +33,7 @@ final class BetfairGrpcServer(
     val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
 
     val service: HttpRequest => Future[HttpResponse] =
-      ServiceHandler.concatOrNotFound(
-        navigationPartial,
-        exchangePartial,
-        reflection)
+      ServiceHandler.concatOrNotFound(navigationPartial, exchangePartial, reflection)
 
     val bound: Future[Http.ServerBinding] = Http(system)
       .newServerAt(interface = "0.0.0.0", port = 8080)
