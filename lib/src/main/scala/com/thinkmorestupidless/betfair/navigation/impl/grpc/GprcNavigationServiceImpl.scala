@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class GrpcError(message: String) extends RuntimeException(message)
 
-class GprcNavigationService(getMenu: GetMenuUseCase)(implicit ec: ExecutionContext) extends NavigationService {
+class GprcNavigationServiceImpl(getMenu: GetMenuUseCase)(implicit ec: ExecutionContext) extends NavigationService {
 
   override def getMenu(in: GetMenuRequest): Future[MenuProto] =
     in.decode.fold(

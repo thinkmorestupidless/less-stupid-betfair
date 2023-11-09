@@ -9,5 +9,5 @@ import com.thinkmorestupidless.utils.ValidationException
 object Decoders {
 
   implicit val getMenuRequestDecoder: Decoder[ValidationException, GetMenuRequestProto, GetMenuRequest] =
-    request => Validated.valid(GetMenuRequest())
+    _ => Validated.valid(GetMenuRequest())
 }

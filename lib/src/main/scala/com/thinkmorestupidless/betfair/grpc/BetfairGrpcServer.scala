@@ -5,7 +5,7 @@ import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
 import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase.GetMenuUseCase
-import com.thinkmorestupidless.betfair.navigation.impl.grpc.GprcNavigationService
+import com.thinkmorestupidless.betfair.navigation.impl.grpc.GprcNavigationServiceImpl
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}
 import com.thinkmorestupidless.betfair.proto.navigation.{NavigationService, NavigationServiceHandler}
 import org.apache.pekko.actor.ActorSystem
@@ -28,7 +28,7 @@ final class BetfairGrpcServer(
   def run(): Future[Http.ServerBinding] = {
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val navigationPartial = NavigationServiceHandler.partial(new GprcNavigationService(getMenuUseCase))
+    val navigationPartial = NavigationServiceHandler.partial(new GprcNavigationServiceImpl(getMenuUseCase))
     val exchangePartial = ExchangeServiceHandler.partial(new GprcExchangeService(betfairExchangeService))
     val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
 
