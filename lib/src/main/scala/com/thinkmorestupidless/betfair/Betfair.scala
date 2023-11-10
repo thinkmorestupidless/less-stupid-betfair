@@ -9,7 +9,6 @@ import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
 import org.apache.pekko.actor.ActorSystem
-import org.slf4j.LoggerFactory
 import pureconfig.error.ConfigReaderFailures
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -104,8 +103,6 @@ final class Betfair(val config: BetfairConfig, val session: BetfairSession, exch
 
 object Betfair {
 
-  private val log = LoggerFactory.getLogger(getClass)
-
   sealed trait BetfairError
   final case class FailedToLoadBetfairConfig(cause: ConfigReaderFailures) extends BetfairError
   final case class FailedBetfairAuthentication(cause: LoginError) extends BetfairError
@@ -116,13 +113,6 @@ object Betfair {
 
     this()
   }
-
-//  def apply(system: typed.ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
-//    implicit val sys = system.classicSystem
-//    implicit val ec = system.executionContext
-//
-//    this()
-//  }
 
   def apply()(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, Betfair] =
     authenticate().map { case (config, session) =>
@@ -142,9 +132,7 @@ object Betfair {
   private def authenticate(
       config: BetfairConfig
   )(implicit system: ActorSystem, ec: ExecutionContext): EitherT[Future, BetfairError, SessionToken] = {
-    log.info("authenticating")
     val authenticator = new PlayWsBetfairAuthenticationService(config)
-    log.info(s"authenticator: $authenticator")
     authenticator.login().leftMap(FailedBetfairAuthentication(_))
   }
 
