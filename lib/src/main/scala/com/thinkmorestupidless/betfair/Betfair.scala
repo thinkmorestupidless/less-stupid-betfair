@@ -5,7 +5,6 @@ import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.
 import com.thinkmorestupidless.betfair.auth.domain.{BetfairSession, SessionToken}
 import com.thinkmorestupidless.betfair.auth.impl.PlayWsBetfairAuthenticationService
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
 import org.apache.pekko.actor.ActorSystem
@@ -13,93 +12,7 @@ import pureconfig.error.ConfigReaderFailures
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class Betfair(val config: BetfairConfig, val session: BetfairSession, exchange: BetfairExchangeService) {
-  def cancelOrders(
-      marketId: MarketId,
-      instructions: List[CancelInstruction],
-      customerRef: CustomerRef
-  ): Future[CancelExecutionReport] =
-    exchange.cancelOrders(marketId, instructions, customerRef)(session)
-
-  def listClearedOrders(
-      betStatus: BetStatus,
-      eventTypeIds: Set[EventTypeId],
-      eventIds: Set[EventId],
-      marketIds: Set[MarketId],
-      runnerIds: Set[RunnerId],
-      betIds: Set[BetId],
-      side: Side,
-      customerOrderRefs: Set[CustomerOrderRef],
-      customerStrategyRefs: Set[CustomerStrategyRef],
-      settledDateRange: TimeRange,
-      groupBy: GroupBy,
-      includeItemDescription: Boolean,
-      locale: String,
-      fromRecord: Int,
-      recordCount: Int
-  ): Future[ClearedOrderSummaryReport] =
-    exchange.listClearedOrders(
-      betStatus,
-      eventTypeIds,
-      eventIds,
-      marketIds,
-      runnerIds,
-      betIds,
-      side,
-      customerOrderRefs,
-      customerStrategyRefs,
-      settledDateRange,
-      groupBy,
-      includeItemDescription,
-      locale,
-      fromRecord,
-      recordCount
-    )(session)
-
-  def listCompetitions(filter: MarketFilter): Future[List[CompetitionResult]] =
-    exchange.listCompetitions(filter)(session)
-
-  def listCountries(filter: MarketFilter): Future[List[CountryCodeResult]] =
-    exchange.listCountries(filter)(session)
-
-  def listCurrentOrders(
-      betIds: Set[BetId],
-      marketIds: Set[MarketId],
-      orderProjection: OrderProjection,
-      placedDateRange: TimeRange,
-      dateRange: TimeRange,
-      orderBy: OrderBy,
-      sortDir: SortDir,
-      fromRecord: Int,
-      recordCount: Int
-  ): Future[CurrentOrderSummaryReport] =
-    exchange.listCurrentOrders(
-      betIds,
-      marketIds,
-      orderProjection,
-      placedDateRange,
-      dateRange,
-      orderBy,
-      sortDir,
-      fromRecord,
-      recordCount
-    )(session)
-
-  def listEventTypes(filter: MarketFilter): Future[List[EventTypeResponse]] =
-    exchange.listEventTypes(filter)(session)
-
-  def listEvents(filter: MarketFilter): Future[Set[EventResponse]] =
-    exchange.listEvents(filter)(session)
-
-  def listMarketCatalogue(listMarketCatalogue: ListMarketCatalogue): Future[List[MarketCatalogue]] =
-    exchange.listMarketCatalogue(listMarketCatalogue)(session)
-
-  def listMarketBook(listMarketBook: ListMarketBook): Future[List[MarketBook]] =
-    exchange.listMarketBook(listMarketBook)(session)
-
-  def placeOrders(placeOrders: PlaceOrders): Future[PlaceExecutionReport] =
-    exchange.placeOrders(placeOrders)(session)
-}
+final case class Betfair(config: BetfairConfig, session: BetfairSession, exchange: BetfairExchangeService)
 
 object Betfair {
 

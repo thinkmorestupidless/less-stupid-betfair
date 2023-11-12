@@ -1,14 +1,14 @@
 package com.thinkmorestupidless.grpc
 
-import cats.data.Validated
+import com.thinkmorestupidless.utils.Validation.Validation
 import scalapb.GeneratedMessage
 
-trait Decoder[ERROR, IN <: GeneratedMessage, OUT] extends (IN => Validated[ERROR, OUT])
+trait Decoder[IN <: GeneratedMessage, OUT] extends (IN => Validation[OUT])
 
 object Decoder {
 
   implicit class DecoderOps[IN <: GeneratedMessage](request: IN) {
-    def decode[ERROR, OUT](implicit decoder: Decoder[ERROR, IN, OUT]): Validated[ERROR, OUT] =
+    def decode[OUT](implicit decoder: Decoder[IN, OUT]): Validation[OUT] =
       decoder(request)
   }
 }

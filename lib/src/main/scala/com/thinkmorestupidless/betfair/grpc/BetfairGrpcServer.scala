@@ -2,8 +2,6 @@ package com.thinkmorestupidless.betfair.grpc
 
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
-import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
-import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.grpc.GprcNavigationServiceImpl
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}

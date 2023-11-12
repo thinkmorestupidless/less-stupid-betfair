@@ -94,16 +94,16 @@ object JsonCodecs {
           segmentType <- c.downField("segmentType").as[Option[SegmentType]]
           status <- c.downField("status").as[Option[Int]]
         } yield MarketChangeMessage(
-          id = id,
-          ct = ct,
-          clk = clk,
-          heartbeatMs = heartbeatMs,
-          pt = pt,
-          initialClk = initialClk,
-          mc = mc,
-          conflateMs = conflateMs,
-          segmentType = segmentType,
-          status = status
+          id,
+          ct,
+          clk,
+          heartbeatMs,
+          pt,
+          initialClk,
+          mc,
+          conflateMs,
+          segmentType,
+          status
         )
     },
     new Encoder[MarketChangeMessage] {

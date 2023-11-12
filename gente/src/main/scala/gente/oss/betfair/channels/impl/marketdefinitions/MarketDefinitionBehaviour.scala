@@ -8,11 +8,10 @@ import org.apache.pekko.persistence.typed.state.scaladsl.DurableStateBehavior
 
 object MarketDefinitionBehaviour {
 
-  def apply(persistenceId: PersistenceId): Behavior[Command] = {
+  def apply(persistenceId: PersistenceId): Behavior[Command] =
     DurableStateBehavior[Command, Option[MarketDefinition]](
       persistenceId = persistenceId,
       emptyState = None,
       commandHandler = MarketDefinitionCommandHandler()
     )
-  }
 }

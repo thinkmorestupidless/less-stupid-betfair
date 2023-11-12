@@ -53,6 +53,21 @@ final case class MarketChangeMessage(
     segmentType: Option[SegmentType],
     status: Option[Int]
 ) extends IncomingBetfairSocketMessage
+object MarketChangeMessage {
+  def apply(
+      id: Option[Int],
+      ct: Option[ChangeType],
+      clk: String,
+      heartbeatMs: Option[Long],
+      pt: Long,
+      initialClk: Option[String],
+      mc: Option[Set[MarketChange]],
+      conflateMs: Option[Long],
+      segmentType: Option[SegmentType],
+      status: Option[Int]
+  ): MarketChangeMessage =
+    new MarketChangeMessage(Op.mcm, id, ct, clk, heartbeatMs, pt, initialClk, mc, conflateMs, segmentType, status)
+}
 
 final case class CannotParseJson(cause: Throwable) extends IncomingBetfairSocketMessage
 case object SocketReady extends IncomingBetfairSocketMessage

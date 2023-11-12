@@ -19,6 +19,8 @@ object MarketDefinitionShardRegion {
 
   def apply(persistenceId: PersistenceId): Behavior[Command] =
     Behaviors.setup[Command] { context =>
-      Behaviors.supervise(MarketDefinitionBehaviour(persistenceId)).onFailure[IllegalStateException](SupervisorStrategy.resume)
+      Behaviors
+        .supervise(MarketDefinitionBehaviour(persistenceId))
+        .onFailure[IllegalStateException](SupervisorStrategy.resume)
     }
 }
