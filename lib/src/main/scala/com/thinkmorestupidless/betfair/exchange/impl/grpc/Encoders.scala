@@ -50,6 +50,7 @@ object Encoders {
         event.name.value,
         event.countryCode.map(_.value),
         event.timezone.value,
+        event.venue.map(_.value),
         event.openDate.value.toString
       )
 }

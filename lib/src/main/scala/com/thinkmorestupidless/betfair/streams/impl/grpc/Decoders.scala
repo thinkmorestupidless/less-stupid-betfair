@@ -31,13 +31,12 @@ import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
 import enumeratum.EnumEntry
 import pl.iterators.kebs.macros.enums.EnumOf
+import com.thinkmorestupidless.grpc.DefaultDecoders.validNone
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object Decoders {
-
-  private def validNone[T]: Validation[Option[T]] = None.validNel
 
   private def validateEnum[A <: EnumEntry](str: String)(implicit e: EnumOf[A]): Validation[A] =
     Try(e.`enum`.withNameInsensitive(str)) match {

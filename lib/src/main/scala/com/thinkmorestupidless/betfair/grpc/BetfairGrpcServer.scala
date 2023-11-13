@@ -30,7 +30,8 @@ final class BetfairGrpcServer(
     implicit val ec: ExecutionContext = system.dispatcher
 
     val navigationPartial = NavigationServiceHandler.partial(new GprcNavigationServiceImpl(getMenuUseCase))
-    val exchangePartial = ExchangeServiceHandler.partial(new GprcExchangeService(listEventTypesUseCase, listEventsUseCase))
+    val exchangePartial =
+      ExchangeServiceHandler.partial(new GprcExchangeService(listEventTypesUseCase, listEventsUseCase))
     val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
 
     val service: HttpRequest => Future[HttpResponse] =
