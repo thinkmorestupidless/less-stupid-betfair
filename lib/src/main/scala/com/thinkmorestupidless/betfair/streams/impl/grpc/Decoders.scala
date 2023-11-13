@@ -25,6 +25,8 @@ import com.thinkmorestupidless.betfair.proto.streams.{
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.grpc.Decoder
 import com.thinkmorestupidless.grpc.Decoder._
+import com.thinkmorestupidless.grpc.DefaultDecoders._
+import com.thinkmorestupidless.utils.Validation.ImplicitConversions.toValidatedOptionalList
 import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
 import enumeratum.EnumEntry
@@ -36,9 +38,6 @@ import scala.util.{Failure, Success, Try}
 object Decoders {
 
   private def validNone[T]: Validation[Option[T]] = None.validNel
-
-  def ensureOptionIsDefined[T](from: Option[T], message: String): Validation[T] =
-    Validated.cond(from.isDefined, from.get, NonEmptyList.one(ValidationException(message)))
 
   private def validateEnum[A <: EnumEntry](str: String)(implicit e: EnumOf[A]): Validation[A] =
     Try(e.`enum`.withNameInsensitive(str)) match {
@@ -72,28 +71,6 @@ object Decoders {
 
       (id, ct, clk, heartbeatMs, pt, initialClk, mc, conflateMs, segmentType, status).mapN(MarketChangeMessage.apply _)
   }
-
-  implicit def toValidatedOptionalList[T](input: Validation[List[T]]): Validation[Option[List[T]]] =
-    input.map(_ match {
-      case Nil  => None
-      case list => Some(list)
-    })
-
-  implicit def validatedStringToValidatedBigDecimal(input: Validation[String]): Validation[BigDecimal] =
-    Try(input.map(BigDecimal(_))) match {
-      case Success(result) => result
-      case Failure(error) =>
-        ValidationException(s"failed to convert Option[String] to Option[BigDecimal]", Some(error)).invalidNel
-    }
-
-  implicit def validatedOptionalStringToValidatedOptionalBigDecimal(
-      input: Validation[Option[String]]
-  ): Validation[Option[BigDecimal]] =
-    Try(input.map(_.map(BigDecimal(_)))) match {
-      case Success(result) => result
-      case Failure(error) =>
-        ValidationException(s"failed to convert Option[String] to Option[BigDecimal]", Some(error)).invalidNel
-    }
 
   implicit val marketChangeProto_marketChange: Decoder[MarketChangeProto, MarketChange] =
     proto => {
@@ -192,15 +169,6 @@ object Decoders {
   implicit val optionalKeyLineDefinition_keyLineDefinition
       : Decoder[Option[KeyLineDefinitionProto], Option[KeyLineDefinition]] =
     _.map(_.decode).sequence
-
-  implicit val optionalString_optionalBigDecimal: Decoder[Option[String], Option[BigDecimal]] = _.validNel
-  implicit val optionalString_optionalString: Decoder[Option[String], Option[String]] = _.validNel
-  implicit val string_string: Decoder[String, String] = _.validNel
-  implicit val seqString_listString: Decoder[Seq[String], List[String]] = _.toList.validNel
-  implicit val int_int: Decoder[Int, Int] = _.validNel
-  implicit val long_long: Decoder[Long, Long] = _.validNel
-  implicit val string_bigDecimal: Decoder[String, BigDecimal] = _.validNel
-  implicit val boolean_boolean: Decoder[Boolean, Boolean] = _.validNel
 
   implicit val marketDefinitionProto_marketDefinition: Decoder[MarketDefinitionProto, MarketDefinition] =
     proto =>

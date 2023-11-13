@@ -119,9 +119,23 @@ message ListCurrentOrdersRequest {}
 
 message CurrentOrderSummaryReport {}
 
-message ListEventTypesResponse {}
+message ListEventTypesResponse {
+  repeated EventTypeResponse results = 1;
+}
 
-message ListEventsResponse {}
+message EventTypeResponse {
+  EventType event_type = 1;
+  int32 market_count = 2;
+}
+
+message ListEventsResponse {
+  repeated EventResponse results = 1;
+}
+
+message EventResponse {
+  Event event = 1;
+  int32 market_count = 2;
+}
 
 message ListMarketCatalogueRequest {}
 

@@ -39,3 +39,16 @@ message MarketFilter {
     optional TimeRange marketStartTime = 13;
     repeated OrderStatus withOrders = 14;
 }
+
+message EventType {
+  string id = 1;
+  string name = 2;
+}
+
+message Event {
+  string id = 1;
+  string name = 2;
+  optional string country_code = 3;
+  string timezone = 4;
+  string open_date = 5;
+}

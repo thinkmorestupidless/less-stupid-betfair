@@ -106,7 +106,7 @@ object BetfairExchangeService {
 
   case class ListEventTypes(filter: MarketFilter, locale: Option[String] = None)
   case class ListEvents(filter: MarketFilter, locale: Option[String] = None)
-  case class ListEventsResponse(events: List[Event])
+  case class ListEventsResponse(results: List[EventResponse])
 
   case class ListMarketBook(
       marketIds: Option[List[MarketId]],

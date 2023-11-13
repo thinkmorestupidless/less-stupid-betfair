@@ -2,6 +2,7 @@ package com.thinkmorestupidless.betfair.grpc
 
 import com.thinkmorestupidless.betfair.Betfair
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
+import com.thinkmorestupidless.betfair.exchange.usecases.{ListEventTypesUseCase, ListEventsUseCase}
 import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService
 import org.apache.pekko.actor.ActorSystem
@@ -16,7 +17,9 @@ object DefaultBetfairGrpcServer {
     val getMenuUseCase = GetMenuUseCase(betfairNavigationService)
 
     val betfairExchangeService = new AkkaHttpBetfairExchangeService(betfair.config)
+    val listEventTypesUseCase = ListEventTypesUseCase(betfairExchangeService)
+    val listEventsUseCase = ListEventsUseCase(betfairExchangeService)
 
-    new BetfairGrpcServer(getMenuUseCase, betfairExchangeService)
+    new BetfairGrpcServer(getMenuUseCase, listEventTypesUseCase, listEventsUseCase)
   }
 }

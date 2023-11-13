@@ -6,22 +6,21 @@ import com.thinkmorestupidless.betfair.navigation.impl.grpc.Encoders._
 import com.thinkmorestupidless.betfair.proto.navigation.{GetMenuRequest, Menu => MenuProto, NavigationService}
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.grpc.Encoder._
+import com.thinkmorestupidless.utils.ValidationException
 
 import scala.concurrent.{ExecutionContext, Future}
-
-final case class GrpcError(message: String) extends RuntimeException(message)
 
 class GprcNavigationServiceImpl(getMenu: GetMenuUseCase)(implicit ec: ExecutionContext) extends NavigationService {
 
   override def getMenu(in: GetMenuRequest): Future[MenuProto] =
     in.decode.fold(
-      error => Future.failed(GrpcError("Kablammo")),
+      errors => Future.failed(ValidationException.combineErrors(errors)),
       request =>
         getMenu(request).flatMap {
           case Right(menu) =>
             Future.successful(menu.encode)
           case Left(error) =>
-            Future.failed(GrpcError(error.message))
+            Future.failed(error)
         }
     )
 }

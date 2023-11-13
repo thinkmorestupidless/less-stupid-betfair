@@ -2,6 +2,8 @@ package com.thinkmorestupidless.betfair.grpc
 
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.grpc.GprcNavigationServiceImpl
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}
@@ -18,7 +20,8 @@ import scala.util.{Failure, Success}
 
 final class BetfairGrpcServer(
     getMenuUseCase: GetMenuUseCase,
-    betfairExchangeService: BetfairExchangeService
+    listEventTypesUseCase: ListEventTypesUseCase,
+    listEventsUseCase: ListEventsUseCase
 )(implicit system: ActorSystem) {
 
   private val log = LoggerFactory.getLogger(getClass)
@@ -27,7 +30,7 @@ final class BetfairGrpcServer(
     implicit val ec: ExecutionContext = system.dispatcher
 
     val navigationPartial = NavigationServiceHandler.partial(new GprcNavigationServiceImpl(getMenuUseCase))
-    val exchangePartial = ExchangeServiceHandler.partial(new GprcExchangeService(betfairExchangeService))
+    val exchangePartial = ExchangeServiceHandler.partial(new GprcExchangeService(listEventTypesUseCase, listEventsUseCase))
     val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
 
     val service: HttpRequest => Future[HttpResponse] =
