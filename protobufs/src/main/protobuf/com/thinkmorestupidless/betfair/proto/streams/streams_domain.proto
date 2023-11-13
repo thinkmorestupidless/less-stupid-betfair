@@ -134,6 +134,7 @@ message MarketChange {
   string openDate = 31;
   string marketTime = 32;
   bool bspReconciled = 33;
+  optional string line_interval = 34;
  }
 
  message PriceLadderDefinition {

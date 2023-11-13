@@ -8,12 +8,16 @@ import com.thinkmorestupidless.betfair.proto.streams.MarketDefinition.{
   BettingType => BettingTypeProto,
   MarketStatus => MarketStatusProto
 }
+import com.thinkmorestupidless.betfair.proto.streams.PriceLadderDefinition.{PriceLadderType => PriceLadderTypeProto}
 import com.thinkmorestupidless.betfair.proto.streams.RunnerDefinition.{RunnerStatus => RunnerStatusProto}
 import com.thinkmorestupidless.betfair.proto.streams.{
   ArrayOfStrings,
+  KeyLineDefinition => KeyLineDefinitionProto,
+  KeyLineSelection => KeyLineSelectionProto,
   MarketChange => MarketChangeProto,
   MarketChangeMessage => MarketChangeMessageProto,
   MarketDefinition => MarketDefinitionProto,
+  PriceLadderDefinition => PriceLadderDefinitionProto,
   RunnerChange => RunnerChangeProto,
   RunnerDefinition => RunnerDefinitionProto
 }
@@ -24,51 +28,53 @@ import com.thinkmorestupidless.grpc.Encoder._
 object Encoders {
 
   implicit val changeTypeEncoder: Encoder[ChangeType, ChangeTypeProto] =
-    changeType =>
-      changeType match {
-        case ChangeType.SubImage   => ChangeTypeProto.SUB_IMAGE
-        case ChangeType.Heartbeat  => ChangeTypeProto.HEARTBEAT
-        case ChangeType.ResubDelta => ChangeTypeProto.RESUB_DELTA
-      }
+    _ match {
+      case ChangeType.SubImage   => ChangeTypeProto.SUB_IMAGE
+      case ChangeType.Heartbeat  => ChangeTypeProto.HEARTBEAT
+      case ChangeType.ResubDelta => ChangeTypeProto.RESUB_DELTA
+    }
 
   implicit val segmentTypeEncoder: Encoder[SegmentType, SegmentTypeProto] =
-    segmentType =>
-      segmentType match {
-        case SegmentType.Seg      => SegmentTypeProto.SEG
-        case SegmentType.SegStart => SegmentTypeProto.SEG_START
-        case SegmentType.SegEnd   => SegmentTypeProto.SEG_END
-      }
+    _ match {
+      case SegmentType.Seg      => SegmentTypeProto.SEG
+      case SegmentType.SegStart => SegmentTypeProto.SEG_START
+      case SegmentType.SegEnd   => SegmentTypeProto.SEG_END
+    }
 
   implicit val marketStatusEncoder: Encoder[MarketStatus, MarketStatusProto] =
-    marketStatus =>
-      marketStatus match {
-        case MarketStatus.Open      => MarketStatusProto.OPEN
-        case MarketStatus.Closed    => MarketStatusProto.CLOSED
-        case MarketStatus.Inactive  => MarketStatusProto.INACTIVE
-        case MarketStatus.Suspended => MarketStatusProto.SUSPENDED
-      }
+    _ match {
+      case MarketStatus.Open      => MarketStatusProto.OPEN
+      case MarketStatus.Closed    => MarketStatusProto.CLOSED
+      case MarketStatus.Inactive  => MarketStatusProto.INACTIVE
+      case MarketStatus.Suspended => MarketStatusProto.SUSPENDED
+    }
 
   implicit val bettingTypeEncoder: Encoder[BettingType, BettingTypeProto] =
-    bettingType =>
-      bettingType match {
-        case BettingType.Line                    => BettingTypeProto.LINE
-        case BettingType.Odds                    => BettingTypeProto.ODDS
-        case BettingType.Range                   => BettingTypeProto.RANGE
-        case BettingType.AsianHandicapDoubleLine => BettingTypeProto.ASIAN_HANDICAP_DOUBLE_LINE
-        case BettingType.AsianHandicapSingleLine => BettingTypeProto.ASIAN_HANDICAP_SINGLE_LINE
-      }
+    _ match {
+      case BettingType.Line                    => BettingTypeProto.LINE
+      case BettingType.Odds                    => BettingTypeProto.ODDS
+      case BettingType.Range                   => BettingTypeProto.RANGE
+      case BettingType.AsianHandicapDoubleLine => BettingTypeProto.ASIAN_HANDICAP_DOUBLE_LINE
+      case BettingType.AsianHandicapSingleLine => BettingTypeProto.ASIAN_HANDICAP_SINGLE_LINE
+    }
 
   implicit val runnerStatusEncoder: Encoder[RunnerStatus, RunnerStatusProto] =
-    runnerStatus =>
-      runnerStatus match {
-        case RunnerStatus.Loser         => RunnerStatusProto.LOSER
-        case RunnerStatus.Active        => RunnerStatusProto.ACTIVE
-        case RunnerStatus.Hidden        => RunnerStatusProto.HIDDEN
-        case RunnerStatus.Placed        => RunnerStatusProto.PLACED
-        case RunnerStatus.Removed       => RunnerStatusProto.REMOVED
-        case RunnerStatus.RemovedVacant => RunnerStatusProto.REMOVED_VACANT
-        case RunnerStatus.Winner        => RunnerStatusProto.WINNER
-      }
+    _ match {
+      case RunnerStatus.Loser         => RunnerStatusProto.LOSER
+      case RunnerStatus.Active        => RunnerStatusProto.ACTIVE
+      case RunnerStatus.Hidden        => RunnerStatusProto.HIDDEN
+      case RunnerStatus.Placed        => RunnerStatusProto.PLACED
+      case RunnerStatus.Removed       => RunnerStatusProto.REMOVED
+      case RunnerStatus.RemovedVacant => RunnerStatusProto.REMOVED_VACANT
+      case RunnerStatus.Winner        => RunnerStatusProto.WINNER
+    }
+
+  implicit val priceLadderTypeEncoder: Encoder[PriceLadderType, PriceLadderTypeProto] =
+    _ match {
+      case PriceLadderType.Finest    => PriceLadderTypeProto.FINEST
+      case PriceLadderType.Classic   => PriceLadderTypeProto.CLASSIC
+      case PriceLadderType.LineRange => PriceLadderTypeProto.LINE_RANGE
+    }
 
   implicit val arrayOfStringsEncoder: Encoder[List[BigDecimal], ArrayOfStrings] =
     input => ArrayOfStrings(values = input.map(_.toString()))
@@ -112,6 +118,15 @@ object Encoders {
         status = runnerDefinition.status.encode
       )
 
+  implicit val priceLadderDefinitionEncoder: Encoder[PriceLadderDefinition, PriceLadderDefinitionProto] =
+    priceLadderDefinition => PriceLadderDefinitionProto(`type` = priceLadderDefinition.`type`.encode)
+
+  implicit val keyLineDefinitionEncoder: Encoder[KeyLineDefinition, KeyLineDefinitionProto] =
+    keyLineDefinition => KeyLineDefinitionProto.defaultInstance.withKl(keyLineDefinition.kl.encode)
+
+  implicit val keyLineSelectionEncoder: Encoder[KeyLineSelection, KeyLineSelectionProto] =
+    keyLineSelection => KeyLineSelectionProto(id = keyLineSelection.id, hc = keyLineSelection.hc.toString())
+
   implicit val marketDefinitionProto: Encoder[MarketDefinition, MarketDefinitionProto] =
     marketDefinition =>
       MarketDefinitionProto(
@@ -136,7 +151,7 @@ object Encoders {
         crossMatching = marketDefinition.crossMatching,
         runnersVoidable = marketDefinition.runnersVoidable,
         turnInPlayEnabled = marketDefinition.turnInPlayEnabled,
-        priceLadderDefinition = marketDefinition.priceLadderDefinition.encode,
+        priceLadderDefinition = Some(marketDefinition.priceLadderDefinition.encode),
         keyLineDefinition = marketDefinition.keyLineDefinition.map(_.encode),
         suspendTime = marketDefinition.suspendTime,
         discountAllowed = marketDefinition.discountAllowed,

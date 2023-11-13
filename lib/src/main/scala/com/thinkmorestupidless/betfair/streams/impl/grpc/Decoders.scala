@@ -1,23 +1,44 @@
 package com.thinkmorestupidless.betfair.streams.impl.grpc
 
+import cats.data.{NonEmptyList, Validated}
 import cats.syntax.apply._
+import cats.syntax.either._
 import cats.syntax.traverse._
 import cats.syntax.validated._
-import com.thinkmorestupidless.betfair.proto.streams.{MarketChange => MarketChangeProto}
-import com.thinkmorestupidless.betfair.proto.streams.{MarketChangeMessage => MarketChangeMessageProto}
-import com.thinkmorestupidless.betfair.streams.domain.{ChangeType, MarketChange, MarketChangeMessage, Op, SegmentType}
+import com.thinkmorestupidless.betfair.proto.streams.MarketDefinition.{
+  BettingType => BettingTypeProto,
+  MarketStatus => MarketStatusProto
+}
+import com.thinkmorestupidless.betfair.proto.streams.PriceLadderDefinition.{PriceLadderType => PriceLadderTypeProto}
+import com.thinkmorestupidless.betfair.proto.streams.RunnerDefinition.{RunnerStatus => RunnerStatusProto}
+import com.thinkmorestupidless.betfair.proto.streams.{
+  ArrayOfStrings,
+  KeyLineDefinition => KeyLineDefinitionProto,
+  KeyLineSelection => KeyLineSelectionProto,
+  MarketChange => MarketChangeProto,
+  MarketChangeMessage => MarketChangeMessageProto,
+  MarketDefinition => MarketDefinitionProto,
+  PriceLadderDefinition => PriceLadderDefinitionProto,
+  RunnerChange => RunnerChangeProto,
+  RunnerDefinition => RunnerDefinitionProto
+}
+import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.grpc.Decoder
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
-import enumeratum.{Enum, EnumEntry}
+import enumeratum.EnumEntry
 import pl.iterators.kebs.macros.enums.EnumOf
 
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object Decoders {
 
   private def validNone[T]: Validation[Option[T]] = None.validNel
+
+  def ensureOptionIsDefined[T](from: Option[T], message: String): Validation[T] =
+    Validated.cond(from.isDefined, from.get, NonEmptyList.one(ValidationException(message)))
 
   private def validateEnum[A <: EnumEntry](str: String)(implicit e: EnumOf[A]): Validation[A] =
     Try(e.`enum`.withNameInsensitive(str)) match {
@@ -27,7 +48,7 @@ object Decoders {
           .invalidNel[A]
     }
 
-  implicit val marketChangeMessageDecoder: Decoder[MarketChangeMessageProto, MarketChangeMessage] = {
+  implicit val marketChangeMessageProto_marketChangeMessage: Decoder[MarketChangeMessageProto, MarketChangeMessage] = {
     marketChangeMessageProto =>
       val id: Validation[Option[Int]] = marketChangeMessageProto.id.validNel
       val ct: Validation[Option[ChangeType]] =
@@ -52,5 +73,240 @@ object Decoders {
       (id, ct, clk, heartbeatMs, pt, initialClk, mc, conflateMs, segmentType, status).mapN(MarketChangeMessage.apply _)
   }
 
-  implicit val decodeMarketChangeDecoder: Decoder[MarketChangeProto, MarketChange] = ???
+  implicit def toValidatedOptionalList[T](input: Validation[List[T]]): Validation[Option[List[T]]] =
+    input.map(_ match {
+      case Nil  => None
+      case list => Some(list)
+    })
+
+  implicit def validatedStringToValidatedBigDecimal(input: Validation[String]): Validation[BigDecimal] =
+    Try(input.map(BigDecimal(_))) match {
+      case Success(result) => result
+      case Failure(error) =>
+        ValidationException(s"failed to convert Option[String] to Option[BigDecimal]", Some(error)).invalidNel
+    }
+
+  implicit def validatedOptionalStringToValidatedOptionalBigDecimal(
+      input: Validation[Option[String]]
+  ): Validation[Option[BigDecimal]] =
+    Try(input.map(_.map(BigDecimal(_)))) match {
+      case Success(result) => result
+      case Failure(error) =>
+        ValidationException(s"failed to convert Option[String] to Option[BigDecimal]", Some(error)).invalidNel
+    }
+
+  implicit val marketChangeProto_marketChange: Decoder[MarketChangeProto, MarketChange] =
+    proto => {
+      val rc: Validation[Option[List[RunnerChange]]] = proto.rc.toList.map(_.decode).sequence
+      val img: Validation[Option[Boolean]] = proto.img.validNel
+      val tv: Validation[Option[BigDecimal]] = proto.tv.map(BigDecimal(_)).validNel
+      val con: Validation[Option[Boolean]] = proto.con.validNel
+      val marketDefinition: Validation[Option[MarketDefinition]] = proto.marketDefinition.map(_.decode).sequence
+      val id: Validation[MarketId] = MarketId(proto.id).validNel
+
+      (rc, img, tv, con, marketDefinition, id).mapN(MarketChange.apply _)
+    }
+
+  implicit val marketStatusProto_marketStatus: Decoder[MarketStatusProto, MarketStatus] =
+    _ match {
+      case MarketStatusProto.CLOSED    => MarketStatus.Closed.validNel
+      case MarketStatusProto.SUSPENDED => MarketStatus.Suspended.validNel
+      case MarketStatusProto.INACTIVE  => MarketStatus.Inactive.validNel
+      case MarketStatusProto.OPEN      => MarketStatus.Open.validNel
+      case MarketStatusProto.Unrecognized(unrecognizedValue) =>
+        ValidationException(s"'$unrecognizedValue' is not a valid member of MarketStatus").invalidNel
+    }
+
+  implicit val bettingTypeProto_bettingType: Decoder[BettingTypeProto, BettingType] =
+    _ match {
+      case BettingTypeProto.ODDS                       => BettingType.Odds.validNel
+      case BettingTypeProto.RANGE                      => BettingType.Range.validNel
+      case BettingTypeProto.LINE                       => BettingType.Line.validNel
+      case BettingTypeProto.ASIAN_HANDICAP_SINGLE_LINE => BettingType.AsianHandicapSingleLine.validNel
+      case BettingTypeProto.ASIAN_HANDICAP_DOUBLE_LINE => BettingType.AsianHandicapDoubleLine.validNel
+      case BettingTypeProto.Unrecognized(unrecognizedValue) =>
+        ValidationException(s"'$unrecognizedValue' is not a valid member of BettingType").invalidNel
+    }
+
+  implicit val priceLadderTypeProto_priceLadderType: Decoder[PriceLadderTypeProto, PriceLadderType] =
+    _ match {
+      case PriceLadderTypeProto.CLASSIC    => PriceLadderType.Classic.validNel
+      case PriceLadderTypeProto.LINE_RANGE => PriceLadderType.LineRange.validNel
+      case PriceLadderTypeProto.FINEST     => PriceLadderType.Finest.validNel
+      case PriceLadderTypeProto.Unrecognized(unrecognizedValue) =>
+        ValidationException(s"'$unrecognizedValue' is not a valid member of PriceLadderType").invalidNel
+    }
+
+  implicit val runnerStatusProto_runnerStatus: Decoder[RunnerStatusProto, RunnerStatus] =
+    _ match {
+      case RunnerStatusProto.WINNER         => RunnerStatus.Winner.validNel
+      case RunnerStatusProto.REMOVED_VACANT => RunnerStatus.RemovedVacant.validNel
+      case RunnerStatusProto.REMOVED        => RunnerStatus.Removed.validNel
+      case RunnerStatusProto.PLACED         => RunnerStatus.Placed.validNel
+      case RunnerStatusProto.HIDDEN         => RunnerStatus.Hidden.validNel
+      case RunnerStatusProto.ACTIVE         => RunnerStatus.Active.validNel
+      case RunnerStatusProto.LOSER          => RunnerStatus.Loser.validNel
+      case RunnerStatusProto.Unrecognized(unrecognizedValue) =>
+        ValidationException(s"'$unrecognizedValue' is not a valid member of RunnerStatus").invalidNel
+    }
+
+  implicit val priceLadderDefinitionProto_priceLadderDefinition
+      : Decoder[PriceLadderDefinitionProto, PriceLadderDefinition] =
+    proto => proto.`type`.decode.map(PriceLadderDefinition(_))
+
+  implicit val keyLineSelectionProto_keyLineSelection: Decoder[KeyLineSelectionProto, KeyLineSelection] =
+    proto => {
+      val id = proto.id.validNel
+      val hc = BigDecimal(proto.hc).validNel
+
+      (id, hc).mapN(KeyLineSelection.apply _)
+    }
+
+  implicit val keyLineDefinitionProto_keyLineDefinition: Decoder[KeyLineDefinitionProto, KeyLineDefinition] =
+    proto =>
+      ensureOptionIsDefined(proto.kl, "KeyLineDefinition.kl is a required field")
+        .andThen(_.decode)
+        .map(KeyLineDefinition(_))
+
+  implicit val runnerDefinitionProto_runnerDefinition: Decoder[RunnerDefinitionProto, RunnerDefinition] =
+    proto => {
+      val sortPriority = proto.sortPriority.validNel
+      val removalDate = proto.removalDate.validNel
+      val id = proto.id.validNel
+      val hc = proto.hc.map(BigDecimal(_)).validNel
+      val adjustmentFactor = proto.adjustmentFactor.map(BigDecimal(_)).validNel
+      val bsp = proto.bsp.map(BigDecimal(_)).validNel
+      val status = proto.status.decode
+
+      (sortPriority, removalDate, id, hc, adjustmentFactor, bsp, status).mapN(RunnerDefinition.apply _)
+    }
+
+  implicit val optionalPriceLadderDefinition_priceLadderDefinition
+      : Decoder[Option[PriceLadderDefinitionProto], PriceLadderDefinition] =
+    proto =>
+      ensureOptionIsDefined(
+        proto,
+        "MarketDefinition.priceLadderDefinition is a required field"
+      ).andThen(_.decode)
+
+  implicit val optionalKeyLineDefinition_keyLineDefinition
+      : Decoder[Option[KeyLineDefinitionProto], Option[KeyLineDefinition]] =
+    _.map(_.decode).sequence
+
+  implicit val optionalString_optionalBigDecimal: Decoder[Option[String], Option[BigDecimal]] = _.validNel
+  implicit val optionalString_optionalString: Decoder[Option[String], Option[String]] = _.validNel
+  implicit val string_string: Decoder[String, String] = _.validNel
+  implicit val seqString_listString: Decoder[Seq[String], List[String]] = _.toList.validNel
+  implicit val int_int: Decoder[Int, Int] = _.validNel
+  implicit val long_long: Decoder[Long, Long] = _.validNel
+  implicit val string_bigDecimal: Decoder[String, BigDecimal] = _.validNel
+  implicit val boolean_boolean: Decoder[Boolean, Boolean] = _.validNel
+
+  implicit val marketDefinitionProto_marketDefinition: Decoder[MarketDefinitionProto, MarketDefinition] =
+    proto =>
+      (for {
+        status <- proto.status.decode.toEither
+        venue <- proto.venue.decode[Option[String]].toEither
+        settledTime <- proto.settledTime.decode[Option[String]].toEither
+        timezone <- proto.timezone.decode[String].toEither
+        eachWayDivisor <- proto.eachWayDivisor.decode[Option[BigDecimal]].toEither
+        regulators <- proto.regulators.decode.toEither
+        marketType <- proto.marketType.decode[String].toEither
+        marketBaseRate <- proto.marketBaseRate.decode[BigDecimal].toEither
+        numberOfWinners <- proto.numberOfWinners.decode.toEither
+        countryCode <- proto.countryCode.decode[String].toEither
+        lineMaxUnit <- proto.lineMaxUnit.decode[Option[BigDecimal]].toEither
+        inPlay <- proto.inPlay.decode.toEither
+        betDelay <- proto.betDelay.decode.toEither
+        bspMarket <- proto.bspMarket.decode.toEither
+        bettingType <- proto.bettingType.decode.toEither
+        numberOfActiveRunners <- proto.numberOfActiveRunners.decode.toEither
+        lineMinUnit <- proto.lineMinUnit.decode[Option[BigDecimal]].toEither
+        eventId <- proto.eventId.decode[String].toEither
+        crossMatching <- proto.crossMatching.decode.toEither
+        runnersVoidable <- proto.runnersVoidable.decode.toEither
+        turnInPlayEnabled <- proto.turnInPlayEnabled.decode.toEither
+        priceLadderDefinition <- proto.priceLadderDefinition.decode.toEither
+        keyLineDefinition <- proto.keyLineDefinition.decode.toEither
+        suspendTime <- proto.suspendTime.decode[String].toEither
+        discountAllowed <- proto.discountAllowed.decode.toEither
+        persistenceEnabled <- proto.persistenceEnabled.decode.toEither
+        runners <- proto.runners.toList.map(_.decode).sequence.toEither
+        version <- proto.version.decode.toEither
+        eventTypeId <- proto.eventTypeId.decode[String].toEither
+        complete <- proto.complete.decode.toEither
+        openDate <- proto.openDate.decode[String].toEither
+        marketTime <- proto.marketTime.decode[String].toEither
+        bspReconciled <- proto.bspReconciled.decode.toEither
+        lineInterval <- proto.lineInterval.decode[Option[BigDecimal]].toEither
+      } yield MarketDefinition(
+        status,
+        venue,
+        settledTime,
+        timezone,
+        eachWayDivisor,
+        regulators,
+        marketType,
+        marketBaseRate,
+        numberOfWinners,
+        countryCode,
+        lineMaxUnit,
+        inPlay,
+        betDelay,
+        bspMarket,
+        bettingType,
+        numberOfActiveRunners,
+        lineMinUnit,
+        eventId,
+        crossMatching,
+        runnersVoidable,
+        turnInPlayEnabled,
+        priceLadderDefinition,
+        keyLineDefinition,
+        suspendTime,
+        discountAllowed,
+        persistenceEnabled,
+        runners,
+        version,
+        eventTypeId,
+        complete,
+        openDate,
+        marketTime,
+        bspReconciled,
+        lineInterval
+      )).toValidated
+
+  implicit val arrayOfStrings_listBigDecimal: Decoder[ArrayOfStrings, List[BigDecimal]] =
+    _.values.map(BigDecimal(_)).toList.validNel
+
+  implicit val seqArrayOfStrings_optionalListListBigDecimal
+      : Decoder[Seq[ArrayOfStrings], Option[List[List[BigDecimal]]]] =
+    _.toList
+      .map(_.decode)
+      .sequence
+      .map(_ match {
+        case Nil  => None
+        case list => Some(list)
+      })
+
+  implicit val runnerChangeProto_runnerChange: Decoder[RunnerChangeProto, RunnerChange] =
+    proto => {
+      val tv = proto.tv.map(BigDecimal(_)).validNel
+      val batb = proto.batb.decode
+      val spb: Validation[Option[List[List[BigDecimal]]]] = proto.spb.decode
+      val bdatl: Validation[Option[List[List[BigDecimal]]]] = proto.bdatl.decode
+      val trd: Validation[Option[List[List[BigDecimal]]]] = proto.trd.decode
+      val spf: Validation[Option[BigDecimal]] = proto.spf.map(BigDecimal(_)).validNel
+      val ltp: Validation[Option[BigDecimal]] = proto.ltp.map(BigDecimal(_)).validNel
+      val atb: Validation[Option[List[List[BigDecimal]]]] = proto.atb.decode
+      val spl: Validation[Option[List[List[BigDecimal]]]] = proto.spl.decode
+      val spn: Validation[Option[BigDecimal]] = proto.spn.map(BigDecimal(_)).validNel
+      val atl: Validation[Option[List[List[BigDecimal]]]] = proto.atl.decode
+      val batl: Validation[Option[List[List[BigDecimal]]]] = proto.batl.decode
+      val id: Validation[Long] = proto.id.validNel
+      val hc: Validation[Option[BigDecimal]] = proto.hc.map(BigDecimal(_)).validNel
+      val bdatb: Validation[Option[List[List[BigDecimal]]]] = proto.bdatb.decode
+
+      (tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb).mapN(RunnerChange.apply _)
+    }
 }
