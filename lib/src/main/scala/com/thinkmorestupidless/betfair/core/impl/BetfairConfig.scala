@@ -11,7 +11,8 @@ final case class BetfairConfig(
     headerKeys: HeaderKeys,
     auth: AuthConfig,
     exchange: ExchangeConfig,
-    navigation: NavigationConfig
+    navigation: NavigationConfig,
+    vendor: VendorConfig
 )
 
 final case class AuthConfig(
@@ -76,6 +77,10 @@ final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
 final case class NavigationConfig(uri: MenuUri)
 final case class MenuUri(value: String)
+final case class VendorConfig(clientId: ClientId, clientSecret: ClientSecret, tokenUri: TokenUri)
+final case class TokenUri(value: String)
+final case class ClientId(value: String)
+final case class ClientSecret(value: String)
 
 object BetfairConfig {
 
@@ -105,6 +110,9 @@ object BetfairConfig {
     ConfigReader[String].map(SessionStoreProviderType.withNameInsensitive(_))
   implicit val logExchangeRequestsReader = ConfigReader[Boolean].map(LogExchangeRequests(_))
   implicit val logExchangeResponsesReader = ConfigReader[Boolean].map(LogExchangeResponses(_))
+  implicit val tokenUriReader = ConfigReader[String].map(TokenUri(_))
+  implicit val clientIdReader = ConfigReader[String].map(ClientId(_))
+  implicit val clientSecretReader = ConfigReader[String].map(ClientSecret(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {
