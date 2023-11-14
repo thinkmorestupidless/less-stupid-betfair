@@ -32,11 +32,11 @@ object BetfairSocketFlow {
   )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
     val codecFlow = BetfairCodecFlow().join(socketFlow)
     val betfairSocketFlow = BetfairProtocolFlow(session, globalMarketFilterRepository).join(codecFlow)
-    val x: RunnableGraph[(Sink[OutgoingBetfairSocketMessage, NotUsed], Source[IncomingBetfairSocketMessage, NotUsed])] =
+    val graph: RunnableGraph[(Sink[OutgoingBetfairSocketMessage, NotUsed], Source[IncomingBetfairSocketMessage, NotUsed])] =
       MergeHub
         .source[OutgoingBetfairSocketMessage](perProducerBufferSize = 16)
         .via(betfairSocketFlow)
         .toMat(BroadcastHub.sink[IncomingBetfairSocketMessage](bufferSize = 256))(Keep.both)
-    new BetfairSocketFlow(x)
+    new BetfairSocketFlow(graph)
   }
 }
