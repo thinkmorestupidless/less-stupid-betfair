@@ -1,40 +1,51 @@
 package com.thinkmorestupidless.betfair.exchange.impl
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
+import cats.data.EitherT
+import com.thinkmorestupidless.betfair.auth.domain.{BetfairAuthenticationService, SessionToken}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.JsonCodecs._
 import com.thinkmorestupidless.utils.CirceSupport
+import io.circe.Decoder
+import io.circe.parser.decode
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.coding.Coders
 import org.apache.pekko.http.scaladsl.marshalling.ToEntityMarshaller
-import org.apache.pekko.http.scaladsl.model.{HttpHeader, HttpResponse}
 import org.apache.pekko.http.scaladsl.model.headers.{HttpEncodings, RawHeader}
+import org.apache.pekko.http.scaladsl.model.{HttpHeader, HttpRequest, HttpResponse}
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.slf4j.LoggerFactory
 
-import scala.concurrent.ExecutionContext
-//import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport._
-import io.circe.Decoder
-import io.circe.parser.decode
-import org.apache.pekko.actor.ActorSystem
-import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import scala.concurrent.{ExecutionContext, Future}
 
-import scala.concurrent.Future
-
-final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit system: ActorSystem, ec: ExecutionContext)
-    extends BetfairExchangeService
+final class AkkaHttpBetfairExchangeService(config: BetfairConfig, authenticationService: BetfairAuthenticationService)(
+    implicit
+    system: ActorSystem,
+    ec: ExecutionContext
+) extends BetfairExchangeService
     with CirceSupport {
 
-  private val wsClient = StandaloneAhcWSClient()
+  private val log = LoggerFactory.getLogger(getClass)
 
-  override def cancelOrders(marketId: MarketId, instructions: List[CancelInstruction], customerRef: CustomerRef)(
-      implicit session: BetfairSession
-  ): Future[CancelExecutionReport] =
-    execute[CancelOrders, CancelExecutionReport](
-      CancelOrders(marketId, instructions, customerRef),
-      config.exchange.uris.cancelOrders.value
+  private def withSessionToken[T](
+      f: SessionToken => EitherT[Future, ExchangeServiceError, T]
+  ): EitherT[Future, ExchangeServiceError, T] =
+    authenticationService.login().leftMap(FailedAuthentication(_)).flatMap(f(_))
+
+  override def cancelOrders(
+      marketId: MarketId,
+      instructions: List[CancelInstruction],
+      customerRef: CustomerRef
+  ): EitherT[Future, ExchangeServiceError, CancelExecutionReport] =
+    withSessionToken(
+      execute[CancelOrders, CancelExecutionReport](
+        _,
+        CancelOrders(marketId, instructions, customerRef),
+        config.exchange.uris.cancelOrders.value
+      )
     )
 
   override def listClearedOrders(
@@ -53,40 +64,47 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
       locale: String,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[ClearedOrderSummaryReport] =
-    execute[ListClearedOrders, ClearedOrderSummaryReport](
-      ListClearedOrders(
-        betStatus,
-        eventTypeIds,
-        eventIds,
-        marketIds,
-        runnerIds,
-        betIds,
-        customerOrderRefs,
-        customerStrategyRefs,
-        side,
-        settledDateRange,
-        groupBy,
-        includeItemDescription,
-        locale,
-        fromRecord,
-        recordCount
-      ),
-      config.exchange.uris.listClearedOrders.value
+  ): EitherT[Future, ExchangeServiceError, ClearedOrderSummaryReport] =
+    withSessionToken(
+      execute[ListClearedOrders, ClearedOrderSummaryReport](
+        _,
+        ListClearedOrders(
+          betStatus,
+          eventTypeIds,
+          eventIds,
+          marketIds,
+          runnerIds,
+          betIds,
+          customerOrderRefs,
+          customerStrategyRefs,
+          side,
+          settledDateRange,
+          groupBy,
+          includeItemDescription,
+          locale,
+          fromRecord,
+          recordCount
+        ),
+        config.exchange.uris.listClearedOrders.value
+      )
     )
 
-  override def listCompetitions(
-      filter: MarketFilter
-  )(implicit session: BetfairSession): Future[List[CompetitionResult]] =
-    execute[ListCompetitions, List[CompetitionResult]](
-      ListCompetitions(filter, locale = None),
-      config.exchange.uris.listCompetitions.value
+  override def listCompetitions(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[CompetitionResult]] =
+    withSessionToken(
+      execute[ListCompetitions, List[CompetitionResult]](
+        _,
+        ListCompetitions(filter, locale = None),
+        config.exchange.uris.listCompetitions.value
+      )
     )
 
-  override def listCountries(filter: MarketFilter)(implicit session: BetfairSession): Future[List[CountryCodeResult]] =
-    execute[ListCountries, List[CountryCodeResult]](
-      ListCountries(filter, locale = None),
-      config.exchange.uris.listCountries.value
+  override def listCountries(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[CountryCodeResult]] =
+    withSessionToken(
+      execute[ListCountries, List[CountryCodeResult]](
+        _,
+        ListCountries(filter, locale = None),
+        config.exchange.uris.listCountries.value
+      )
     )
 
   override def listCurrentOrders(
@@ -99,63 +117,85 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig)(implicit syste
       sortDir: SortDir,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[CurrentOrderSummaryReport] =
-    execute[ListCurrentOrders, CurrentOrderSummaryReport](
-      ListCurrentOrders(
-        betIds,
-        marketIds,
-        orderProjection,
-        placedDateRange,
-        dateRange,
-        orderBy,
-        sortDir,
-        fromRecord,
-        recordCount
-      ),
-      config.exchange.uris.listCurrentOrders.value
+  ): EitherT[Future, ExchangeServiceError, CurrentOrderSummaryReport] =
+    withSessionToken(
+      execute[ListCurrentOrders, CurrentOrderSummaryReport](
+        _,
+        ListCurrentOrders(
+          betIds,
+          marketIds,
+          orderProjection,
+          placedDateRange,
+          dateRange,
+          orderBy,
+          sortDir,
+          fromRecord,
+          recordCount
+        ),
+        config.exchange.uris.listCurrentOrders.value
+      )
     )
 
-  override def listEventTypes(
-      filter: MarketFilter
-  )(implicit session: BetfairSession): Future[List[EventTypeResponse]] =
-    execute[ListEventTypes, List[EventTypeResponse]](ListEventTypes(filter), config.exchange.uris.listEventTypes.value)
+  override def listEventTypes(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[EventTypeResponse]] =
+    withSessionToken(
+      execute[ListEventTypes, List[EventTypeResponse]](
+        _,
+        ListEventTypes(filter),
+        config.exchange.uris.listEventTypes.value
+      )
+    )
 
-  override def listEvents(filter: MarketFilter)(implicit session: BetfairSession): Future[Set[EventResponse]] =
-    execute[ListEvents, Set[EventResponse]](ListEvents(filter), config.exchange.uris.listEvents.value)
+  override def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, Set[EventResponse]] =
+    withSessionToken(
+      execute[ListEvents, Set[EventResponse]](_, ListEvents(filter), config.exchange.uris.listEvents.value)
+    )
 
   override def listMarketCatalogue(
       listMarketCatalogue: ListMarketCatalogue
-  )(implicit session: BetfairSession): Future[List[MarketCatalogue]] =
-    execute[ListMarketCatalogue, List[MarketCatalogue]](
-      listMarketCatalogue,
-      config.exchange.uris.listMarketCatalogue.value
+  ): EitherT[Future, ExchangeServiceError, List[MarketCatalogue]] =
+    withSessionToken(
+      execute[ListMarketCatalogue, List[MarketCatalogue]](
+        _,
+        listMarketCatalogue,
+        config.exchange.uris.listMarketCatalogue.value
+      )
     )
 
-  override def listMarketBook(listMarketBook: ListMarketBook)(implicit
-      session: BetfairSession
-  ): Future[List[MarketBook]] =
-    execute[ListMarketBook, List[MarketBook]](listMarketBook, config.exchange.uris.listMarketBook.value)
+  override def listMarketBook(listMarketBook: ListMarketBook): EitherT[Future, ExchangeServiceError, List[MarketBook]] =
+    withSessionToken(
+      execute[ListMarketBook, List[MarketBook]](_, listMarketBook, config.exchange.uris.listMarketBook.value)
+    )
 
-  override def placeOrders(placeOrders: PlaceOrders)(implicit session: BetfairSession): Future[PlaceExecutionReport] =
-    execute[PlaceOrders, PlaceExecutionReport](placeOrders, config.exchange.uris.placeOrders.value)
+  override def placeOrders(placeOrders: PlaceOrders): EitherT[Future, ExchangeServiceError, PlaceExecutionReport] =
+    withSessionToken(execute[PlaceOrders, PlaceExecutionReport](_, placeOrders, config.exchange.uris.placeOrders.value))
 
-  private def execute[REQUEST, RESPONSE](content: REQUEST, uri: String)(implicit
+  private def execute[REQUEST, RESPONSE](sessionToken: SessionToken, requestBody: REQUEST, uri: String)(implicit
       decoder: Decoder[RESPONSE],
-      m: ToEntityMarshaller[REQUEST],
-      session: BetfairSession
-  ): Future[RESPONSE] = {
+      m: ToEntityMarshaller[REQUEST]
+  ): EitherT[Future, ExchangeServiceError, RESPONSE] = {
     val headers: Seq[HttpHeader] = config.exchange.requiredHeaders ++ List(
-      RawHeader(config.headerKeys.applicationKey.value, session.applicationKey.value),
-      RawHeader(config.headerKeys.sessionToken.value, session.sessionToken.value)
+      RawHeader(config.headerKeys.applicationKey.value, config.auth.credentials.applicationKey.value),
+      RawHeader(config.headerKeys.sessionToken.value, sessionToken.value)
     )
-    val request = RequestBuilding.Post(uri = uri, content = content).withHeaders(headers)
+    val httpRequest = RequestBuilding.Post(uri = uri, content = requestBody).withHeaders(headers)
     for {
-      response <- Http().singleRequest(request).map(decodeResponse)
-      resultString <- Unmarshal(response.entity).to[String]
-      _ = println(resultString)
-      result = decode[RESPONSE](resultString).getOrElse(throw new IllegalStateException("failed thingy"))
+      httpResponse <- send(httpRequest)
+      responseBodyAsString <- unmarshalToString(httpResponse)
+      _ = if (config.exchange.logging.logResponses.value) log.info(responseBodyAsString)
+      result <- decodeAs[RESPONSE](responseBodyAsString)
     } yield result
   }
+
+  private def send(request: HttpRequest): EitherT[Future, ExchangeServiceError, HttpResponse] =
+    EitherT.liftF(Http().singleRequest(request).map(decodeResponse)).leftMap(UnableToExecuteRequest(_))
+
+  private def unmarshalToString(response: HttpResponse): EitherT[Future, ExchangeServiceError, String] =
+    EitherT.liftF(Unmarshal(response.entity).to[String]).leftMap(UnableToHandleResponse(_))
+
+  private def decodeAs[T: Decoder](resultString: String)(implicit
+      ec: ExecutionContext
+  ): EitherT[Future, ExchangeServiceError, T] =
+    EitherT.fromEither[Future](decode[T](resultString)).leftMap(UnableToHandleResponse(_))
 
   private def decodeResponse(response: HttpResponse): HttpResponse = {
     val decoder = response.encoding match {

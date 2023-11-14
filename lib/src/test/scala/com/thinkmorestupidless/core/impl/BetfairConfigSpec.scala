@@ -38,7 +38,7 @@ object BetfairConfigSpec {
 
   val expectedBetfairConfig = BetfairConfig(
     HeaderKeys(ApplicationKeyHeaderKey("X-Application"), SessionTokenHeaderKey("X-Authentication")),
-    LoginConfig(
+    AuthConfig(
       Cert(CertFile("betfair-cert-file"), CertPassword("betfair-cert-password")),
       BetfairCredentials(
         Username("betfair-username"),
@@ -67,6 +67,6 @@ object BetfairConfigSpec {
         PlaceOrdersUri("https://api.betfair.com/exchange/betting/rest/v1.0/placeOrders/")
       )
     ),
-    Navigation(MenuUri("https://api.betfair.com/exchange/betting/rest/v1.0/en/navigation/menu.json"))
+    NavigationConfig(MenuUri("https://api.betfair.com/exchange/betting/rest/v1.0/en/navigation/menu.json"))
   )
 }

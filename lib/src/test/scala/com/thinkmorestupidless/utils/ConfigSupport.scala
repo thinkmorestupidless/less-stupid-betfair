@@ -8,7 +8,7 @@ object ConfigSupport {
 
   def generateConfig(baseUri: String) = BetfairConfig(
     HeaderKeys(ApplicationKeyHeaderKey("X-Application"), SessionTokenHeaderKey("X-Authentication")),
-    LoginConfig(
+    AuthConfig(
       Cert(
         CertFile("certfile.pkcs12"),
         CertPassword("top-secret")
@@ -41,6 +41,6 @@ object ConfigSupport {
         PlaceOrdersUri(s"$baseUri/placeOrders")
       )
     ),
-    Navigation(MenuUri(s"$baseUri/navigation/menu.json"))
+    NavigationConfig(MenuUri(s"$baseUri/navigation/menu.json"))
   )
 }

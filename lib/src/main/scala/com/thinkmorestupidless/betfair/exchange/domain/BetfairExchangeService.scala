@@ -1,9 +1,12 @@
 package com.thinkmorestupidless.betfair.exchange.domain
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
+import cats.data.EitherT
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.auth.domain.SessionToken
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{
   EventResponse,
   EventTypeResponse,
+  ExchangeServiceError,
   ListMarketBook,
   ListMarketCatalogue
 }
@@ -13,9 +16,11 @@ import scala.concurrent.Future
 
 trait BetfairExchangeService {
 
-  def cancelOrders(marketId: MarketId, instructions: List[CancelInstruction], customerRef: CustomerRef)(implicit
-      session: BetfairSession
-  ): Future[CancelExecutionReport]
+  def cancelOrders(
+      marketId: MarketId,
+      instructions: List[CancelInstruction],
+      customerRef: CustomerRef
+  ): EitherT[Future, ExchangeServiceError, CancelExecutionReport]
 
   def listClearedOrders(
       betStatus: BetStatus,
@@ -33,11 +38,11 @@ trait BetfairExchangeService {
       locale: String,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[ClearedOrderSummaryReport]
+  ): EitherT[Future, ExchangeServiceError, ClearedOrderSummaryReport]
 
-  def listCompetitions(filter: MarketFilter)(implicit session: BetfairSession): Future[List[CompetitionResult]]
+  def listCompetitions(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[CompetitionResult]]
 
-  def listCountries(filter: MarketFilter)(implicit session: BetfairSession): Future[List[CountryCodeResult]]
+  def listCountries(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[CountryCodeResult]]
 
   def listCurrentOrders(
       betIds: Set[BetId],
@@ -49,22 +54,27 @@ trait BetfairExchangeService {
       sortDir: SortDir,
       fromRecord: Int,
       recordCount: Int
-  )(implicit session: BetfairSession): Future[CurrentOrderSummaryReport]
+  ): EitherT[Future, ExchangeServiceError, CurrentOrderSummaryReport]
 
-  def listEventTypes(filter: MarketFilter)(implicit session: BetfairSession): Future[List[EventTypeResponse]]
+  def listEventTypes(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[EventTypeResponse]]
 
-  def listEvents(filter: MarketFilter)(implicit session: BetfairSession): Future[Set[EventResponse]]
+  def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, Set[EventResponse]]
 
-  def listMarketCatalogue(listMarketCatalogue: ListMarketCatalogue)(implicit
-      session: BetfairSession
-  ): Future[List[MarketCatalogue]]
+  def listMarketCatalogue(
+      listMarketCatalogue: ListMarketCatalogue
+  ): EitherT[Future, ExchangeServiceError, List[MarketCatalogue]]
 
-  def listMarketBook(listMarketBook: ListMarketBook)(implicit session: BetfairSession): Future[List[MarketBook]]
+  def listMarketBook(listMarketBook: ListMarketBook): EitherT[Future, ExchangeServiceError, List[MarketBook]]
 
-  def placeOrders(placeOrders: PlaceOrders)(implicit session: BetfairSession): Future[PlaceExecutionReport]
+  def placeOrders(placeOrders: PlaceOrders): EitherT[Future, ExchangeServiceError, PlaceExecutionReport]
 }
 
 object BetfairExchangeService {
+
+  sealed trait ExchangeServiceError
+  final case class FailedAuthentication(error: AuthenticationError) extends ExchangeServiceError
+  final case class UnableToExecuteRequest(cause: Throwable) extends ExchangeServiceError
+  final case class UnableToHandleResponse(cause: Throwable) extends ExchangeServiceError
 
   case class CancelOrders(marketId: MarketId, instructions: List[CancelInstruction], customerRef: CustomerRef)
   case class ListClearedOrders(

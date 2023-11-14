@@ -1,14 +1,17 @@
 package com.thinkmorestupidless.betfair.auth.impl
 
 import com.thinkmorestupidless.betfair.auth.domain._
+import com.thinkmorestupidless.betfair.auth.impl.SessionTokenStore.StoredSession
 import com.thinkmorestupidless.extensions.circe.CirceUtils._
 import io.circe.Decoder.Result
 import io.circe._
+import io.circe.generic.semiauto.deriveCodec
 
 object JsonCodecs {
 
   implicit val applicationKeyCodec: Codec[ApplicationKey] = bimapString(_.value, ApplicationKey(_))
   implicit val sessionTokenCodec: Codec[SessionToken] = bimapString(_.value, SessionToken(_))
+  implicit lazy val storedSessionCodec: Codec[StoredSession] = deriveCodec[StoredSession]
 
   implicit val loginResponseCodec: Codec[LoginResponse] = Codec.from(
     new Decoder[LoginResponse] {
