@@ -1,11 +1,8 @@
 package com.thinkmorestupidless.betfair.exchange.impl.grpc
 
-import com.thinkmorestupidless.grpc.Decoder._
-import com.thinkmorestupidless.grpc.Encoder._
+import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{EventTypeResponse, ListEventsResponse}
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.Decoders._
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.Encoders._
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{EventTypeResponse, ListEventsResponse}
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService.ListEventTypesResponse
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
@@ -28,6 +25,8 @@ import com.thinkmorestupidless.betfair.proto.exchange.{
   PlaceExecutionReport,
   PlaceOrdersRequest
 }
+import com.thinkmorestupidless.grpc.Decoder._
+import com.thinkmorestupidless.grpc.Encoder._
 import com.thinkmorestupidless.utils.ValidationException
 
 import scala.concurrent.{ExecutionContext, Future}

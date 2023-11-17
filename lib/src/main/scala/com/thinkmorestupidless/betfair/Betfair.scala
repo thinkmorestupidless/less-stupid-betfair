@@ -1,12 +1,19 @@
 package com.thinkmorestupidless.betfair
 
 import cats.data.EitherT
-import com.thinkmorestupidless.betfair.auth.impl.{ClusterSingletonBetfairAuthenticationService, PlayWsBetfairAuthenticationService, SessionTokenStore}
+import com.thinkmorestupidless.betfair.auth.impl.{
+  ClusterSingletonBetfairAuthenticationService,
+  PlayWsBetfairAuthenticationService,
+  SessionTokenStore
+}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
-import com.thinkmorestupidless.betfair.navigation.impl.{ClusterSingletonBetfairNavigationService, PlayWsBetfairNavigationService}
+import com.thinkmorestupidless.betfair.navigation.impl.{
+  ClusterSingletonBetfairNavigationService,
+  PlayWsBetfairNavigationService
+}
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
 import pureconfig.error.ConfigReaderFailures

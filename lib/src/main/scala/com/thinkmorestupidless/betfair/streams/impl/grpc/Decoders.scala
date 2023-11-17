@@ -193,7 +193,9 @@ object Decoders {
         crossMatching <- proto.crossMatching.decode.toEither
         runnersVoidable <- proto.runnersVoidable.decode.toEither
         turnInPlayEnabled <- proto.turnInPlayEnabled.decode.toEither
-        priceLadderDefinition <- proto.priceLadderDefinition.decode(optionalPriceLadderDefinition_priceLadderDefinition).toEither
+        priceLadderDefinition <- proto.priceLadderDefinition
+          .decode(optionalPriceLadderDefinition_priceLadderDefinition)
+          .toEither
         keyLineDefinition <- proto.keyLineDefinition.decode.toEither
         suspendTime <- proto.suspendTime.decode[String].toEither
         discountAllowed <- proto.discountAllowed.decode.toEither

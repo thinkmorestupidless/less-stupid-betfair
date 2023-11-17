@@ -21,8 +21,10 @@ object BetfairAuthenticationService {
   object AuthenticationError {
     def toValidationException(error: AuthenticationError): ValidationException =
       error match {
-        case FailedToParseLoginResponseAsJson(body, cause) => ValidationException(s"Failed to parse string as json '$body'", Some(cause))
-        case FailedToDecodeLoginResponseJson(json, cause) => ValidationException(s"Failed to decode JSON '${json.spaces2}'", Some(cause))
+        case FailedToParseLoginResponseAsJson(body, cause) =>
+          ValidationException(s"Failed to parse string as json '$body'", Some(cause))
+        case FailedToDecodeLoginResponseJson(json, cause) =>
+          ValidationException(s"Failed to decode JSON '${json.spaces2}'", Some(cause))
         case LoginRejectedByBetfair(loginStatus) => ValidationException(s"Login rejected by Betfair '$loginStatus'")
         case UnexpectedLoginError(cause) => ValidationException("Unexpected error returned by Betfair", Some(cause))
       }
