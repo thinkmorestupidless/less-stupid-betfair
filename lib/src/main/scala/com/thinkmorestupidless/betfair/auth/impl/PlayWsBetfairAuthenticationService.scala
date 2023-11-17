@@ -25,7 +25,8 @@ final class PlayWsBetfairAuthenticationService private (
     loginUri: LoginUri,
     username: Username,
     password: Password,
-    authHeader: AuthHeader
+    authHeader: AuthHeader,
+    sessionTokenStore: SessionTokenStore
 )(implicit system: ActorSystem)
     extends BetfairAuthenticationService {
 
@@ -34,6 +35,15 @@ final class PlayWsBetfairAuthenticationService private (
   private implicit val ec = system.dispatcher
 
   override def login(): EitherT[Future, AuthenticationError, SessionToken] =
+    EitherT
+      .liftF(sessionTokenStore.read())
+      .flatMap(maybeSessionToken =>
+        maybeSessionToken
+          .map(sessionToken => EitherT.rightT[Future, AuthenticationError](sessionToken))
+          .getOrElse(_login())
+      )
+
+  private def _login(): EitherT[Future, AuthenticationError, SessionToken] =
     EitherT(
       wsClient
         .url(loginUri.value)
@@ -46,14 +56,14 @@ final class PlayWsBetfairAuthenticationService private (
         )
         .map(response => parseResponseString(response.body))
         .recover { case e: Throwable =>
-          Left(UnexpectedLoginError(e.getMessage()))
+          Left(UnexpectedLoginError(e))
         }
     )
 
   private def parseResponseString(bodyAsString: String): Either[AuthenticationError, SessionToken] =
     parse(bodyAsString) match {
       case Right(json) => decodeJsonResponse(json)
-      case Left(error) => FailedToParseLoginResponseAsJson(bodyAsString, error.getMessage()).asLeft
+      case Left(error) => FailedToParseLoginResponseAsJson(bodyAsString, error).asLeft
     }
 
   private def decodeJsonResponse(json: Json): Either[AuthenticationError, SessionToken] =
@@ -73,12 +83,14 @@ object PlayWsBetfairAuthenticationService {
 
   final case class AuthHeader(key: String, value: String)
 
-  def apply(config: BetfairConfig)(implicit system: ActorSystem): BetfairAuthenticationService = {
+  def apply(config: BetfairConfig, sessionTokenStore: SessionTokenStore)(implicit
+      system: ActorSystem
+  ): BetfairAuthenticationService = {
     val loginUri = config.auth.uri
     val username = config.auth.credentials.username
     val password = config.auth.credentials.password
     val authHeader = AuthHeader(config.headerKeys.applicationKey.value, config.auth.credentials.applicationKey.value)
 
-    new PlayWsBetfairAuthenticationService(loginUri, username, password, authHeader)
+    new PlayWsBetfairAuthenticationService(loginUri, username, password, authHeader, sessionTokenStore)
   }
 }

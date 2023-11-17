@@ -1,10 +1,32 @@
 package com.thinkmorestupidless.betfair.navigation.domain
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
+import cats.data.EitherT
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService.NavigationServiceError
+import com.thinkmorestupidless.utils.ValidationException
 
 import scala.concurrent.Future
 
 trait BetfairNavigationService {
 
-  def menu()(implicit session: BetfairSession): Future[Menu]
+  def menu(): EitherT[Future, NavigationServiceError, Menu]
+}
+
+object BetfairNavigationService {
+
+  sealed trait NavigationServiceError {
+    def toValidationException(): ValidationException =
+      NavigationServiceError.toValidationException(this)
+  }
+  object NavigationServiceError {
+    def toValidationException(error: NavigationServiceError): ValidationException =
+      error match {
+        case FailedAuthentication(authenticationError) => AuthenticationError.toValidationException(authenticationError)
+        case UnexpectedParsingError(cause) => ValidationException("unexpected error parsing navigation response", Some(cause))
+        case UnexpectedNavigationError(cause) => ValidationException("unexpected error from navigation API call", Some(cause))
+      }
+  }
+  final case class FailedAuthentication(error: AuthenticationError) extends NavigationServiceError
+  final case class UnexpectedParsingError(cause: Throwable) extends NavigationServiceError
+  final case class UnexpectedNavigationError(cause: Throwable) extends NavigationServiceError
 }
