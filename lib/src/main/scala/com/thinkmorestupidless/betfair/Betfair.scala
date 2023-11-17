@@ -1,6 +1,7 @@
 package com.thinkmorestupidless.betfair
 
 import cats.data.EitherT
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService
 import com.thinkmorestupidless.betfair.auth.impl.{
   ClusterSingletonBetfairAuthenticationService,
   PlayWsBetfairAuthenticationService,
@@ -8,12 +9,21 @@ import com.thinkmorestupidless.betfair.auth.impl.{
 }
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain._
-import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
+import com.thinkmorestupidless.betfair.exchange.impl.{
+  AkkaHttpBetfairExchangeService,
+  ClusterSingletonBetfairExchangeService
+}
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
+import com.thinkmorestupidless.betfair.exchange.usecases.{ListEventTypesUseCase, ListEventsUseCase}
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
 import com.thinkmorestupidless.betfair.navigation.impl.{
   ClusterSingletonBetfairNavigationService,
   PlayWsBetfairNavigationService
 }
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
+import org.apache.pekko.{actor => classic}
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
 import pureconfig.error.ConfigReaderFailures
@@ -21,7 +31,7 @@ import pureconfig.error.ConfigReaderFailures
 import java.time.Clock
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class Betfair(config: BetfairConfig, navigation: BetfairNavigationService, exchange: BetfairExchangeService)
+final case class Betfair(getMenu: GetMenuUseCase, listEventTypes: ListEventTypesUseCase, listEvents: ListEventsUseCase)
 
 object Betfair {
 
@@ -32,11 +42,9 @@ object Betfair {
     implicit val ec = system.executionContext
     implicit val classicSystem = system.toClassic
     loadConfig().map { config =>
-      val sessionTokenStore = SessionTokenStore.fromConfig(config.auth.sessionStore)
-      val authenticationService = PlayWsBetfairAuthenticationService(config, sessionTokenStore)
-      val navigationService = PlayWsBetfairNavigationService(config, authenticationService)
-      val exchangeService = new AkkaHttpBetfairExchangeService(config, authenticationService)
-      new Betfair(config, navigationService, exchangeService)
+      val authenticationService = createAuthenticationService(config)
+      val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
+      create(navigationService, exchangeService)
     }
   }
 
@@ -44,17 +52,44 @@ object Betfair {
     implicit val ec = system.executionContext
     implicit val classicSystem = system.toClassic
     loadConfig().map { config =>
-      val sessionTokenStore = SessionTokenStore.fromConfig(config.auth.sessionStore)
-      val underlyingAuthenticationService = PlayWsBetfairAuthenticationService(config, sessionTokenStore)
+      val underlyingAuthenticationService = createAuthenticationService(config)
       val authenticationService = ClusterSingletonBetfairAuthenticationService(underlyingAuthenticationService)
-
-      val underlyingNavigationService = PlayWsBetfairNavigationService(config, authenticationService)
+      val (underlyingNavigationService, underlyingExchangeService) =
+        createUnderlyingServices(config, authenticationService)
       val navigationService = ClusterSingletonBetfairNavigationService(underlyingNavigationService)
+      val exchangeService = ClusterSingletonBetfairExchangeService(underlyingExchangeService)
 
-      val underlyingExchangeService = new AkkaHttpBetfairExchangeService(config, authenticationService)
-
-      ???
+      create(navigationService, exchangeService)
     }
+  }
+
+  private def create(navigationService: BetfairNavigationService, exchangeService: BetfairExchangeService)(implicit
+      ec: ExecutionContext
+  ): Betfair = {
+    val getMenu = GetMenuUseCase(navigationService)
+
+    val listEventTypes = ListEventTypesUseCase(exchangeService)
+    val listEvents = ListEventsUseCase(exchangeService)
+
+    Betfair(getMenu, listEventTypes, listEvents)
+  }
+
+  private def createAuthenticationService(
+      config: BetfairConfig
+  )(implicit clock: Clock, system: classic.ActorSystem, ec: ExecutionContext): BetfairAuthenticationService = {
+    val sessionTokenStore = SessionTokenStore.fromConfig(config.auth.sessionStore)
+    PlayWsBetfairAuthenticationService(config, sessionTokenStore)
+  }
+
+  private def createUnderlyingServices(config: BetfairConfig, authenticationService: BetfairAuthenticationService)(
+      implicit system: ActorSystem[_]
+  ): (BetfairNavigationService, BetfairExchangeService) = {
+    implicit val ec = system.executionContext
+    implicit val classicSystem = system.toClassic
+    val navigationService = PlayWsBetfairNavigationService(config, authenticationService)
+    val exchangeService = new AkkaHttpBetfairExchangeService(config, authenticationService)
+
+    (navigationService, exchangeService)
   }
 
   private def loadConfig()(implicit ec: ExecutionContext): EitherT[Future, BetfairError, BetfairConfig] =

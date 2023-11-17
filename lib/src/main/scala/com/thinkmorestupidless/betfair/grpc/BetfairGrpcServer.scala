@@ -5,6 +5,7 @@ import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.grpc.GrpcNavigationServiceImpl
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}
 import com.thinkmorestupidless.betfair.proto.navigation.{NavigationService, NavigationServiceHandler}
 import org.apache.pekko.actor.ActorSystem

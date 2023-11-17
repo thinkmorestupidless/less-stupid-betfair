@@ -1,3 +1,8 @@
 package com.thinkmorestupidless.betfair.exchange.impl
 
-object ClusterSingletonBetfairExchangeService {}
+import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
+
+object ClusterSingletonBetfairExchangeService {
+
+  def apply(exchangeService: BetfairExchangeService): BetfairExchangeService = ???
+}

@@ -12,12 +12,10 @@ object DefaultBetfairGrpcServer {
   def apply(betfair: Betfair)(implicit system: ActorSystem): BetfairGrpcServer = {
     implicit val ec = system.dispatcher
 
-    val betfairNavigationService = new PlayWsBetfairNavigationService(betfair.config)
-    val getMenuUseCase = GetMenuUseCase(betfairNavigationService)
+    val getMenuUseCase = GetMenuUseCase(betfair.navigation)
 
-    val betfairExchangeService = new AkkaHttpBetfairExchangeService(betfair.config)
-    val listEventTypesUseCase = ListEventTypesUseCase(betfairExchangeService)
-    val listEventsUseCase = ListEventsUseCase(betfairExchangeService)
+    val listEventTypesUseCase = ListEventTypesUseCase(betfair.exchange)
+    val listEventsUseCase = ListEventsUseCase(betfair.exchange)
 
     new BetfairGrpcServer(getMenuUseCase, listEventTypesUseCase, listEventsUseCase)
   }
