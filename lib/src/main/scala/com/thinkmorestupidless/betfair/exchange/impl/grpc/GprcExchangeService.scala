@@ -52,7 +52,7 @@ final class GprcExchangeService(listEventTypesUseCase: ListEventTypesUseCase, li
       decoded =>
         listEventTypesUseCase(decoded).value.flatMap {
           case Right(result) => Future.successful(ListEventTypesResponse(result).encode)
-          case Left(error)   => Future.failed(error)
+          case Left(error)   => Future.failed(error.toValidationException())
         }
     )
 
@@ -62,7 +62,7 @@ final class GprcExchangeService(listEventTypesUseCase: ListEventTypesUseCase, li
       decoded =>
         listEventsUseCase(decoded).value.flatMap {
           case Right(result) => Future.successful(ListEventsResponse(result).encode)
-          case Left(error)   => Future.failed(error)
+          case Left(error)   => Future.failed(error.toValidationException())
         }
     )
 

@@ -145,7 +145,7 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig, authentication
       )
     )
 
-  override def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, Set[EventResponse]] =
+  override def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[EventResponse]] =
     withSessionToken(
       execute[ListEvents, Set[EventResponse]](_, ListEvents(filter), config.exchange.uris.listEvents.value)
     )

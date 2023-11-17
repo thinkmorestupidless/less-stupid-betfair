@@ -14,7 +14,10 @@ trait BetfairAuthenticationService {
 
 object BetfairAuthenticationService {
 
-  sealed trait AuthenticationError
+  sealed trait AuthenticationError {
+    def toValidationException(): ValidationException =
+      AuthenticationError.toValidationException(this)
+  }
   object AuthenticationError {
     def toValidationException(error: AuthenticationError): ValidationException =
       error match {

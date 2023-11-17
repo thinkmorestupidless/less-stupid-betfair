@@ -21,7 +21,7 @@ object BetfairNavigationService {
   object NavigationServiceError {
     def toValidationException(error: NavigationServiceError): ValidationException =
       error match {
-        case FailedAuthentication(authenticationError) => AuthenticationError.toValidationException(authenticationError)
+        case FailedAuthentication(authenticationError) => authenticationError.toValidationException()
         case UnexpectedParsingError(cause) => ValidationException("unexpected error parsing navigation response", Some(cause))
         case UnexpectedNavigationError(cause) => ValidationException("unexpected error from navigation API call", Some(cause))
       }

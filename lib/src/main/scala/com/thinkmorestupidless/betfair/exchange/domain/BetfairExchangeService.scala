@@ -2,14 +2,8 @@ package com.thinkmorestupidless.betfair.exchange.domain
 
 import cats.data.EitherT
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
-import com.thinkmorestupidless.betfair.auth.domain.SessionToken
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{
-  EventResponse,
-  EventTypeResponse,
-  ExchangeServiceError,
-  ListMarketBook,
-  ListMarketCatalogue
-}
+import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
+import com.thinkmorestupidless.utils.ValidationException
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -58,7 +52,7 @@ trait BetfairExchangeService {
 
   def listEventTypes(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[EventTypeResponse]]
 
-  def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, Set[EventResponse]]
+  def listEvents(filter: MarketFilter): EitherT[Future, ExchangeServiceError, List[EventResponse]]
 
   def listMarketCatalogue(
       listMarketCatalogue: ListMarketCatalogue
@@ -71,7 +65,18 @@ trait BetfairExchangeService {
 
 object BetfairExchangeService {
 
-  sealed trait ExchangeServiceError
+  sealed trait ExchangeServiceError {
+    def toValidationException(): ValidationException =
+      ExchangeServiceError.toValidationException(this)
+  }
+  object ExchangeServiceError {
+    def toValidationException(error: ExchangeServiceError): ValidationException =
+      error match {
+        case FailedAuthentication(authenticationError) => authenticationError.toValidationException()
+        case UnableToExecuteRequest(cause) => ValidationException("Unable to execute exchange API call", Some(cause))
+        case UnableToHandleResponse(cause) => ValidationException("Unable to handle exchange API response", Some(cause))
+      }
+  }
   final case class FailedAuthentication(error: AuthenticationError) extends ExchangeServiceError
   final case class UnableToExecuteRequest(cause: Throwable) extends ExchangeServiceError
   final case class UnableToHandleResponse(cause: Throwable) extends ExchangeServiceError

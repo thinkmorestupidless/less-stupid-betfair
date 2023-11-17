@@ -3,8 +3,8 @@ package com.thinkmorestupidless.betfair.grpc
 import com.thinkmorestupidless.betfair.Betfair
 import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
 import com.thinkmorestupidless.betfair.exchange.usecases.{ListEventTypesUseCase, ListEventsUseCase}
-import com.thinkmorestupidless.betfair.navigation.domain.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService
+import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
 import org.apache.pekko.actor.ActorSystem
 
 object DefaultBetfairGrpcServer {
