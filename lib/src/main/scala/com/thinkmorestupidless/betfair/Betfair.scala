@@ -57,7 +57,7 @@ object Betfair {
       val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
       val applicationKey = config.auth.credentials.applicationKey
       val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
-      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow(config.exchange.socket))
+      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
 
       create(
         authenticationService,
@@ -86,7 +86,7 @@ object Betfair {
       val exchangeService = ClusterSingletonBetfairExchangeService(underlyingExchangeService)
       val applicationKey = config.auth.credentials.applicationKey
       val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
-      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow(config.exchange.socket))
+      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
 
       create(
         authenticationService,

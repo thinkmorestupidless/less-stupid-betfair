@@ -10,6 +10,7 @@ import com.thinkmorestupidless.betfair.core.impl.{BetfairConfig, LoginUri}
 import io.circe.Json
 import io.circe.parser.parse
 import org.apache.pekko.actor.ActorSystem
+import org.slf4j.LoggerFactory
 import play.api.libs.ws.DefaultBodyWritables._
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
@@ -24,6 +25,7 @@ final class PlayWsBetfairAuthenticationService private (
 )(implicit system: ActorSystem)
     extends BetfairAuthenticationService {
 
+  private val log = LoggerFactory.getLogger(getClass)
   private val wsClient = StandaloneAhcWSClient()
 
   private implicit val ec = system.dispatcher
@@ -68,8 +70,12 @@ final class PlayWsBetfairAuthenticationService private (
 
   private def matchLoginResponse(loginResponse: LoginResponse): Either[AuthenticationError, SessionToken] =
     loginResponse match {
-      case LoginSuccess(sessionToken) => sessionToken.asRight
-      case LoginFailure(loginStatus)  => LoginRejectedByBetfair(loginStatus).asLeft
+      case LoginSuccess(sessionToken) =>
+        log.info("successfully authenticated with Betfair")
+        sessionToken.asRight
+      case LoginFailure(loginStatus)  =>
+        log.warn(s"failed to authenticate with Betfair '$loginStatus'")
+        LoginRejectedByBetfair(loginStatus).asLeft
     }
 }
 

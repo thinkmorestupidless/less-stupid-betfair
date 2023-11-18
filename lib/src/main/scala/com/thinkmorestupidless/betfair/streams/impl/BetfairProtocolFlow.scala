@@ -133,8 +133,8 @@ private object BetfairProtocolActor {
               replyTo ! Answer(List(Authentication(applicationKey, sessionToken)))
               connecting(marketFilter)
 
-            case asking: Question =>
-              buffer.stash(asking)
+            case question: Question =>
+              buffer.stash(question)
               Behaviors.same
           }
 

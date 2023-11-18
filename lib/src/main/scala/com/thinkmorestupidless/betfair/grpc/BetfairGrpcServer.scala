@@ -5,6 +5,8 @@ import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
 import com.thinkmorestupidless.betfair.navigation.impl.grpc.GrpcNavigationServiceImpl
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}
 import com.thinkmorestupidless.betfair.proto.navigation.{NavigationService, NavigationServiceHandler}
+import com.thinkmorestupidless.betfair.proto.streams.{BetfairStreamsService, BetfairStreamsServiceHandler}
+import com.thinkmorestupidless.betfair.streams.impl.grpc.GrpcStreamsServiceImpl
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.grpc.scaladsl.{ServerReflection, ServiceHandler}
 import org.apache.pekko.http.scaladsl.Http
@@ -25,10 +27,12 @@ final class BetfairGrpcServer(betfair: Betfair)(implicit system: ActorSystem) {
     val navigationPartial = NavigationServiceHandler.partial(new GrpcNavigationServiceImpl(betfair.getMenu))
     val exchangePartial =
       ExchangeServiceHandler.partial(new GprcExchangeService(betfair.listEventTypes, betfair.listEvents))
-    val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
+    val streamsPartial = BetfairStreamsServiceHandler.partial(new GrpcStreamsServiceImpl(betfair))
+
+    val reflection = ServerReflection.partial(List(NavigationService, ExchangeService, BetfairStreamsService))
 
     val service: HttpRequest => Future[HttpResponse] =
-      ServiceHandler.concatOrNotFound(navigationPartial, exchangePartial, reflection)
+      ServiceHandler.concatOrNotFound(navigationPartial, exchangePartial, streamsPartial, reflection)
 
     val bound: Future[Http.ServerBinding] = Http(system)
       .newServerAt(interface = "0.0.0.0", port = 8080)

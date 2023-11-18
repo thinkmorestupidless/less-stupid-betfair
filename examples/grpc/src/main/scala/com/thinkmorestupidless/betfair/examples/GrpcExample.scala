@@ -22,6 +22,6 @@ object GrpcExample {
     Betfair
       .create()
       .map(betfair => new BetfairGrpcServer(betfair).run())
-      .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
+      .leftMap(error => log.error(s"Something went wrong '$error'"))
   }
 }

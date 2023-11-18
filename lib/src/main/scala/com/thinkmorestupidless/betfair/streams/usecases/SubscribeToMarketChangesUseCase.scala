@@ -1,4 +1,4 @@
-package com.thinkmorestupidless.betfair.streams.domain.usecases
+package com.thinkmorestupidless.betfair.streams.usecases
 
 import com.thinkmorestupidless.betfair.streams.domain.{MarketChangeMessage, MarketFilter, MarketSubscription}
 import com.thinkmorestupidless.betfair.streams.impl.BetfairSocketFlow
