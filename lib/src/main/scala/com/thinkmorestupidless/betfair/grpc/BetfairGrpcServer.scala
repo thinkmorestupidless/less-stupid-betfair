@@ -1,11 +1,8 @@
 package com.thinkmorestupidless.betfair.grpc
 
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
+import com.thinkmorestupidless.betfair.Betfair
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService
-import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
-import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.navigation.impl.grpc.GrpcNavigationServiceImpl
-import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.proto.exchange.{ExchangeService, ExchangeServiceHandler}
 import com.thinkmorestupidless.betfair.proto.navigation.{NavigationService, NavigationServiceHandler}
 import org.apache.pekko.actor.ActorSystem
@@ -18,20 +15,16 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-final class BetfairGrpcServer(
-    getMenuUseCase: GetMenuUseCase,
-    listEventTypesUseCase: ListEventTypesUseCase,
-    listEventsUseCase: ListEventsUseCase
-)(implicit system: ActorSystem) {
+final class BetfairGrpcServer(betfair: Betfair)(implicit system: ActorSystem) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
   def run(): Future[Http.ServerBinding] = {
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val navigationPartial = NavigationServiceHandler.partial(new GrpcNavigationServiceImpl(getMenuUseCase))
+    val navigationPartial = NavigationServiceHandler.partial(new GrpcNavigationServiceImpl(betfair.getMenu))
     val exchangePartial =
-      ExchangeServiceHandler.partial(new GprcExchangeService(listEventTypesUseCase, listEventsUseCase))
+      ExchangeServiceHandler.partial(new GprcExchangeService(betfair.listEventTypes, betfair.listEvents))
     val reflection = ServerReflection.partial(List(NavigationService, ExchangeService))
 
     val service: HttpRequest => Future[HttpResponse] =

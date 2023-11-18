@@ -1,6 +1,6 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService}
 import com.thinkmorestupidless.betfair.streams.domain.{
   GlobalMarketFilterRepository,
   IncomingBetfairSocketMessage,
@@ -27,11 +27,13 @@ object BetfairSocketFlow {
 
   def apply(
       socketFlow: TlsSocketFlow.TlsSocketFlow,
-      session: BetfairSession,
+      applicationKey: ApplicationKey,
+      authenticationService: BetfairAuthenticationService,
       globalMarketFilterRepository: GlobalMarketFilterRepository
   )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
     val codecFlow = BetfairCodecFlow().join(socketFlow)
-    val betfairSocketFlow = BetfairProtocolFlow(session, globalMarketFilterRepository).join(codecFlow)
+    val betfairSocketFlow =
+      BetfairProtocolFlow(applicationKey, authenticationService, globalMarketFilterRepository).join(codecFlow)
     val graph
         : RunnableGraph[(Sink[OutgoingBetfairSocketMessage, NotUsed], Source[IncomingBetfairSocketMessage, NotUsed])] =
       MergeHub

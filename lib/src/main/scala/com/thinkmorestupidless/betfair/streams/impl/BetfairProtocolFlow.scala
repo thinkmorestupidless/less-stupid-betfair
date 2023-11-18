@@ -1,6 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{Answer, Question}
 import com.thinkmorestupidless.extensions.akkastreams.SplitEither
@@ -25,13 +26,17 @@ object BetfairProtocolFlow {
     NotUsed
   ]
 
-  def apply(session: BetfairSession, globalMarketFilterRepository: GlobalMarketFilterRepository)(implicit
+  def apply(
+      applicationKey: ApplicationKey,
+      authenticationService: BetfairAuthenticationService,
+      globalMarketFilterRepository: GlobalMarketFilterRepository
+  )(implicit
       system: ActorSystem[_]
   ): BetfairProtocolFlow = {
     implicit val timeout = Timeout(10.seconds)
 
     val protocolActor: ActorRef[Question] = system.systemActorOf(
-      BetfairProtocolActor(session, globalMarketFilterRepository),
+      BetfairProtocolActor(applicationKey, authenticationService, globalMarketFilterRepository),
       name = s"betfair-socket-protocol-${RandomUtils.generateRandomString()}",
       Props.empty
     )
@@ -67,24 +72,50 @@ private object BetfairProtocolActor {
   sealed trait BetfairProtocolMessage
   final case class SetGlobalMarketFilter(marketFilter: MarketFilter) extends BetfairProtocolMessage
   final case class InitializationError(cause: Throwable) extends BetfairProtocolMessage
+  final case class SetSessionToken(sessionToken: SessionToken) extends BetfairProtocolMessage
+  final case class ErrorGettingSessionToken(error: AuthenticationError) extends BetfairProtocolMessage
+  final case class FailedToGetSessionToken(cause: Throwable) extends BetfairProtocolMessage
   final case class Question(incoming: IncomingBetfairSocketMessage, replyTo: ActorRef[Answer])
       extends BetfairProtocolMessage
 
   final case class Answer(messages: List[BetfairSocketMessage])
 
   def apply(
-      session: BetfairSession,
+      applicationKey: ApplicationKey,
+      authenticationService: BetfairAuthenticationService,
       globalMarketFilterRepository: GlobalMarketFilterRepository
   ): Behavior[BetfairProtocolMessage] =
     Behaviors.withStash(capacity = 100) { buffer =>
       Behaviors.setup { context =>
         implicit val timeout = Timeout(3.seconds)
 
-        def initializing(): Behavior[BetfairProtocolMessage] =
-          Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
+        def waitingForSessionToken(): Behavior[BetfairProtocolMessage] =
+          Behaviors.receiveMessage[BetfairProtocolMessage] {
+            case SetSessionToken(sessionToken) =>
+              context.system.log.info("session token received, getting global market filter")
+              context.pipeToSelf(globalMarketFilterRepository.getCurrentGlobalFilter()) {
+                case scala.util.Success(globalMarketFilter) => SetGlobalMarketFilter(globalMarketFilter)
+                case scala.util.Failure(cause)              => InitializationError(cause)
+              }
+              waitingForGlobalMarketFilter(sessionToken)
+
+            case ErrorGettingSessionToken(error) =>
+              throw new RuntimeException(s"Failed to get session token '$error'")
+
+            case FailedToGetSessionToken(cause) =>
+              throw cause
+
+            case message =>
+              buffer.stash(message)
+              Behaviors.same
+          }
+
+        def waitingForGlobalMarketFilter(sessionToken: SessionToken): Behavior[BetfairProtocolMessage] =
+          Behaviors.receiveMessage[BetfairProtocolMessage] {
             case SetGlobalMarketFilter(marketFilter) =>
-              context.system.log.info(s"${context.self.path.name} received market filter - moving to unconnected")
-              unconnected(marketFilter)
+              context.system.log
+                .info(s"${context.self.path.name} received global market filter - moving to unconnected")
+              unconnected(sessionToken, marketFilter)
 
             case InitializationError(cause) =>
               throw cause
@@ -94,12 +125,12 @@ private object BetfairProtocolActor {
               Behaviors.same
           }
 
-        def unconnected(marketFilter: MarketFilter): Behavior[BetfairProtocolMessage] =
+        def unconnected(sessionToken: SessionToken, marketFilter: MarketFilter): Behavior[BetfairProtocolMessage] =
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
             case Question(Connection(_, _), replyTo) =>
               context.system.log
                 .info(s"${context.self.path.name} received connection, giving back authentication message")
-              replyTo ! Answer(List(Authentication(session.applicationKey, session.sessionToken)))
+              replyTo ! Answer(List(Authentication(applicationKey, sessionToken)))
               connecting(marketFilter)
 
             case asking: Question =>
@@ -139,12 +170,16 @@ private object BetfairProtocolActor {
           }
         }
 
-        context.pipeToSelf(globalMarketFilterRepository.getCurrentGlobalFilter()) {
-          case scala.util.Success(globalMarketFilter) => SetGlobalMarketFilter(globalMarketFilter)
-          case scala.util.Failure(cause)              => InitializationError(cause)
+        context.pipeToSelf(authenticationService.login().value) {
+          case scala.util.Success(sessionTokenOr) =>
+            sessionTokenOr match {
+              case Right(sessionToken) => SetSessionToken(sessionToken)
+              case Left(error)         => ErrorGettingSessionToken(error)
+            }
+          case scala.util.Failure(cause) => FailedToGetSessionToken(cause)
         }
 
-        initializing()
+        waitingForSessionToken()
       }
     }
 }

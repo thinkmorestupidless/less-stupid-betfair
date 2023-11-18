@@ -1,8 +1,11 @@
 package com.thinkmorestupidless.betfair.examples
 
 import com.thinkmorestupidless.betfair.Betfair
-import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.slf4j.LoggerFactory
+
+import java.time.Clock
 
 object WebsocketExample {
 
@@ -11,10 +14,11 @@ object WebsocketExample {
   def main(args: Array[String]): Unit = {
     log.info("websocket example starting")
 
-    implicit val system = ActorSystem("websocket-example")
-    implicit val ec = system.dispatcher
+    implicit val system = ActorSystem(Behaviors.ignore, "grpc-example")
+    implicit val ec = system.executionContext
+    implicit val clock = Clock.systemUTC()
 
-    Betfair()
+    Betfair.create()
       .map { betfair =>
         log.info("betfair is ready {}", betfair)
       }

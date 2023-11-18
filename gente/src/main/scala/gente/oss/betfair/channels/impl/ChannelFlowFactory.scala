@@ -1,12 +1,7 @@
 package gente.oss.betfair.channels.impl
 
-import com.thinkmorestupidless.betfair.auth.domain.BetfairSession
-import com.thinkmorestupidless.betfair.streams.domain.{
-  GlobalMarketFilterRepository,
-  IncomingBetfairSocketMessage,
-  OutgoingBetfairSocketMessage
-}
-import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, TlsSocketFlow}
+import com.thinkmorestupidless.betfair.Betfair
+import com.thinkmorestupidless.betfair.streams.domain.{IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage}
 import gente.oss.betfair.channels.domain.{ChannelId, ChannelsService}
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
@@ -17,19 +12,16 @@ object ChannelFlowFactory {
   type ChannelFlowFactory = ChannelId => Flow[OutgoingBetfairSocketMessage, IncomingBetfairSocketMessage, NotUsed]
 
   def apply(
-      socketFlow: TlsSocketFlow.TlsSocketFlow,
-      session: BetfairSession,
-      globalMarketFilterRepository: GlobalMarketFilterRepository,
+      betfair: Betfair,
       channelsService: ChannelsService
   )(implicit
       system: ActorSystem[_]
   ): ChannelFlowFactory = {
     implicit val ec = system.executionContext
-    val betfairSocketFlow = BetfairSocketFlow(socketFlow, session, globalMarketFilterRepository)
 
     channelId => {
       val channelFilterFlow = ChannelFilterFlow(channelId, channelsService)
-      channelFilterFlow.join(betfairSocketFlow.flowFromSinkAndSource())
+      channelFilterFlow.join(betfair.socketFlow.flowFromSinkAndSource())
     }
   }
 }
