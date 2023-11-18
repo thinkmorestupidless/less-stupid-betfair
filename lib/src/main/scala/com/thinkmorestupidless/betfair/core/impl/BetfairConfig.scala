@@ -34,7 +34,7 @@ case object SessionStoreProviderType extends Enum[SessionStoreProviderType] {
 
 final case class FileProviderConfig(filePath: FileProviderFilePath)
 final case class FileProviderFilePath(value: String)
-final case class SessionStoreConfig(providerType: SessionStoreProviderType, file: FileProviderConfig)
+final case class SessionStoreConfig(providerType: SessionStoreProviderType, fileProvider: FileProviderConfig)
 
 final case class ExchangeConfig(
     requiredHeaders: List[RawHeader],

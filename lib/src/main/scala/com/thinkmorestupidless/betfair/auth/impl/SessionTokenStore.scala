@@ -16,11 +16,10 @@ trait SessionTokenStore {
 object SessionTokenStore {
 
   final case class StoredSession(sessionToken: SessionToken, createdAt: Instant)
-  case object NoSessionAvailable
 
   def fromConfig(config: SessionStoreConfig)(implicit ec: ExecutionContext, clock: Clock): SessionTokenStore =
     config.providerType match {
       case SessionStoreProviderType.None => NoOpSessionTokenTokenStore
-      case SessionStoreProviderType.File => FileSessionTokenStore(config.file)
+      case SessionStoreProviderType.File => FileSessionTokenStore(config.fileProvider)
     }
 }
