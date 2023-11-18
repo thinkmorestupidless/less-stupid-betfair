@@ -19,7 +19,8 @@ object GrpcExample {
     implicit val ec = system.executionContext
     implicit val clock = Clock.systemUTC()
 
-    Betfair.create()
+    Betfair
+      .create()
       .map(betfair => new BetfairGrpcServer(betfair).run())
       .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
   }

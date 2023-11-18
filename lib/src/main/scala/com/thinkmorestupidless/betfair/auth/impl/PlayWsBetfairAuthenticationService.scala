@@ -2,13 +2,7 @@ package com.thinkmorestupidless.betfair.auth.impl
 
 import cats.data.EitherT
 import cats.syntax.either._
-import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.{
-  AuthenticationError,
-  FailedToDecodeLoginResponseJson,
-  FailedToParseLoginResponseAsJson,
-  LoginRejectedByBetfair,
-  UnexpectedLoginError
-}
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService._
 import com.thinkmorestupidless.betfair.auth.domain._
 import com.thinkmorestupidless.betfair.auth.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.auth.impl.PlayWsBetfairAuthenticationService.AuthHeader

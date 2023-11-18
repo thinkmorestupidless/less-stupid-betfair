@@ -18,7 +18,8 @@ object WebsocketExample {
     implicit val ec = system.executionContext
     implicit val clock = Clock.systemUTC()
 
-    Betfair.create()
+    Betfair
+      .create()
       .map { betfair =>
         log.info("betfair is ready {}", betfair)
       }
