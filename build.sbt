@@ -9,7 +9,8 @@ ThisBuild / scalaVersion := DependencyVersions.scalaVersion
 lazy val root = project.in(file("."))
   .enablePlugins(BuildInfoPlugin)
   .settings(
-    publish := false
+    publish := false,
+    libraryDependencies ++= Dependencies.topLevelDependencies
   )
   .aggregate(
     lib,
@@ -17,6 +18,10 @@ lazy val root = project.in(file("."))
     `example-grpc`,
     gente
   )
+  .dependsOn(Array(
+    lib,
+    `example-websocket`,
+    `example-grpc`).map(_ % "test->test"): _*)
 
 lazy val lib = project.in(file("lib"))
   .enablePlugins(BuildInfoPlugin)

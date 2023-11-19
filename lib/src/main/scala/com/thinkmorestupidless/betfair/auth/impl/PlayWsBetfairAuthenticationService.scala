@@ -13,6 +13,7 @@ import org.apache.pekko.actor.ActorSystem
 import org.slf4j.LoggerFactory
 import play.api.libs.ws.DefaultBodyWritables._
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import com.thinkmorestupidless.utils.EitherTUtils._
 
 import scala.concurrent.Future
 
@@ -35,7 +36,7 @@ final class PlayWsBetfairAuthenticationService private (
       .liftF(sessionTokenStore.read())
       .flatMap(maybeSessionToken =>
         maybeSessionToken
-          .map(sessionToken => EitherT.rightT[Future, AuthenticationError](sessionToken))
+          .map(sessionToken => EitherT.safeRightT[Future, AuthenticationError](sessionToken))
           .getOrElse(_login())
       )
 
@@ -73,7 +74,7 @@ final class PlayWsBetfairAuthenticationService private (
       case LoginSuccess(sessionToken) =>
         log.info("successfully authenticated with Betfair")
         sessionToken.asRight
-      case LoginFailure(loginStatus)  =>
+      case LoginFailure(loginStatus) =>
         log.warn(s"failed to authenticate with Betfair '$loginStatus'")
         LoginRejectedByBetfair(loginStatus).asLeft
     }

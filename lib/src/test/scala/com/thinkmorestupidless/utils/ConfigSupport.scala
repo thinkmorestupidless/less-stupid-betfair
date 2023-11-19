@@ -18,7 +18,8 @@ object ConfigSupport {
         Password("changeme"),
         ApplicationKey("foobar")
       ),
-      LoginUri(s"$baseUri/login")
+      LoginUri(s"$baseUri/login"),
+      SessionStoreConfig(SessionStoreProviderType.None, FileProviderConfig(FileProviderFilePath(".")))
     ),
     ExchangeConfig(
       List(
@@ -39,7 +40,8 @@ object ConfigSupport {
         ListMarketCatalogueUri(s"$baseUri/listMarketCatalogue"),
         ListMarketBookUri(s"$baseUri/listMarketBook"),
         PlaceOrdersUri(s"$baseUri/placeOrders")
-      )
+      ),
+      ExchangeLogging(LogExchangeRequests(true), LogExchangeResponses(true))
     ),
     NavigationConfig(MenuUri(s"$baseUri/navigation/menu.json"))
   )

@@ -16,18 +16,7 @@ final class BetfairConfigSpec extends AnyWordSpecLike with Matchers {
   "apply" should {
     "load betfair config" in {
 
-      val productionConfig = ConfigFactory
-        .load()
-        .withValue("betfair.login.cert.file", ConfigValueFactory.fromAnyRef("betfair-cert-file"))
-        .withValue("betfair.login.cert.password", ConfigValueFactory.fromAnyRef("betfair-cert-password"))
-        .withValue("betfair.login.credentials.username", ConfigValueFactory.fromAnyRef("betfair-username"))
-        .withValue("betfair.login.credentials.password", ConfigValueFactory.fromAnyRef("betfair-password"))
-        .withValue(
-          "betfair.login.credentials.application-key",
-          ConfigValueFactory.fromAnyRef("betfair-application-key")
-        )
-
-      val config = ConfigSource.fromConfig(productionConfig).at(namespace = "betfair").load[BetfairConfig]
+      val config = ConfigSource.fromConfig(ConfigFactory.load()).at(namespace = "betfair").load[BetfairConfig]
 
       config shouldBe Right(expectedBetfairConfig)
     }
@@ -39,13 +28,14 @@ object BetfairConfigSpec {
   val expectedBetfairConfig = BetfairConfig(
     HeaderKeys(ApplicationKeyHeaderKey("X-Application"), SessionTokenHeaderKey("X-Authentication")),
     AuthConfig(
-      Cert(CertFile("betfair-cert-file"), CertPassword("betfair-cert-password")),
+      Cert(CertFile("[BETFAIR_CERT_FILE MISSING]"), CertPassword("[BETFAIR_CERT_PASSWORD MISSING]")),
       BetfairCredentials(
-        Username("betfair-username"),
-        Password("betfair-password"),
-        ApplicationKey("betfair-application-key")
+        Username("[USERNAME MISSING]"),
+        Password("[PASSWORD MISSING]"),
+        ApplicationKey("[APPLICATION_KEY MISSING]")
       ),
-      LoginUri("https://identitysso-cert.betfair.com/api/certlogin")
+      LoginUri("https://identitysso-cert.betfair.com/api/certlogin"),
+      SessionStoreConfig(SessionStoreProviderType.None, FileProviderConfig(FileProviderFilePath(".")))
     ),
     ExchangeConfig(
       List(
@@ -65,8 +55,11 @@ object BetfairConfigSpec {
         ListMarketCatalogueUri("https://api.betfair.com/exchange/betting/rest/v1.0/listMarketCatalogue/"),
         ListMarketBookUri("https://api.betfair.com/exchange/betting/rest/v1.0/listMarketBook/"),
         PlaceOrdersUri("https://api.betfair.com/exchange/betting/rest/v1.0/placeOrders/")
-      )
+      ),
+      ExchangeLogging(LogExchangeRequests(true), LogExchangeResponses(true))
     ),
-    NavigationConfig(MenuUri("https://api.betfair.com/exchange/betting/rest/v1.0/en/navigation/menu.json"))
+    NavigationConfig(MenuUri("https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json"))
   )
 }
+
+

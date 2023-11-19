@@ -1,9 +1,10 @@
-import sbt._
+import sbt.*
 
 object DependencyVersions {
   val akkaVersion = "2.7.0"
   val akkaHttpVersion = "10.4.0"
   val akkaHttpJsonVersion = "1.39.2"
+  val archUnitVersion = "0.14.1"
   val logbackVersion = "1.4.11"
   val circeVersion = "0.14.1"
   val enumeratumVersion = "1.6.1"
@@ -44,6 +45,10 @@ object Dependencies {
 //  private val akkaTesting = Seq(
 //    "com.typesafe.akka" %% "akka-stream-testkit"
 //  ).map(_ % akkaVersion % Test)
+
+  private val archUnitDeps = Seq(
+    "com.tngtech.archunit" % "archunit" % archUnitVersion
+  ).map(_ % Test)
 
   private val circe = Seq(
     "io.circe" %% "circe-core",
@@ -122,6 +127,10 @@ object Dependencies {
     "com.github.tomakehurst" % "wiremock-jre8"
   ).map(_ % wiremockVersion % Test)
 
+  val topLevelDependencies: Seq[ModuleID] =
+    scalatest ++
+    archUnitDeps
+
   val libDependencies = {
     val production =
 //      akka ++
@@ -140,12 +149,14 @@ object Dependencies {
         slick ++
         spray
 
-    val test =
+    val test = {
 //      akkaTesting ++
-      pekkoTest ++
+        archUnitDeps ++
+        pekkoTest ++
         scalatest ++
         testcontainers ++
         wiremock
+    }
 
     production ++ test
   }

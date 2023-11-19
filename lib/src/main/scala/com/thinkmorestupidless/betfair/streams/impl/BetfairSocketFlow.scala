@@ -31,10 +31,7 @@ object BetfairSocketFlow {
       authenticationService: BetfairAuthenticationService,
       globalMarketFilterRepository: GlobalMarketFilterRepository
   )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
-    val codecFlow = BetfairCodecFlow().join(socketFlow).map { elem =>
-      println(s"ELEM: ${elem}")
-      elem
-    }
+    val codecFlow = BetfairCodecFlow().join(socketFlow)
     val betfairSocketFlow =
       BetfairProtocolFlow(applicationKey, authenticationService, globalMarketFilterRepository).join(codecFlow)
     val graph
