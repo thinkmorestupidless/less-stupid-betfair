@@ -149,7 +149,7 @@ message PlaceOrdersRequest {}
 
 message PlaceExecutionReport {}
 
-service ExchangeService {
+service BetfairExchangeService {
 
   rpc CancelOrders (CancelOrdersRequest) returns (CancelExecutionReport) {}
 

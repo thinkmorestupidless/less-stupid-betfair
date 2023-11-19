@@ -3,17 +3,17 @@ package com.thinkmorestupidless.betfair.exchange.impl.grpc
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{EventTypeResponse, ListEventsResponse}
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.Decoders._
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.Encoders._
-import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService.ListEventTypesResponse
+import com.thinkmorestupidless.betfair.exchange.impl.grpc.GrpcExchangeService.ListEventTypesResponse
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.proto.exchange.{
+  BetfairExchangeService,
   CancelExecutionReport,
   CancelOrdersRequest,
   ClearedOrderSummaryReport,
   CompetitionResult,
   CountryCodeResponse,
   CurrentOrderSummaryReport,
-  ExchangeService,
   ListCurrentOrdersRequest,
   ListEventTypesResponse => ListEventTypesResponseProto,
   ListEventsResponse => ListEventsResponseProto,
@@ -31,9 +31,9 @@ import com.thinkmorestupidless.utils.ValidationException
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class GprcExchangeService(listEventTypesUseCase: ListEventTypesUseCase, listEventsUseCase: ListEventsUseCase)(
+final class GrpcExchangeService(listEventTypesUseCase: ListEventTypesUseCase, listEventsUseCase: ListEventsUseCase)(
     implicit ec: ExecutionContext
-) extends ExchangeService {
+) extends BetfairExchangeService {
 
   override def cancelOrders(in: CancelOrdersRequest): Future[CancelExecutionReport] = ???
 
@@ -72,7 +72,7 @@ final class GprcExchangeService(listEventTypesUseCase: ListEventTypesUseCase, li
   override def placeOrders(in: PlaceOrdersRequest): Future[PlaceExecutionReport] = ???
 }
 
-object GprcExchangeService {
+object GrpcExchangeService {
 
   final case class ListEventTypesResponse(results: List[EventTypeResponse])
 }

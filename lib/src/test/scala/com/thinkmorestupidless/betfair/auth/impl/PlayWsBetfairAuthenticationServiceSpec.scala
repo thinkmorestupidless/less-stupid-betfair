@@ -3,7 +3,11 @@ package com.thinkmorestupidless.betfair.auth.impl
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.{FailedToParseLoginResponseAsJson, LoginRejectedByBetfair, UnexpectedLoginError}
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.{
+  FailedToParseLoginResponseAsJson,
+  LoginRejectedByBetfair,
+  UnexpectedLoginError
+}
 import com.thinkmorestupidless.betfair.auth.domain.{LoginStatus, SessionToken}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.utils.{ConfigSupport, FutureSupport}

@@ -7,7 +7,7 @@ import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.{
   ListEventsResponse
 }
 import com.thinkmorestupidless.betfair.exchange.domain.{Event, EventType}
-import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService.ListEventTypesResponse
+import com.thinkmorestupidless.betfair.exchange.impl.grpc.GrpcExchangeService.ListEventTypesResponse
 import com.thinkmorestupidless.betfair.proto.exchange.{
   Event => EventProto,
   EventResponse => EventResponseProto,

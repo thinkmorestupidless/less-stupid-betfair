@@ -4,7 +4,7 @@ package com.thinkmorestupidless.betfair.proto.navigation;
 
 import "com/thinkmorestupidless/betfair/proto/navigation/navigation_domain.proto";
 
-service NavigationService {
+service BetfairNavigationService {
 
   rpc GetMenu (GetMenuRequest) returns (Menu) {}
 }

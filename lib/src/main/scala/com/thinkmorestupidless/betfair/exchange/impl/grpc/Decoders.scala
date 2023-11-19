@@ -28,7 +28,7 @@ import com.thinkmorestupidless.betfair.exchange.domain.{
   TotalMatched,
   Venue
 }
-import com.thinkmorestupidless.betfair.exchange.impl.grpc.GprcExchangeService.ListEventTypesResponse
+import com.thinkmorestupidless.betfair.exchange.impl.grpc.GrpcExchangeService.ListEventTypesResponse
 import com.thinkmorestupidless.betfair.proto.exchange.{
   Competition => CompetitionProto,
   Event => EventProto,

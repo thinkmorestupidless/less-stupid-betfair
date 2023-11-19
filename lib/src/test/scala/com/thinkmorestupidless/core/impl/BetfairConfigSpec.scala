@@ -61,5 +61,3 @@ object BetfairConfigSpec {
     NavigationConfig(MenuUri("https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json"))
   )
 }
-
-
