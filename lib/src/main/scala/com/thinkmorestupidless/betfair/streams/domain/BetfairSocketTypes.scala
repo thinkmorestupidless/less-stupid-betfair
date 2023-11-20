@@ -62,21 +62,21 @@ object RunnerStatus extends Enum[RunnerStatus] with CirceEnum[RunnerStatus] {
 final case class MarketId(value: String)
 
 final case class MarketFilter(
-    marketIds: Option[Set[MarketId]],
+    marketIds: Option[List[MarketId]],
     bspMarket: Option[Boolean],
-    bettingTypes: Option[Set[MarketBettingType]],
-    eventTypeIds: Option[Set[String]],
-    eventIds: Option[Set[String]],
+    bettingTypes: Option[List[MarketBettingType]],
+    eventTypeIds: Option[List[String]],
+    eventIds: Option[List[String]],
     turnInPlayEnabled: Option[Boolean],
-    marketTypes: Option[Set[String]],
-    venues: Option[Set[String]],
-    countryCodes: Option[Set[String]],
-    raceTypes: Option[Set[String]]
+    marketTypes: Option[List[String]],
+    venues: Option[List[String]],
+    countryCodes: Option[List[String]],
+    raceTypes: Option[List[String]]
 )
 
 object MarketFilter {
 
-  def apply(marketIds: Set[MarketId]): MarketFilter =
+  def apply(marketIds: List[MarketId]): MarketFilter =
     new MarketFilter(
       marketIds = Some(marketIds),
       bspMarket = None,
@@ -90,7 +90,7 @@ object MarketFilter {
       raceTypes = None
     )
 
-  val empty: MarketFilter = MarketFilter(Set.empty)
+  val empty: MarketFilter = MarketFilter(List.empty)
 }
 
 final case class MarketChange(

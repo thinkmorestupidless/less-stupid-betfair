@@ -40,7 +40,7 @@ message MarketFilter {
       FIXED_ODDS = 5;
   }
 
-  optional string marketIds = 1;
+  repeated string marketIds = 1;
   optional bool bspMarket = 2;
   repeated MarketBettingType bettingTypes = 3;
   repeated string eventTypeIds = 4;

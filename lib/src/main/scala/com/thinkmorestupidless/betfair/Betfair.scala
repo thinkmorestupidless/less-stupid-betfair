@@ -1,7 +1,8 @@
 package com.thinkmorestupidless.betfair
 
 import cats.data.EitherT
-import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService}
+import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
 import com.thinkmorestupidless.betfair.auth.impl.{
   ClusterSingletonBetfairAuthenticationService,
   PlayWsBetfairAuthenticationService,
@@ -23,6 +24,7 @@ import com.thinkmorestupidless.betfair.navigation.impl.{
 }
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
+import com.thinkmorestupidless.betfair.streams.domain
 import com.thinkmorestupidless.betfair.streams.domain.GlobalMarketFilterRepository
 import com.thinkmorestupidless.betfair.streams.impl.TlsSocketFlow.TlsSocketFlow
 import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, InMemoryMarketFilterRepository, TlsSocketFlow}
@@ -45,6 +47,7 @@ object Betfair {
 
   sealed trait BetfairError
   final case class FailedToLoadBetfairConfig(cause: ConfigReaderFailures) extends BetfairError
+  final case class FailedToLoginToBetfair(error: AuthenticationError) extends BetfairError
 
   def create(
       maybeSocketFlow: Option[TlsSocketFlow] = None,
@@ -52,60 +55,91 @@ object Betfair {
   )(implicit clock: Clock, system: ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
     implicit val ec = system.executionContext
     implicit val classicSystem = system.toClassic
-    loadConfig().map { config =>
-      val authenticationService = createAuthenticationService(config)
+
+    for {
+      config <- loadConfig()
+      authenticationService = createAuthenticationService(config)
+      sessionToken <- authenticationService.login().leftMap(FailedToLoginToBetfair(_))
+      globalMarketFilter <- EitherT.liftF(
+        maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository()).getCurrentGlobalFilter()
+      )
+    } yield {
       val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
       val applicationKey = config.auth.credentials.applicationKey
-      val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
       val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
 
       create(
-        authenticationService,
         navigationService,
         exchangeService,
         applicationKey,
-        socketFlow,
-        globalMarketFilterRepository
+        sessionToken,
+        globalMarketFilter,
+        socketFlow
       )
     }
+
+//    loadConfig().flatMap { config =>
+//      val authenticationService = createAuthenticationService(config)
+//      authenticationService.login().map { sessionToken =>
+//        val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
+//        val applicationKey = config.auth.credentials.applicationKey
+//        val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
+//        val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
+//
+//        create(
+//          authenticationService,
+//          navigationService,
+//          exchangeService,
+//          applicationKey,
+//          sessionToken,
+//          socketFlow,
+//          globalMarketFilterRepository
+//        )
+//      }
+//        .leftMap(FailedToLoginToBetfair(_))
+//    }
   }
 
-  def createClustered(
-      maybeSocketFlow: Option[TlsSocketFlow] = None,
-      maybeGlobalMarketFilterRepository: Option[GlobalMarketFilterRepository] = None
-  )(implicit clock: Clock, system: ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
-    implicit val ec = system.executionContext
-    implicit val classicSystem = system.toClassic
-
-    loadConfig().map { config =>
-      val underlyingAuthenticationService = createAuthenticationService(config)
-      val authenticationService = ClusterSingletonBetfairAuthenticationService(underlyingAuthenticationService)
-      val (underlyingNavigationService, underlyingExchangeService) =
-        createUnderlyingServices(config, authenticationService)
-      val navigationService = ClusterSingletonBetfairNavigationService(underlyingNavigationService)
-      val exchangeService = ClusterSingletonBetfairExchangeService(underlyingExchangeService)
-      val applicationKey = config.auth.credentials.applicationKey
-      val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
-      val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
-
-      create(
-        authenticationService,
-        navigationService,
-        exchangeService,
-        applicationKey,
-        socketFlow,
-        globalMarketFilterRepository
-      )
-    }
-  }
+//  def createClustered(
+//      maybeSocketFlow: Option[TlsSocketFlow] = None,
+//      maybeGlobalMarketFilterRepository: Option[GlobalMarketFilterRepository] = None
+//  )(implicit clock: Clock, system: ActorSystem[_]): EitherT[Future, BetfairError, Betfair] = {
+//    implicit val ec = system.executionContext
+//    implicit val classicSystem = system.toClassic
+//
+//
+//
+//    loadConfig().flatMap { config =>
+//      val underlyingAuthenticationService = createAuthenticationService(config)
+//      val authenticationService = ClusterSingletonBetfairAuthenticationService(underlyingAuthenticationService)
+//      authenticationService.login().map { sessionToken =>
+//        val (underlyingNavigationService, underlyingExchangeService) =
+//          createUnderlyingServices(config, authenticationService)
+//        val navigationService = ClusterSingletonBetfairNavigationService(underlyingNavigationService)
+//        val exchangeService = ClusterSingletonBetfairExchangeService(underlyingExchangeService)
+//        val applicationKey = config.auth.credentials.applicationKey
+//        val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
+//        val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
+//
+//        create(
+//          navigationService,
+//          exchangeService,
+//          applicationKey,
+//          sessionToken,
+//          socketFlow,
+//          globalMarketFilterRepository
+//        )
+//      }.leftMap(FailedToLoginToBetfair(_))
+//    }
+//  }
 
   private def create(
-      authenticationService: BetfairAuthenticationService,
       navigationService: BetfairNavigationService,
       exchangeService: BetfairExchangeService,
       applicationKey: ApplicationKey,
-      socketFlow: TlsSocketFlow.TlsSocketFlow,
-      globalMarketFilterRepository: GlobalMarketFilterRepository
+      sessionToken: SessionToken,
+      globalMarketFilter: domain.MarketFilter,
+      socketFlow: TlsSocketFlow.TlsSocketFlow
   )(implicit
       ec: ExecutionContext,
       system: ActorSystem[_]
@@ -116,7 +150,7 @@ object Betfair {
     val listEvents = ListEventsUseCase(exchangeService)
 
     val betfairSocketFlow =
-      BetfairSocketFlow(socketFlow, applicationKey, authenticationService, globalMarketFilterRepository)
+      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilter)
 
     Betfair(getMenu, listEventTypes, listEvents, betfairSocketFlow)
   }

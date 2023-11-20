@@ -18,6 +18,15 @@ object DefaultDecoders {
   implicit def optionalA_optionalB[A, B](implicit decoder: Decoder[A, B]): Decoder[Option[A], Option[B]] =
     _.map(_.decode).sequence
 
+  implicit def seqA_optionalSeqA[A, B](implicit decoder: Decoder[A, B]): Decoder[Seq[A], Option[List[B]]] =
+    x => {
+      val list = x.map(_.decode[B]).toList.sequence
+      list.map(_ match {
+        case Nil  => None
+        case list => Some(list)
+      })
+    }
+
   implicit val optionalString_optionalBigDecimal: Decoder[Option[String], Option[BigDecimal]] = _.validNel
   implicit val optionalString_optionalString: Decoder[Option[String], Option[String]] = _.validNel
   implicit val string_string: Decoder[String, String] = _.validNel

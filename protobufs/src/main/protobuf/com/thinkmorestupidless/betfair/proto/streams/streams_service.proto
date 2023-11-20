@@ -5,7 +5,6 @@ package com.thinkmorestupidless.betfair.proto.streams;
 import "com/thinkmorestupidless/betfair/proto/streams/streams_domain.proto";
 
 message SubscribeToMarketChangesRequest {
-  string channel_id = 1;
   MarketFilter market_filter = 2;
 }
 

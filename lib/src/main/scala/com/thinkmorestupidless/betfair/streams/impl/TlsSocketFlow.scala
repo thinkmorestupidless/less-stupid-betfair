@@ -15,7 +15,17 @@ object TlsSocketFlow {
 
   def fromConfig(config: SocketConfig)(implicit system: ActorSystem): TlsSocketFlow = {
     val address = new InetSocketAddress(config.uri.value, config.port.value)
-    Tcp().outgoingConnectionWithTls(address, () => createSSLEngine()).mapMaterializedValue(_ => NotUsed)
+    val flow = Tcp().outgoingConnectionWithTls(address, () => createSSLEngine()).mapMaterializedValue(_ => NotUsed)
+    Flow[ByteString]
+      .map { byteString =>
+        println(byteString.utf8String)
+        byteString
+      }
+      .via(flow)
+      .map { elem =>
+        println(elem)
+        elem
+      }
   }
 
   private def createSSLEngine(): SSLEngine = {

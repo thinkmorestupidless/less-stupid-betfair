@@ -16,15 +16,22 @@ object BetfairCodecFlow {
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  private val outgoing = Flow[OutgoingBetfairSocketMessage].map(msg => ByteString(s"${msg.asJson.noSpaces}\n"))
+  private val outgoing = Flow[OutgoingBetfairSocketMessage]
+    .map { elem =>
+      println(s"OUT => ${elem.asJson.noSpaces}")
+      elem
+    }
+    .map(msg => ByteString(s"${msg.asJson.noSpaces}\r\n"))
 
   private val incoming = Flow[ByteString]
-    .map(byteString =>
+    .map { byteString =>
+      val str = byteString.utf8String
+      log.info(s"IN => $str")
       for {
-        json <- parse(byteString.utf8String)
+        json <- parse(str)
         msg <- json.as[IncomingBetfairSocketMessage]
       } yield msg
-    )
+    }
     .collect {
       case Right(message) => Some(message)
       case Left(error) =>

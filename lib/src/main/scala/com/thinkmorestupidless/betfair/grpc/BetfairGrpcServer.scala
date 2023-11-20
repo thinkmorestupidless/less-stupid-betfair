@@ -7,7 +7,7 @@ import com.thinkmorestupidless.betfair.proto.exchange.{BetfairExchangeService, B
 import com.thinkmorestupidless.betfair.proto.navigation.{BetfairNavigationService, BetfairNavigationServiceHandler}
 import com.thinkmorestupidless.betfair.proto.streams.{BetfairStreamsService, BetfairStreamsServiceHandler}
 import com.thinkmorestupidless.betfair.streams.impl.grpc.GrpcStreamsServiceImpl
-import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.grpc.scaladsl.{ServerReflection, ServiceHandler}
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
@@ -17,12 +17,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-final class BetfairGrpcServer(betfair: Betfair)(implicit system: ActorSystem) {
+final class BetfairGrpcServer(betfair: Betfair)(implicit system: ActorSystem[_]) {
 
   private val log = LoggerFactory.getLogger(getClass)
 
   def run(): Future[Http.ServerBinding] = {
-    implicit val ec: ExecutionContext = system.dispatcher
+    implicit val ec: ExecutionContext = system.executionContext
 
     val navigationPartial = BetfairNavigationServiceHandler.partial(new GrpcNavigationServiceImpl(betfair.getMenu))
     val exchangePartial =

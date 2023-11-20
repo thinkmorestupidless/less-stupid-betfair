@@ -1,7 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.streams.domain.MarketFilter
-import com.thinkmorestupidless.utils.OptionalSetUtils._
+import com.thinkmorestupidless.utils.OptionalListUtils._
 
 object MarketFilterUtils {
 

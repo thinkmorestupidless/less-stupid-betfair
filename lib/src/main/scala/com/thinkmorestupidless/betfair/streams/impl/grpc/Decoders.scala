@@ -1,6 +1,5 @@
 package com.thinkmorestupidless.betfair.streams.impl.grpc
 
-import cats.data.{NonEmptyList, Validated}
 import cats.syntax.apply._
 import cats.syntax.either._
 import cats.syntax.traverse._
@@ -18,11 +17,14 @@ import com.thinkmorestupidless.betfair.proto.streams.{
   MarketChange => MarketChangeProto,
   MarketChangeMessage => MarketChangeMessageProto,
   MarketDefinition => MarketDefinitionProto,
+  MarketFilter => MarketFilterProto,
   PriceLadderDefinition => PriceLadderDefinitionProto,
   RunnerChange => RunnerChangeProto,
-  RunnerDefinition => RunnerDefinitionProto
+  RunnerDefinition => RunnerDefinitionProto,
+  SubscribeToMarketChangesRequest => SubscribeToMarketChangesRequestProto
 }
 import com.thinkmorestupidless.betfair.streams.domain._
+import com.thinkmorestupidless.betfair.streams.impl.grpc.GrpcStreamsServiceImpl.SubscribeToMarketChangesRequest
 import com.thinkmorestupidless.grpc.Decoder
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.grpc.DefaultDecoders._
@@ -31,7 +33,10 @@ import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
 import enumeratum.EnumEntry
 import pl.iterators.kebs.macros.enums.EnumOf
-import com.thinkmorestupidless.grpc.DefaultDecoders.validNone
+import com.thinkmorestupidless.grpc.DefaultDecoders._
+import com.thinkmorestupidless.utils.Validation.Validation
+import com.thinkmorestupidless.utils.Validation.ImplicitConversions.toValidatedOptionalList
+import com.thinkmorestupidless.betfair.proto.streams.MarketFilter.{MarketBettingType => MarketBettingTypeProto}
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -102,6 +107,18 @@ object Decoders {
       case BettingTypeProto.ASIAN_HANDICAP_DOUBLE_LINE => BettingType.AsianHandicapDoubleLine.validNel
       case BettingTypeProto.Unrecognized(unrecognizedValue) =>
         ValidationException(s"'$unrecognizedValue' is not a valid member of BettingType").invalidNel
+    }
+
+  implicit val marketBettingTypeProto_marketBettingType: Decoder[MarketBettingTypeProto, MarketBettingType] =
+    _ match {
+      case MarketBettingTypeProto.LINE                       => MarketBettingType.Line.validNel
+      case MarketBettingTypeProto.ODDS                       => MarketBettingType.Odds.validNel
+      case MarketBettingTypeProto.RANGE                      => MarketBettingType.Range.validNel
+      case MarketBettingTypeProto.FIXED_ODDS                 => MarketBettingType.FixedOdds.validNel
+      case MarketBettingTypeProto.ASIAN_HANDICAP_DOUBLE_LINE => MarketBettingType.AsianHandicapDoubleLine.validNel
+      case MarketBettingTypeProto.ASIAN_HANDICAP_SINGLE_LINE => MarketBettingType.AsianHandicapSingleLine.validNel
+      case MarketBettingTypeProto.Unrecognized(unrecognizedValue) =>
+        ValidationException(s"'$unrecognizedValue' is not a valid member of MarketBettingType").invalidNel
     }
 
   implicit val priceLadderTypeProto_priceLadderType: Decoder[PriceLadderTypeProto, PriceLadderType] =
@@ -277,5 +294,67 @@ object Decoders {
       val bdatb: Validation[Option[List[List[BigDecimal]]]] = proto.bdatb.decode
 
       (tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb).mapN(RunnerChange.apply _)
+    }
+
+  implicit val subscribeToMarketChangesRequestProto_subscribeToMarketChangeRequest
+      : Decoder[SubscribeToMarketChangesRequestProto, SubscribeToMarketChangesRequest] =
+    proto =>
+      ensureOptionIsDefined(
+        proto.marketFilter,
+        "required field SubscribeToMarketChangesRequest.marketFilter was not defined"
+      ).andThen(_.decode[MarketFilter]).map(SubscribeToMarketChangesRequest(_))
+
+  implicit val string_marketId: Decoder[String, MarketId] = ???
+
+  implicit val marketFilterProto_marketFilter: Decoder[MarketFilterProto, MarketFilter] =
+    proto => {
+      val marketIds = proto.marketIds.decode[Option[List[MarketId]]]
+      val bspMarket = proto.bspMarket.decode[Option[Boolean]]
+      val bettingTypes = proto.bettingTypes.decode[Option[List[MarketBettingType]]]
+      val eventTypeIds = proto.eventTypeIds.decode[Option[List[String]]]
+      val eventIds = proto.eventIds.decode[Option[List[String]]]
+      val turnInPlayEnabled = proto.turnInPlayEnabled.decode[Option[Boolean]]
+      val marketTypes = proto.marketTypes.decode[Option[List[String]]]
+      val venues = proto.venues.decode[Option[List[String]]]
+      val countryCodes = proto.countryCodes.decode[Option[List[String]]]
+      val raceTypes = proto.raceTypes.decode[Option[List[String]]]
+
+      (
+        marketIds,
+        bspMarket,
+        bettingTypes,
+        eventTypeIds,
+        eventIds,
+        turnInPlayEnabled,
+        marketTypes,
+        venues,
+        countryCodes,
+        raceTypes
+      ).mapN(
+        (
+            marketIds,
+            bspMarket,
+            bettingTypes,
+            eventTypeIds,
+            eventIds,
+            turnInPlayEnabled,
+            marketTypes,
+            venues,
+            countryCodes,
+            raceTypes
+        ) =>
+          MarketFilter(
+            marketIds,
+            bspMarket,
+            bettingTypes,
+            eventTypeIds,
+            eventIds,
+            turnInPlayEnabled,
+            marketTypes,
+            venues,
+            countryCodes,
+            raceTypes
+          )
+      )
     }
 }
