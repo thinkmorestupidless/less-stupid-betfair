@@ -1,7 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
-import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
   Answer,
@@ -13,9 +13,9 @@ import com.thinkmorestupidless.extensions.akkastreams.SplitEither
 import com.thinkmorestupidless.utils.RandomUtils
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
-import org.apache.pekko.actor.typed.{scaladsl, ActorRef, ActorSystem, Behavior, Props}
+import org.apache.pekko.actor.typed.{ActorRef, ActorSystem, Behavior, Props}
 import org.apache.pekko.stream.BidiShape
-import org.apache.pekko.stream.scaladsl.{BidiFlow, Broadcast, GraphDSL, Merge, Source}
+import org.apache.pekko.stream.scaladsl.{BidiFlow, Broadcast, GraphDSL, Merge}
 import org.apache.pekko.stream.typed.scaladsl.ActorFlow
 import org.apache.pekko.util.Timeout
 

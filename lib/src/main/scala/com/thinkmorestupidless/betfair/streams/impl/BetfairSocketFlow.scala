@@ -1,12 +1,10 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
-import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
+import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.streams.domain.{
-  GlobalMarketFilterRepository,
   Heartbeat,
   IncomingBetfairSocketMessage,
   MarketFilter,
-  MarketSubscription,
   OutgoingBetfairSocketMessage
 }
 import org.apache.pekko.NotUsed
