@@ -33,5 +33,11 @@ object MarketFilterUtils {
         self.countryCodes + other.countryCodes,
         self.raceTypes + other.raceTypes
       )
+
+    def isEmpty(): Boolean =
+      self == MarketFilter.empty
+
+    def isNotEmpty(): Boolean =
+      !self.isEmpty()
   }
 }

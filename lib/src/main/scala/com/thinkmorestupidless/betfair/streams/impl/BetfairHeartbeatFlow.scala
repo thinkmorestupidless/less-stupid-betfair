@@ -18,12 +18,9 @@ import scala.concurrent.duration._
 
 object BetfairHeartbeatFlow {
 
-  def apply()(implicit
+  def apply(queue: BoundedSourceQueue[OutgoingBetfairSocketMessage], source: Source[OutgoingBetfairSocketMessage, NotUsed])(implicit
       system: ActorSystem[_]
   ): Flow[OutgoingBetfairSocketMessage, OutgoingBetfairSocketMessage, NotUsed] = {
-
-    val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
-
     val actorRef = system.systemActorOf[HeartbeatMessage](BetfairHeartbeatActor(queue), "betfair-stream-heartbeat")
     val sink: Sink[OutgoingBetfairSocketMessage, NotUsed] = Flow[OutgoingBetfairSocketMessage]
       .map(OutgoingMessage(_))

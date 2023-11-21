@@ -1,12 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
-import com.thinkmorestupidless.betfair.streams.domain.{
-  Heartbeat,
-  IncomingBetfairSocketMessage,
-  MarketFilter,
-  OutgoingBetfairSocketMessage
-}
+import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, Heartbeat, IncomingBetfairSocketMessage, MarketFilter, OutgoingBetfairSocketMessage}
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, RunnableGraph, Sink, Source}
@@ -30,11 +25,11 @@ object BetfairSocketFlow {
       socketFlow: TlsSocketFlow.TlsSocketFlow,
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
-      globalMarketFilter: MarketFilter
+      globalMarketFilterRepository: GlobalMarketFilterRepository
   )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
     val codecFlow = BetfairCodecFlow().join(socketFlow)
     val betfairSocketFlow =
-      BetfairProtocolFlow(applicationKey, sessionToken, globalMarketFilter).join(codecFlow)
+      BetfairProtocolFlow(applicationKey, sessionToken, globalMarketFilterRepository).join(codecFlow)
     val graph
         : RunnableGraph[(Sink[OutgoingBetfairSocketMessage, NotUsed], Source[IncomingBetfairSocketMessage, NotUsed])] =
       MergeHub

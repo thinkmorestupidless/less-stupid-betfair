@@ -3,25 +3,16 @@ package com.thinkmorestupidless.betfair
 import cats.data.EitherT
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
-import com.thinkmorestupidless.betfair.auth.impl.{
-  ClusterSingletonBetfairAuthenticationService,
-  PlayWsBetfairAuthenticationService,
-  SessionTokenStore
-}
+import com.thinkmorestupidless.betfair.auth.impl.{ClusterSingletonBetfairAuthenticationService, PlayWsBetfairAuthenticationService, SessionTokenStore}
+import com.thinkmorestupidless.betfair.auth.usecases.LoginToBetfair
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain._
-import com.thinkmorestupidless.betfair.exchange.impl.{
-  AkkaHttpBetfairExchangeService,
-  ClusterSingletonBetfairExchangeService
-}
+import com.thinkmorestupidless.betfair.exchange.impl.{AkkaHttpBetfairExchangeService, ClusterSingletonBetfairExchangeService}
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.{ListEventTypesUseCase, ListEventsUseCase}
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
-import com.thinkmorestupidless.betfair.navigation.impl.{
-  ClusterSingletonBetfairNavigationService,
-  PlayWsBetfairNavigationService
-}
+import com.thinkmorestupidless.betfair.navigation.impl.{ClusterSingletonBetfairNavigationService, PlayWsBetfairNavigationService}
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.streams.domain
@@ -32,6 +23,7 @@ import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
 import org.apache.pekko.{actor => classic}
 import pureconfig.error.ConfigReaderFailures
+import com.thinkmorestupidless.utils.EitherTUtils._
 
 import java.time.Clock
 import scala.concurrent.{ExecutionContext, Future}
@@ -59,21 +51,20 @@ object Betfair {
     for {
       config <- loadConfig()
       authenticationService = createAuthenticationService(config)
-      sessionToken <- authenticationService.login().leftMap(FailedToLoginToBetfair(_))
-      globalMarketFilter <- EitherT.liftF(
-        maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository()).getCurrentGlobalFilter()
-      )
+      loginToBetfair = LoginToBetfair(authenticationService)
+      sessionToken <- loginToBetfair().leftMap(FailedToLoginToBetfair(_)).leftUpcast[BetfairError]
     } yield {
       val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
       val applicationKey = config.auth.credentials.applicationKey
       val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
+      val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
 
       create(
         navigationService,
         exchangeService,
         applicationKey,
         sessionToken,
-        globalMarketFilter,
+        globalMarketFilterRepository,
         socketFlow
       )
     }
@@ -138,7 +129,7 @@ object Betfair {
       exchangeService: BetfairExchangeService,
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
-      globalMarketFilter: domain.MarketFilter,
+      globalMarketFilterRepository: GlobalMarketFilterRepository,
       socketFlow: TlsSocketFlow.TlsSocketFlow
   )(implicit
       ec: ExecutionContext,
@@ -150,7 +141,7 @@ object Betfair {
     val listEvents = ListEventsUseCase(exchangeService)
 
     val betfairSocketFlow =
-      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilter)
+      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository)
 
     Betfair(getMenu, listEventTypes, listEvents, betfairSocketFlow)
   }
