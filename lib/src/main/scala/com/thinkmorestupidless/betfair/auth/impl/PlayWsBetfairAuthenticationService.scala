@@ -52,6 +52,12 @@ final class PlayWsBetfairAuthenticationService private (
           )
         )
         .map(response => parseResponseString(response.body))
+        .map {
+          case right @ Right(sessionToken) =>
+            sessionTokenStore.write(sessionToken)
+            right
+          case left => left
+        }
         .recover { case e: Throwable =>
           Left(UnexpectedLoginError(e))
         }

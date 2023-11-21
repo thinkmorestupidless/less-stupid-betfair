@@ -3,16 +3,31 @@ package com.thinkmorestupidless.betfair
 import cats.data.EitherT
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
-import com.thinkmorestupidless.betfair.auth.impl.{ClusterSingletonBetfairAuthenticationService, PlayWsBetfairAuthenticationService, SessionTokenStore}
+import com.thinkmorestupidless.betfair.auth.impl.{
+  ClusterSingletonBetfairAuthenticationService,
+  PlayWsBetfairAuthenticationService,
+  SessionTokenStore
+}
 import com.thinkmorestupidless.betfair.auth.usecases.LoginToBetfair
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.exchange.domain._
-import com.thinkmorestupidless.betfair.exchange.impl.{AkkaHttpBetfairExchangeService, ClusterSingletonBetfairExchangeService}
+import com.thinkmorestupidless.betfair.exchange.impl.{
+  AkkaHttpBetfairExchangeService,
+  ClusterSingletonBetfairExchangeService
+}
+import com.thinkmorestupidless.betfair.exchange.usecases.ListAllEventTypesUseCase.ListAllEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
-import com.thinkmorestupidless.betfair.exchange.usecases.{ListEventTypesUseCase, ListEventsUseCase}
+import com.thinkmorestupidless.betfair.exchange.usecases.{
+  ListAllEventTypesUseCase,
+  ListEventTypesUseCase,
+  ListEventsUseCase
+}
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
-import com.thinkmorestupidless.betfair.navigation.impl.{ClusterSingletonBetfairNavigationService, PlayWsBetfairNavigationService}
+import com.thinkmorestupidless.betfair.navigation.impl.{
+  ClusterSingletonBetfairNavigationService,
+  PlayWsBetfairNavigationService
+}
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
 import com.thinkmorestupidless.betfair.streams.domain
@@ -30,6 +45,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class Betfair(
     getMenu: GetMenuUseCase,
+    listAllEventTypes: ListAllEventTypesUseCase,
     listEventTypes: ListEventTypesUseCase,
     listEvents: ListEventsUseCase,
     socketFlow: BetfairSocketFlow
@@ -116,13 +132,14 @@ object Betfair {
   ): Betfair = {
     val getMenu = GetMenuUseCase(navigationService)
 
+    val listAllEventTypes = ListAllEventTypesUseCase(exchangeService)
     val listEventTypes = ListEventTypesUseCase(exchangeService)
     val listEvents = ListEventsUseCase(exchangeService)
 
     val betfairSocketFlow =
       BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository)
 
-    Betfair(getMenu, listEventTypes, listEvents, betfairSocketFlow)
+    Betfair(getMenu, listAllEventTypes, listEventTypes, listEvents, betfairSocketFlow)
   }
 
   private def createAuthenticationService(

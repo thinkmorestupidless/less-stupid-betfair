@@ -17,13 +17,14 @@ import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.stream.scaladsl.Source
 
 final class GrpcStreamsServiceImpl(betfair: Betfair)(implicit system: ActorSystem[_]) extends BetfairStreamsService {
+
   override def subscribeToMarketChanges(in: SubscribeToMarketChangesRequest): Source[MarketChange, NotUsed] =
     in.decode.fold(
       errors => Source.failed(ValidationException.combineErrors(errors)),
       decoded => {
-        val (sink, source) = betfair.socketFlow.sinkAndSource()
-        Source.single(decoded.marketFilter).map(MarketSubscription(_)).runWith(sink)
-        source
+//        val (sink, source) = betfair.socketFlow.sinkAndSource()
+        Source.single(decoded.marketFilter).map(MarketSubscription(_)).runWith(betfair.socketFlow.sink)
+        betfair.socketFlow.source
           .collect { case MarketChangeMessage(_, _, _, _, _, _, _, Some(marketChanges), _, _, _) =>
             marketChanges
           }

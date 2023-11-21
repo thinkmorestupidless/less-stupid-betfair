@@ -1,7 +1,12 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.core.domain.SocketAuthenticated
-import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, MarketFilter, MarketSubscription, OutgoingBetfairSocketMessage}
+import com.thinkmorestupidless.betfair.streams.domain.{
+  GlobalMarketFilterRepository,
+  MarketFilter,
+  MarketSubscription,
+  OutgoingBetfairSocketMessage
+}
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.eventstream.EventStream.Subscribe
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
@@ -17,7 +22,10 @@ object GlobalMarketSubscriptionSupplierActor {
   final case class GlobalMarketFilterAvailable(globalMarketFilter: MarketFilter) extends Message
   final case class FailedToGetGlobalMarketFilter(cause: Throwable) extends Message
 
-  def apply(globalMarketFilterRepository: GlobalMarketFilterRepository, queue: BoundedSourceQueue[OutgoingBetfairSocketMessage]): Behavior[Message] = {
+  def apply(
+      globalMarketFilterRepository: GlobalMarketFilterRepository,
+      queue: BoundedSourceQueue[OutgoingBetfairSocketMessage]
+  ): Behavior[Message] =
     Behaviors.setup { context =>
       val eventStreamAdaptor = context.messageAdapter[SocketAuthenticated.type](_ => GetGlobalMarketFilter)
       context.system.eventStream ! Subscribe(eventStreamAdaptor)
@@ -27,7 +35,7 @@ object GlobalMarketSubscriptionSupplierActor {
           context.log.info("socket authenticated, getting global market filter")
           context.pipeToSelf(globalMarketFilterRepository.getCurrentGlobalFilter()) {
             case Success(globalMarketFilter) => GlobalMarketFilterAvailable(globalMarketFilter)
-            case Failure(exception) => FailedToGetGlobalMarketFilter(exception)
+            case Failure(exception)          => FailedToGetGlobalMarketFilter(exception)
           }
           Behaviors.same
 
@@ -46,5 +54,4 @@ object GlobalMarketSubscriptionSupplierActor {
           throw cause
       }
     }
-  }
 }

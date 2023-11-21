@@ -1,7 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.Betfair
-import com.thinkmorestupidless.betfair.auth.impl.{NoOpSessionTokenTokenStore, PlayWsBetfairAuthenticationService}
+import com.thinkmorestupidless.betfair.auth.impl.{InMemorySessionTokenStore, PlayWsBetfairAuthenticationService}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.betfair.grpc.BetfairGrpcServer
 import com.thinkmorestupidless.betfair.proto.streams.{
@@ -41,7 +41,7 @@ final class TlsSocketFlowSpec extends AnyWordSpecLike {
       val codecFlow = BetfairCodecFlow().join(socketFlow)
 
       val applicationKey = betfairConfig.auth.credentials.applicationKey
-      val authenticationService = PlayWsBetfairAuthenticationService(betfairConfig, NoOpSessionTokenTokenStore)
+      val authenticationService = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val globalMarketFilterRepository = InMemoryMarketFilterRepository()(classic.dispatcher)
 
       val protocolFlow = BetfairProtocolFlow(applicationKey, authenticationService, globalMarketFilterRepository)(

@@ -136,14 +136,12 @@ object JsonCodecs {
         statusCode match {
           case StatusCode.Success => cursor.downField("connectionClosed").as[ConnectionClosed].map(Success(_))
           case StatusCode.Failure =>
-            val res = for {
+            for {
               errorCode <- cursor.downField("errorCode").as[ErrorCode]
               errorMessage <- cursor.downField("errorMessage").as[ErrorMessage]
               connectionClosed <- cursor.downField("connectionClosed").as[ConnectionClosed]
               connectionId <- cursor.downField("connectionId").as[ConnectionId]
             } yield Failure(errorCode, errorMessage, connectionClosed, connectionId)
-            log.info(s"decoding failure => $res")
-            res
         }
       }
     },

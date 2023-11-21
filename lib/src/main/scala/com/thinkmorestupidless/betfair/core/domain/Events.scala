@@ -9,4 +9,3 @@ case object SocketConnected extends BetfairLifecycleEvent
 final case class SocketConnectionFailed() extends BetfairLifecycleEvent
 case object SocketAuthenticated extends BetfairLifecycleEvent
 final case class SocketAuthenticationFailed() extends BetfairLifecycleEvent
-

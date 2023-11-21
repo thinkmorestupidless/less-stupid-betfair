@@ -7,8 +7,8 @@ import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.JsonCodecs._
 import com.thinkmorestupidless.utils.CirceSupport
-import io.circe.Decoder
-import io.circe.parser.decode
+import io.circe.{Decoder, Encoder}
+import io.circe.parser.{decode, parse}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
@@ -25,8 +25,7 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig, authentication
     implicit
     system: ActorSystem,
     ec: ExecutionContext
-) extends BetfairExchangeService
-    with CirceSupport {
+) extends BetfairExchangeService {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -171,13 +170,15 @@ final class AkkaHttpBetfairExchangeService(config: BetfairConfig, authentication
 
   private def execute[REQUEST, RESPONSE](sessionToken: SessionToken, requestBody: REQUEST, uri: String)(implicit
       decoder: Decoder[RESPONSE],
-      m: ToEntityMarshaller[REQUEST]
+      encoder: Encoder[REQUEST]
   ): EitherT[Future, ExchangeServiceError, RESPONSE] = {
     val headers: Seq[HttpHeader] = config.exchange.requiredHeaders ++ List(
       RawHeader(config.headerKeys.applicationKey.value, config.auth.credentials.applicationKey.value),
       RawHeader(config.headerKeys.sessionToken.value, sessionToken.value)
     )
-    val httpRequest = RequestBuilding.Post(uri = uri, content = requestBody).withHeaders(headers)
+    val httpRequest = RequestBuilding
+      .Post(uri = uri, content = requestBody)(CirceSupport.jsonMarshaller[REQUEST], ec)
+      .withHeaders(headers)
     for {
       httpResponse <- send(httpRequest)
       responseBodyAsString <- unmarshalToString(httpResponse)

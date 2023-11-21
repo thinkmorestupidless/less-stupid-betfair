@@ -3,7 +3,12 @@ package com.thinkmorestupidless.betfair.streams.impl
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.core.domain.{SocketAuthenticated, SocketAuthenticationFailed, SocketConnected}
 import com.thinkmorestupidless.betfair.streams.domain._
-import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{Answer, BetfairProtocolMessage, IncomingQuestion, OutgoingQuestion}
+import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
+  Answer,
+  BetfairProtocolMessage,
+  IncomingQuestion,
+  OutgoingQuestion
+}
 import com.thinkmorestupidless.extensions.akkastreams.SplitEither
 import com.thinkmorestupidless.utils.RandomUtils
 import org.apache.pekko.NotUsed
@@ -47,7 +52,10 @@ object BetfairProtocolFlow {
 
       val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
 
-      system.systemActorOf(GlobalMarketSubscriptionSupplierActor(globalMarketFilterRepository, queue), "betfair-global-filter")
+      system.systemActorOf(
+        GlobalMarketSubscriptionSupplierActor(globalMarketFilterRepository, queue),
+        "betfair-global-filter"
+      )
 
       val mergeIncoming = b.add(Merge[IncomingBetfairSocketMessage](inputPorts = 2))
       val mergeOutgoing = b.add(Merge[OutgoingBetfairSocketMessage](inputPorts = 3))
@@ -112,7 +120,6 @@ private object BetfairProtocolActor {
   ): Behavior[BetfairProtocolMessage] =
     Behaviors.withStash(capacity = 100) { buffer =>
       Behaviors.setup { context =>
-
         def unconnected(
             sessionToken: SessionToken
         ): Behavior[BetfairProtocolMessage] =

@@ -44,7 +44,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus: }"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, NoOpSessionTokenTokenStore)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe a[FailedToParseLoginResponseAsJson]
@@ -56,7 +56,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
       val responseBody = """{"loginStatus":"GIGANTIC_MAN_EATING_TIGER"}"""
       createStubMapping(betfairConfig, responseBody)
 
-      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, NoOpSessionTokenTokenStore)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe a[UnexpectedLoginError]
@@ -67,7 +67,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"ACCOUNT_PENDING_PASSWORD_CHANGE"}""")
 
-      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, NoOpSessionTokenTokenStore)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val error = awaitLeft(authenticator.login())
 
       error shouldBe LoginRejectedByBetfair(LoginStatus.AccountPendingPasswordChange)
@@ -78,7 +78,7 @@ final class PlayWsBetfairAuthenticationServiceSpec
 
       createStubMapping(betfairConfig, """{"loginStatus":"SUCCESS","sessionToken":"abcd1234"}""")
 
-      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, NoOpSessionTokenTokenStore)
+      val authenticator = PlayWsBetfairAuthenticationService(betfairConfig, InMemorySessionTokenStore)
       val result = awaitRight(authenticator.login())
 
       result shouldBe SessionToken("abcd1234")

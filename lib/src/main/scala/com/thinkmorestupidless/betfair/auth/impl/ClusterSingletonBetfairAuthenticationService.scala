@@ -30,7 +30,7 @@ object ClusterSingletonBetfairAuthenticationService {
   def apply(
       authService: BetfairAuthenticationService
   )(implicit system: ActorSystem[_]): BetfairAuthenticationService = {
-    val singleton = ClusterSingletonSessionTokenStoreActor.create(authService, NoOpSessionTokenTokenStore)
+    val singleton = ClusterSingletonSessionTokenStoreActor.create(authService, InMemorySessionTokenStore)
     new ClusterSingletonBetfairAuthenticationService(singleton)
   }
 }

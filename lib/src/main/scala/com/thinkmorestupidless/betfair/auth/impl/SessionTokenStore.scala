@@ -19,7 +19,7 @@ object SessionTokenStore {
 
   def fromConfig(config: SessionStoreConfig)(implicit ec: ExecutionContext, clock: Clock): SessionTokenStore =
     config.providerType match {
-      case SessionStoreProviderType.None => NoOpSessionTokenTokenStore
-      case SessionStoreProviderType.File => FileSessionTokenStore(config.fileProvider)
+      case SessionStoreProviderType.InMem => InMemorySessionTokenStore
+      case SessionStoreProviderType.File  => FileSessionTokenStore(config.fileProvider)
     }
 }

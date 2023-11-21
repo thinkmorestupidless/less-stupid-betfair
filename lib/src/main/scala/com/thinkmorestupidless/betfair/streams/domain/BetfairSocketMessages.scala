@@ -113,6 +113,7 @@ object ErrorCode extends Enum[ErrorCode] with CirceEnum[ErrorCode] {
   case object InvalidAppKey extends ErrorCode
   case object InvalidInput extends ErrorCode
   case object SubscriptionLimitExceeded extends ErrorCode
+  case object NotAuthorized extends ErrorCode
 }
 
 sealed trait ChangeType extends EnumEntry with UpperSnakecase

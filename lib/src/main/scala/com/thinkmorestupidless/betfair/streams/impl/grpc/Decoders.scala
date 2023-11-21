@@ -304,7 +304,7 @@ object Decoders {
         "required field SubscribeToMarketChangesRequest.marketFilter was not defined"
       ).andThen(_.decode[MarketFilter]).map(SubscribeToMarketChangesRequest(_))
 
-  implicit val string_marketId: Decoder[String, MarketId] = ???
+  implicit val string_marketId: Decoder[String, MarketId] = MarketId(_).validNel
 
   implicit val marketFilterProto_marketFilter: Decoder[MarketFilterProto, MarketFilter] =
     proto => {

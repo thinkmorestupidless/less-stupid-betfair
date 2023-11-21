@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object GetMenuUseCase {
 
-  type GetMenuUseCase = GetMenuRequest => EitherT[Future, FailedToGetMenu, Menu]
+  type GetMenuUseCase = () => EitherT[Future, FailedToGetMenu, Menu]
 
   final case class FailedToGetMenu(error: NavigationServiceError) {
     def toValidationException(): ValidationException =
@@ -18,5 +18,5 @@ object GetMenuUseCase {
   }
 
   def apply(betfairNavigationService: BetfairNavigationService)(implicit ec: ExecutionContext): GetMenuUseCase =
-    _ => betfairNavigationService.menu().leftMap(FailedToGetMenu(_))
+    () => betfairNavigationService.menu().leftMap(FailedToGetMenu(_))
 }

@@ -16,8 +16,8 @@ class GrpcNavigationServiceImpl(getMenu: GetMenuUseCase)(implicit ec: ExecutionC
   override def getMenu(in: GetMenuRequest): Future[MenuProto] =
     in.decode.fold(
       errors => Future.failed(ValidationException.combineErrors(errors)),
-      request =>
-        getMenu(request).value.flatMap {
+      _ =>
+        getMenu().value.flatMap {
           case Right(menu) => Future.successful(menu.encode)
           case Left(error) => Future.failed(error.toValidationException())
         }

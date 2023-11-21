@@ -13,9 +13,8 @@ object SubscribeToMarketChangesUseCase {
   def apply(betfairSocketFlow: BetfairSocketFlow)(implicit system: ActorSystem[_]): SubscribeToMarketChangesUseCase =
     marketFilter => {
       val request = MarketSubscription(marketFilter)
-      val (sink, source) = betfairSocketFlow.sinkAndSource()
-      Source.single(request).runWith(sink)
-      source.collect { case marketChangeMessage: MarketChangeMessage =>
+      Source.single(request).runWith(betfairSocketFlow.sink)
+      betfairSocketFlow.source.collect { case marketChangeMessage: MarketChangeMessage =>
         marketChangeMessage
       }
     }

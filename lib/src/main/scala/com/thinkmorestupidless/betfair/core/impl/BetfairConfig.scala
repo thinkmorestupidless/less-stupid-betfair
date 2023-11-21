@@ -28,7 +28,7 @@ final case class CertPassword(value: String)
 sealed trait SessionStoreProviderType extends EnumEntry with Hyphencase
 case object SessionStoreProviderType extends Enum[SessionStoreProviderType] {
   override def values: IndexedSeq[SessionStoreProviderType] = findValues
-  case object None extends SessionStoreProviderType
+  case object InMem extends SessionStoreProviderType
   case object File extends SessionStoreProviderType
 }
 
