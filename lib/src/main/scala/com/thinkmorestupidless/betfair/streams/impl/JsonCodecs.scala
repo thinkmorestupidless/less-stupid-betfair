@@ -29,119 +29,104 @@ object JsonCodecs {
   implicit val connectionClosedCodec: Codec[ConnectionClosed] = bimapBoolean(_.value, ConnectionClosed(_))
   implicit val connectionIdCodec: Codec[ConnectionId] = bimapString(_.value, ConnectionId(_))
 
-  implicit val heartbeatCodec: Codec[Heartbeat.type] = deriveCodec[Heartbeat.type]
   implicit val socketReadyCodec: Codec[SocketReady.type] = deriveCodec[SocketReady.type]
   implicit val socketFailedCodec: Codec[SocketFailed.type] = deriveCodec[SocketFailed.type]
 
   implicit val authenticationCodec: Codec[Authentication] = Codec.from(
-    new Decoder[Authentication] {
-      override def apply(c: HCursor): Result[Authentication] =
-        for {
-          appKey <- c.downField("appKey").as[ApplicationKey]
-          session <- c.downField("session").as[SessionToken]
-        } yield Authentication(appKey, session)
-    },
-    new Encoder[Authentication] {
-      override def apply(a: Authentication): Json = {
-        log.info(s"Encoding authentication [${a.op.asJson}]")
-        Json.obj(
-          ("op", a.op.asJson),
-          ("appKey", Json.fromString(a.appKey.value)),
-          ("session", Json.fromString(a.session.value))
-        )
-      }
-    }
+    cursor =>
+      for {
+        appKey <- cursor.downField("appKey").as[ApplicationKey]
+        session <- cursor.downField("session").as[SessionToken]
+      } yield Authentication(appKey, session),
+    authentication =>
+      Json.obj(
+        ("op", authentication.op.asJson),
+        ("appKey", Json.fromString(authentication.appKey.value)),
+        ("session", Json.fromString(authentication.session.value))
+      )
   )
+
   implicit val connectionCodec: Codec[Connection] = Codec.from(
-    new Decoder[Connection] {
-      override def apply(c: HCursor): Result[Connection] =
-        c.downField("connectionId").as[ConnectionId].map(Connection(_))
-    },
-    new Encoder[Connection] {
-      override def apply(connection: Connection): Json =
-        Json.obj(("op", Json.fromString("connection")), ("connectionId", connection.connectionId.asJson))
-    }
+    _.downField("connectionId").as[ConnectionId].map(Connection(_)),
+    connection => Json.obj(("op", connection.op.asJson), ("connectionId", connection.connectionId.asJson))
+  )
+
+  implicit val heartbeatCodec: Codec[Heartbeat] = Codec.from(
+    _ => Right(Heartbeat()),
+    heartbeat => Json.obj(("op", heartbeat.op.asJson))
   )
 
   implicit val marketSubscriptionCodec: Codec[MarketSubscription] = Codec.from(
-    new Decoder[MarketSubscription] {
-      override def apply(c: HCursor): Result[MarketSubscription] =
-        for {
-          marketFilter <- c.downField("marketFilter").as[MarketFilter]
-        } yield MarketSubscription(marketFilter)
-    },
-    new Encoder[MarketSubscription] {
-      override def apply(a: MarketSubscription): Json =
-        Json.obj(
-          ("op", Json.fromString("marketSubscription")),
-          ("marketFilter", a.marketFilter.asJson)
-        )
-    }
+    cursor =>
+      for {
+        marketFilter <- cursor.downField("marketFilter").as[MarketFilter]
+      } yield MarketSubscription(marketFilter),
+    marketSubscription =>
+      Json.obj(
+        ("op", marketSubscription.op.asJson),
+        ("marketFilter", marketSubscription.marketFilter.asJson)
+      )
   )
 
   implicit val marketChangeMessageCodec: Codec[MarketChangeMessage] = Codec.from(
-    new Decoder[MarketChangeMessage] {
-      override def apply(c: HCursor): Result[MarketChangeMessage] =
-        for {
-          id <- c.downField("id").as[Option[Int]]
-          ct <- c.downField("ct").as[Option[ChangeType]]
-          clk <- c.downField("clk").as[String]
-          heartbeatMs <- c.downField("heartbeatMs").as[Option[Long]]
-          pt <- c.downField("pt").as[Long]
-          initialClk <- c.downField("initialClk").as[Option[String]]
-          mc <- c.downField("mc").as[Option[Set[MarketChange]]]
-          conflateMs <- c.downField("conflateMs").as[Option[Long]]
-          segmentType <- c.downField("segmentType").as[Option[SegmentType]]
-          status <- c.downField("status").as[Option[Int]]
-        } yield MarketChangeMessage(
-          id,
-          ct,
-          clk,
-          heartbeatMs,
-          pt,
-          initialClk,
-          mc,
-          conflateMs,
-          segmentType,
-          status
-        )
-    },
-    new Encoder[MarketChangeMessage] {
-      override def apply(a: MarketChangeMessage): Json =
-        Json.obj(
-          ("op", Json.fromString("mcm")),
-          ("id", a.id.asJson),
-          ("ct", a.ct.asJson),
-          ("clk", a.clk.asJson),
-          ("heartbeatMs", a.heartbeatMs.asJson),
-          ("pt", a.pt.asJson),
-          ("initialClk", a.initialClk.asJson),
-          ("mc", a.mc.asJson),
-          ("conflateMs", a.conflateMs.asJson),
-          ("segmentType", a.segmentType.asJson),
-          ("status", a.status.asJson)
-        )
-    }
+    cursor =>
+      for {
+        id <- cursor.downField("id").as[Option[Int]]
+        ct <- cursor.downField("ct").as[Option[ChangeType]]
+        clk <- cursor.downField("clk").as[String]
+        heartbeatMs <- cursor.downField("heartbeatMs").as[Option[Long]]
+        pt <- cursor.downField("pt").as[Long]
+        initialClk <- cursor.downField("initialClk").as[Option[String]]
+        mc <- cursor.downField("mc").as[Option[Set[MarketChange]]]
+        conflateMs <- cursor.downField("conflateMs").as[Option[Long]]
+        segmentType <- cursor.downField("segmentType").as[Option[SegmentType]]
+        status <- cursor.downField("status").as[Option[Int]]
+      } yield MarketChangeMessage(
+        id,
+        ct,
+        clk,
+        heartbeatMs,
+        pt,
+        initialClk,
+        mc,
+        conflateMs,
+        segmentType,
+        status
+      ),
+    marketChangeMessage =>
+      Json.obj(
+        ("op", marketChangeMessage.op.asJson),
+        ("id", marketChangeMessage.id.asJson),
+        ("ct", marketChangeMessage.ct.asJson),
+        ("clk", marketChangeMessage.clk.asJson),
+        ("heartbeatMs", marketChangeMessage.heartbeatMs.asJson),
+        ("pt", marketChangeMessage.pt.asJson),
+        ("initialClk", marketChangeMessage.initialClk.asJson),
+        ("mc", marketChangeMessage.mc.asJson),
+        ("conflateMs", marketChangeMessage.conflateMs.asJson),
+        ("segmentType", marketChangeMessage.segmentType.asJson),
+        ("status", marketChangeMessage.status.asJson)
+      )
   )
 
   implicit val incomingMessageCodec: Codec[IncomingBetfairSocketMessage] = Codec.from(
     new Decoder[IncomingBetfairSocketMessage] {
-      override def apply(c: HCursor): Result[IncomingBetfairSocketMessage] =
-        c.downField("op").as[Op] match {
-          case Right(op)   => decodeOp(op, c)
+      override def apply(cursor: HCursor): Result[IncomingBetfairSocketMessage] =
+        cursor.downField("op").as[Op] match {
+          case Right(op)   => decodeOp(op, cursor)
           case Left(error) => throw new IllegalStateException(s"failed to decode incoming message - because [$error]")
         }
 
-      def decodeOp(op: Op, c: HCursor): Result[IncomingBetfairSocketMessage] =
+      def decodeOp(op: Op, cursor: HCursor): Result[IncomingBetfairSocketMessage] =
         op match {
-          case Op.Connection => c.value.as[Connection]
-          case Op.mcm        => c.value.as[MarketChangeMessage]
-          case Op.Status     => decodeStatus(c)
+          case Op.Connection => cursor.value.as[Connection]
+          case Op.mcm        => cursor.value.as[MarketChangeMessage]
+          case Op.Status     => decodeStatus(cursor)
           case _             => throw new IllegalStateException(s"expected an incoming op but received '$op'")
         }
 
-      def decodeStatus(c: HCursor): Result[IncomingBetfairSocketMessage] = {
-        val statusCode = c.downField("statusCode").as[StatusCode] match {
+      def decodeStatus(cursor: HCursor): Result[IncomingBetfairSocketMessage] = {
+        val statusCode = cursor.downField("statusCode").as[StatusCode] match {
           case Right(status) => status
           case Left(error) =>
             throw new IllegalStateException(
@@ -149,88 +134,65 @@ object JsonCodecs {
             )
         }
         statusCode match {
-          case StatusCode.Success =>
-            log.info("Decoding success")
-            c.downField("connectionClosed").as[ConnectionClosed].map(Success(_))
+          case StatusCode.Success => cursor.downField("connectionClosed").as[ConnectionClosed].map(Success(_))
           case StatusCode.Failure =>
-            log.info("Decoding Failure")
             val res = for {
-              errorCode <- c.downField("errorCode").as[ErrorCode]
-              errorMessage <- c.downField("errorMessage").as[ErrorMessage]
-              connectionClosed <- c.downField("connectionClosed").as[ConnectionClosed]
-              connectionId <- c.downField("connectionId").as[ConnectionId]
+              errorCode <- cursor.downField("errorCode").as[ErrorCode]
+              errorMessage <- cursor.downField("errorMessage").as[ErrorMessage]
+              connectionClosed <- cursor.downField("connectionClosed").as[ConnectionClosed]
+              connectionId <- cursor.downField("connectionId").as[ConnectionId]
             } yield Failure(errorCode, errorMessage, connectionClosed, connectionId)
-            log.info(s"failure => $res")
+            log.info(s"decoding failure => $res")
             res
         }
       }
     },
-    new Encoder[IncomingBetfairSocketMessage] {
-      override def apply(a: IncomingBetfairSocketMessage): Json =
-        a match {
-          case connection: Connection                   => connection.asJson
-          case SocketFailed                             => SocketFailed.asJson
-          case SocketReady                              => SocketReady.asJson
-          case marketChangeMessage: MarketChangeMessage => marketChangeMessage.asJson
-          case Success(connectionClosed) =>
-            Json.obj(
-              ("op", Json.fromString("status")),
-              ("statusCode", Json.fromString("SUCCESS")),
-              ("connectionClosed", connectionClosed.asJson)
-            )
-          case Failure(errorCode, errorMessage, connectionClosed, connectionId) =>
-            Json.obj(
-              ("op", Json.fromString("status")),
-              ("statusCode", Json.fromString("FAILURE")),
-              ("errorCode", errorCode.asJson),
-              ("errorMessage", errorMessage.asJson),
-              ("connectionClosed", connectionClosed.asJson),
-              ("connectionId", connectionId.asJson)
-            )
-          case x => throw new NotImplementedError(s"no encoder for $x")
-        }
+    _ match {
+      case connection: Connection                   => connection.asJson
+      case SocketFailed                             => SocketFailed.asJson
+      case SocketReady                              => SocketReady.asJson
+      case marketChangeMessage: MarketChangeMessage => marketChangeMessage.asJson
+      case Success(connectionClosed) =>
+        Json.obj(
+          ("op", Json.fromString("status")),
+          ("statusCode", Json.fromString("SUCCESS")),
+          ("connectionClosed", connectionClosed.asJson)
+        )
+      case Failure(errorCode, errorMessage, connectionClosed, connectionId) =>
+        Json.obj(
+          ("op", Json.fromString("status")),
+          ("statusCode", Json.fromString("FAILURE")),
+          ("errorCode", errorCode.asJson),
+          ("errorMessage", errorMessage.asJson),
+          ("connectionClosed", connectionClosed.asJson),
+          ("connectionId", connectionId.asJson)
+        )
+      case x => throw new NotImplementedError(s"no encoder for $x")
     }
   )
 
-  implicit class JsonKeysOps(self: Option[Iterable[String]]) {
-    def hasKey(key: String): Boolean =
-      self.flatMap(_.find(_ == key)) match {
-        case Some(_) => true
-        case None    => false
-      }
-
-    def hasKeys(keys: String*): Boolean =
-      keys.forall(hasKey(_))
-  }
-
   implicit val outgoingMessageCodec: Codec[OutgoingBetfairSocketMessage] = Codec.from(
     new Decoder[OutgoingBetfairSocketMessage] {
-      override def apply(c: HCursor): Result[OutgoingBetfairSocketMessage] = {
-        log.info(s"decoding OutgoingBetfairSocketMessage [${c.value}]")
-        c.downField("op").as[Op] match {
-          case Right(op) => decodeOp(op, c)
+      override def apply(cursor: HCursor): Result[OutgoingBetfairSocketMessage] =
+        cursor.downField("op").as[Op] match {
+          case Right(op) => decodeOp(op, cursor)
           case Left(error) =>
             log.warn(s"failed to decode outgoing message op - because [$error]")
             throw new IllegalStateException(s"failed to decode outgoing message op - because [$error]")
         }
-      }
 
-      def decodeOp(op: Op, c: HCursor): Result[OutgoingBetfairSocketMessage] = {
-        log.info(s"op is $op")
+      def decodeOp(op: Op, c: HCursor): Result[OutgoingBetfairSocketMessage] =
         op match {
           case Op.Authentication     => c.as[Authentication]
+          case Op.Heartbeat          => c.as[Heartbeat]
           case Op.MarketSubscription => c.as[MarketSubscription]
           case _                     => throw new IllegalStateException(s"expected an outgoing op but received '$op'")
         }
-      }
     },
-    new Encoder[OutgoingBetfairSocketMessage] {
-      override def apply(a: OutgoingBetfairSocketMessage): Json =
-        a match {
-          case marketSubscription: MarketSubscription => marketSubscription.asJson
-          case Heartbeat                              => Heartbeat.asJson
-          case authentication: Authentication         => authentication.asJson
-        }
+    _ match {
+      case marketSubscription: MarketSubscription => marketSubscription.asJson
+      case heartbeat: Heartbeat                   => heartbeat.asJson
+      case authentication: Authentication         => authentication.asJson
     }
   )
 }

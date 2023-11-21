@@ -43,7 +43,7 @@ object BetfairSocketFlow {
         .toMat(BroadcastHub.sink[IncomingBetfairSocketMessage](bufferSize = 256))(Keep.both)
 
     val (sink, _) = graph.run()
-    Source.single(Heartbeat).runWith(sink)
+    Source.single(Heartbeat()).runWith(sink)
 
     new BetfairSocketFlow(graph)
   }

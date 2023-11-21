@@ -55,7 +55,7 @@ object BetfairHeartbeatActor {
             Behaviors.same
 
           case SendHeartbeat =>
-            queue.offer(Heartbeat)
+            queue.offer(Heartbeat())
             timers.startSingleTimer(HeartbeatTimer, SendHeartbeat, 5.second)
             Behaviors.same
 

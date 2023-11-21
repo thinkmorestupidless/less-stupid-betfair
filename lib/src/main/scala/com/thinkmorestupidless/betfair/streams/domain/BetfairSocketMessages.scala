@@ -7,7 +7,11 @@ import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken
 sealed trait BetfairSocketMessage
 
 sealed trait OutgoingBetfairSocketMessage extends BetfairSocketMessage
-final case object Heartbeat extends OutgoingBetfairSocketMessage
+abstract case class Heartbeat private (op: Op = Op.Heartbeat) extends OutgoingBetfairSocketMessage
+object Heartbeat {
+  def apply(): Heartbeat =
+    new Heartbeat() {}
+}
 abstract case class Authentication private (op: Op = Op.Authentication, appKey: ApplicationKey, session: SessionToken)
     extends OutgoingBetfairSocketMessage
 object Authentication {
@@ -86,6 +90,7 @@ object Op extends Enum[Op] with CirceEnum[Op] {
 
   case object Connection extends Op
   case object Authentication extends Op
+  case object Heartbeat extends Op
   case object Status extends Op
   case object MarketSubscription extends Op
   case object mcm extends Op
