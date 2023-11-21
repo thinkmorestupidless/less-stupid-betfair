@@ -68,27 +68,6 @@ object Betfair {
         socketFlow
       )
     }
-
-//    loadConfig().flatMap { config =>
-//      val authenticationService = createAuthenticationService(config)
-//      authenticationService.login().map { sessionToken =>
-//        val (navigationService, exchangeService) = createUnderlyingServices(config, authenticationService)
-//        val applicationKey = config.auth.credentials.applicationKey
-//        val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
-//        val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
-//
-//        create(
-//          authenticationService,
-//          navigationService,
-//          exchangeService,
-//          applicationKey,
-//          sessionToken,
-//          socketFlow,
-//          globalMarketFilterRepository
-//        )
-//      }
-//        .leftMap(FailedToLoginToBetfair(_))
-//    }
   }
 
 //  def createClustered(
