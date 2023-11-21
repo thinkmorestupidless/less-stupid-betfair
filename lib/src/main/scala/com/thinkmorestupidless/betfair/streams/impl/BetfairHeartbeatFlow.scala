@@ -22,7 +22,7 @@ object BetfairHeartbeatFlow {
       system: ActorSystem[_]
   ): Flow[OutgoingBetfairSocketMessage, OutgoingBetfairSocketMessage, NotUsed] = {
 
-    val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](100).preMaterialize()
+    val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
 
     val actorRef = system.systemActorOf[HeartbeatMessage](BetfairHeartbeatActor(queue), "betfair-stream-heartbeat")
     val sink: Sink[OutgoingBetfairSocketMessage, NotUsed] = Flow[OutgoingBetfairSocketMessage]
@@ -44,7 +44,7 @@ object BetfairHeartbeatActor {
   final case class Fail(cause: Throwable) extends HeartbeatMessage
 
   def apply(queue: BoundedSourceQueue[OutgoingBetfairSocketMessage]): Behavior[HeartbeatMessage] =
-    Behaviors.setup { context =>
+    Behaviors.setup { _ =>
       Behaviors.withTimers { timers =>
         Behaviors.receiveMessage {
           case OutgoingMessage(_) =>
