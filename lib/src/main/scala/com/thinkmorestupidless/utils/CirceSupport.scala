@@ -8,7 +8,6 @@ import cats.syntax.either._
 import io.circe.jawn._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
-import java.lang.String
 
 trait CirceSupport {
   private final val compactPrinter: Printer = Printer(
@@ -20,10 +19,7 @@ trait CirceSupport {
     Unmarshaller.byteArrayUnmarshaller.forContentTypes(ContentTypes.`application/json`).mapWithCharset {
       case (bytes, charset) =>
         if (bytes.length == 0) throw Unmarshaller.NoContentException
-        else {
-          println(s"String: '${new String(bytes, charset.nioCharset().name())}'")
-          decode(new String(bytes, charset.nioCharset.name)).valueOr(throw _)
-        }
+        else decode(new String(bytes, charset.nioCharset.name)).valueOr(throw _)
     }
 
   final implicit def jsonMarshaller[T: Encoder](implicit printer: Printer = compactPrinter): ToEntityMarshaller[T] =

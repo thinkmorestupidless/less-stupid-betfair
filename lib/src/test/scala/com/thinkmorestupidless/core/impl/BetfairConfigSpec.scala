@@ -35,7 +35,7 @@ object BetfairConfigSpec {
         ApplicationKey("[APPLICATION_KEY MISSING]")
       ),
       LoginUri("https://identitysso-cert.betfair.com/api/certlogin"),
-      SessionStoreConfig(SessionStoreProviderType.None, FileProviderConfig(FileProviderFilePath(".")))
+      SessionStoreConfig(SessionStoreProviderType.InMem, FileProviderConfig(FileProviderFilePath(".")))
     ),
     ExchangeConfig(
       List(

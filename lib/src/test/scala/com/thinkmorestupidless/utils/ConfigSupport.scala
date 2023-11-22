@@ -19,7 +19,7 @@ object ConfigSupport {
         ApplicationKey("foobar")
       ),
       LoginUri(s"$baseUri/login"),
-      SessionStoreConfig(SessionStoreProviderType.None, FileProviderConfig(FileProviderFilePath(".")))
+      SessionStoreConfig(SessionStoreProviderType.InMem, FileProviderConfig(FileProviderFilePath(".")))
     ),
     ExchangeConfig(
       List(

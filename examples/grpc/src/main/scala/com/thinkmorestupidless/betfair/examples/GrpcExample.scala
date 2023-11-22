@@ -37,7 +37,6 @@ object GrpcExample {
 
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "grpc-example")
-//    implicit val classicSystem = system.toClassic
     implicit val ec = system.executionContext
     implicit val clock = Clock.systemUTC()
 
@@ -75,7 +74,7 @@ object GrpcExample {
 
           implicit val mat = Materializer(classicSystem)
 
-          source.runWith(Sink.foreach(println))
+          source.runWith(Sink.foreach(o => log.info(o.toString)))
         }
 
 //        val x = betfair.listAllEventTypes().map { allEventTypes =>
