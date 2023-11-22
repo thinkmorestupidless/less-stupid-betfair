@@ -2,6 +2,7 @@ package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.core.domain.{SocketAuthenticated, SocketAuthenticationFailed, SocketConnected}
+import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
   Answer,
@@ -35,7 +36,8 @@ object BetfairProtocolFlow {
   def apply(
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
-      globalMarketFilterRepository: GlobalMarketFilterRepository
+      globalMarketFilterRepository: GlobalMarketFilterRepository,
+      outgoingHeartbeat: OutgoingHeartbeat
   )(implicit
       system: ActorSystem[_]
   ): BetfairProtocolFlow =
@@ -62,7 +64,7 @@ object BetfairProtocolFlow {
       val splitIncoming = b.add(SplitEither[IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage])
       val splitOutgoing = b.add(SplitEither[IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage])
       val broadcastOutgoing = b.add(Broadcast[OutgoingBetfairSocketMessage](outputPorts = 2))
-      val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source))
+      val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source, outgoingHeartbeat))
 
       val incomingProtocolFlow = b.add(
         ActorFlow

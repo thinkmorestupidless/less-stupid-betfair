@@ -9,7 +9,7 @@ import com.thinkmorestupidless.betfair.auth.impl.{
   SessionTokenStore
 }
 import com.thinkmorestupidless.betfair.auth.usecases.LoginToBetfair
-import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
+import com.thinkmorestupidless.betfair.core.impl.{BetfairConfig, OutgoingHeartbeat}
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.{
   AkkaHttpBetfairExchangeService,
@@ -81,7 +81,8 @@ object Betfair {
         applicationKey,
         sessionToken,
         globalMarketFilterRepository,
-        socketFlow
+        socketFlow,
+        config.exchange.socket.outgoingHeartbeat
       )
     }
   }
@@ -125,7 +126,8 @@ object Betfair {
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
       globalMarketFilterRepository: GlobalMarketFilterRepository,
-      socketFlow: TlsSocketFlow.TlsSocketFlow
+      socketFlow: TlsSocketFlow.TlsSocketFlow,
+      outgoingHeartbeat: OutgoingHeartbeat
   )(implicit
       ec: ExecutionContext,
       system: ActorSystem[_]
@@ -137,7 +139,7 @@ object Betfair {
     val listEvents = ListEventsUseCase(exchangeService)
 
     val betfairSocketFlow =
-      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository)
+      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat)
 
     Betfair(getMenu, listAllEventTypes, listEventTypes, listEvents, betfairSocketFlow)
   }

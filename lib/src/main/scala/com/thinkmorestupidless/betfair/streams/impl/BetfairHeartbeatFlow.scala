@@ -1,5 +1,6 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
+import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain.{Heartbeat, OutgoingBetfairSocketMessage}
 import com.thinkmorestupidless.betfair.streams.impl.BetfairHeartbeatActor.{
   Complete,
@@ -20,17 +21,21 @@ object BetfairHeartbeatFlow {
 
   def apply(
       queue: BoundedSourceQueue[OutgoingBetfairSocketMessage],
-      source: Source[OutgoingBetfairSocketMessage, NotUsed]
+      source: Source[OutgoingBetfairSocketMessage, NotUsed],
+      outgoingHeartbeat: OutgoingHeartbeat
   )(implicit
       system: ActorSystem[_]
-  ): Flow[OutgoingBetfairSocketMessage, OutgoingBetfairSocketMessage, NotUsed] = {
-    val actorRef = system.systemActorOf[HeartbeatMessage](BetfairHeartbeatActor(queue), "betfair-stream-heartbeat")
-    val sink: Sink[OutgoingBetfairSocketMessage, NotUsed] = Flow[OutgoingBetfairSocketMessage]
-      .map(OutgoingMessage(_))
-      .to(ActorSink.actorRef[HeartbeatMessage](actorRef, Complete, Fail(_)))
+  ): Flow[OutgoingBetfairSocketMessage, OutgoingBetfairSocketMessage, NotUsed] =
+    if (outgoingHeartbeat.value) {
+      val actorRef = system.systemActorOf[HeartbeatMessage](BetfairHeartbeatActor(queue), "betfair-stream-heartbeat")
+      val sink: Sink[OutgoingBetfairSocketMessage, NotUsed] = Flow[OutgoingBetfairSocketMessage]
+        .map(OutgoingMessage(_))
+        .to(ActorSink.actorRef[HeartbeatMessage](actorRef, Complete, Fail(_)))
 
-    Flow.fromSinkAndSourceCoupled(sink, source)
-  }
+      Flow.fromSinkAndSourceCoupled(sink, source)
+    } else {
+      Flow[OutgoingBetfairSocketMessage].filter(_ => false)
+    }
 }
 
 object BetfairHeartbeatActor {

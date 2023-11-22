@@ -71,10 +71,16 @@ final case class ListEventsUri(value: String)
 final case class ListMarketCatalogueUri(value: String)
 final case class ListMarketBookUri(value: String)
 final case class PlaceOrdersUri(value: String)
-final case class SocketConfig(frameSize: SocketFrameSize, uri: SocketUri, port: SocketPort)
+final case class SocketConfig(
+    frameSize: SocketFrameSize,
+    uri: SocketUri,
+    port: SocketPort,
+    outgoingHeartbeat: OutgoingHeartbeat
+)
 final case class SocketFrameSize(value: Int)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
+final case class OutgoingHeartbeat(value: Boolean)
 final case class NavigationConfig(uri: MenuUri)
 final case class MenuUri(value: String)
 
@@ -107,6 +113,7 @@ object BetfairConfig {
   implicit val logExchangeRequestsReader = ConfigReader[Boolean].map(LogExchangeRequests(_))
   implicit val logExchangeResponsesReader = ConfigReader[Boolean].map(LogExchangeResponses(_))
   implicit val socketFrameSizeReader = ConfigReader[Int].map(SocketFrameSize(_))
+  implicit val outgoingHeartbeatReader = ConfigReader[Boolean].map(OutgoingHeartbeat(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {
