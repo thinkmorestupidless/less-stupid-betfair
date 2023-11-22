@@ -3,7 +3,7 @@ package com.thinkmorestupidless.betfair.streams.impl
 import com.thinkmorestupidless.betfair.core.impl.SocketConfig
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.stream.scaladsl.{Flow, Tcp}
+import org.apache.pekko.stream.scaladsl.{Flow, Framing, Tcp}
 import org.apache.pekko.util.ByteString
 
 import java.net.InetSocketAddress
@@ -15,7 +15,10 @@ object TlsSocketFlow {
 
   def fromConfig(config: SocketConfig)(implicit system: ActorSystem): TlsSocketFlow = {
     val address = new InetSocketAddress(config.uri.value, config.port.value)
-    Tcp().outgoingConnectionWithTls(address, () => createSSLEngine()).mapMaterializedValue(_ => NotUsed)
+    Tcp()
+      .outgoingConnectionWithTls(address, () => createSSLEngine())
+      .mapMaterializedValue(_ => NotUsed)
+      .via(Framing.delimiter(ByteString("\n"), maximumFrameLength = config.frameSize.value, allowTruncation = true))
   }
 
   private def createSSLEngine(): SSLEngine = {

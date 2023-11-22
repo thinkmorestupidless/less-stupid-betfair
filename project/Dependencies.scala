@@ -161,6 +161,9 @@ object Dependencies {
     production ++ test
   }
 
+  val streamsApiExampleDependencies =
+    logging
+
   val websocketExampleDependencies =
     logging
 

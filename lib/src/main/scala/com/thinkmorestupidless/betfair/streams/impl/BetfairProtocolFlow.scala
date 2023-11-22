@@ -38,23 +38,23 @@ object BetfairProtocolFlow {
       globalMarketFilterRepository: GlobalMarketFilterRepository
   )(implicit
       system: ActorSystem[_]
-  ): BetfairProtocolFlow = {
-    implicit val timeout = Timeout(10.seconds)
-
-    val protocolActor: ActorRef[BetfairProtocolMessage] = system.systemActorOf(
-      BetfairProtocolActor(applicationKey, sessionToken),
-      name = s"betfair-socket-protocol-${RandomUtils.generateRandomString()}",
-      Props.empty
-    )
-
+  ): BetfairProtocolFlow =
     BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
+
+      implicit val timeout = Timeout(10.seconds)
 
       val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
 
       system.systemActorOf(
         GlobalMarketSubscriptionSupplierActor(globalMarketFilterRepository, queue),
         "betfair-global-filter"
+      )
+
+      val protocolActor: ActorRef[BetfairProtocolMessage] = system.systemActorOf(
+        BetfairProtocolActor(applicationKey, sessionToken),
+        name = s"betfair-socket-protocol-${RandomUtils.generateRandomString()}",
+        Props.empty
       )
 
       val mergeIncoming = b.add(Merge[IncomingBetfairSocketMessage](inputPorts = 2))
@@ -89,19 +89,22 @@ object BetfairProtocolFlow {
       )
 
       incomingProtocolFlow.out ~> splitIncoming.in
+
       splitIncoming.right ~> mergeOutgoing.in(0)
       splitIncoming.left ~> mergeIncoming.in(0)
 
       outgoingProtocolFlow.out ~> splitOutgoing.in
+
       splitOutgoing.right ~> broadcastOutgoing.in
       splitOutgoing.left ~> mergeIncoming.in(1)
+
       broadcastOutgoing.out(0) ~> mergeOutgoing.in(1)
       broadcastOutgoing.out(1) ~> heartbeatFlow.in
+
       heartbeatFlow.out ~> mergeOutgoing.in(2)
 
       BidiShape(outgoingProtocolFlow.in, mergeOutgoing.out, incomingProtocolFlow.in, mergeIncoming.out)
     })
-  }
 }
 
 private object BetfairProtocolActor {

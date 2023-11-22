@@ -71,7 +71,8 @@ final case class ListEventsUri(value: String)
 final case class ListMarketCatalogueUri(value: String)
 final case class ListMarketBookUri(value: String)
 final case class PlaceOrdersUri(value: String)
-final case class SocketConfig(uri: SocketUri, port: SocketPort)
+final case class SocketConfig(frameSize: SocketFrameSize, uri: SocketUri, port: SocketPort)
+final case class SocketFrameSize(value: Int)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
 final case class NavigationConfig(uri: MenuUri)
@@ -105,6 +106,7 @@ object BetfairConfig {
     ConfigReader[String].map(SessionStoreProviderType.withNameInsensitive(_))
   implicit val logExchangeRequestsReader = ConfigReader[Boolean].map(LogExchangeRequests(_))
   implicit val logExchangeResponsesReader = ConfigReader[Boolean].map(LogExchangeResponses(_))
+  implicit val socketFrameSizeReader = ConfigReader[Int].map(SocketFrameSize(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {

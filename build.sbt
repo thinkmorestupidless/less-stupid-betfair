@@ -49,6 +49,14 @@ lazy val lib = project.in(file("lib"))
     )
   )
 
+lazy val `example-streams-api` = project.in(file("examples/streams-api"))
+  .dependsOn(lib)
+  .settings(
+    publish := false,
+    libraryDependencies ++= Dependencies.streamsApiExampleDependencies,
+    run / fork := true
+  )
+
 lazy val `example-websocket` = project.in(file("examples/websocket"))
   .dependsOn(lib)
   .settings(
