@@ -4,7 +4,8 @@ import com.thinkmorestupidless.betfair.Betfair
 import com.thinkmorestupidless.betfair.grpc.BetfairGrpcServer
 import com.thinkmorestupidless.betfair.navigation.domain.EventName.EnglishPremierLeague
 import com.thinkmorestupidless.betfair.navigation.domain.MarketType.MatchOdds
-import com.thinkmorestupidless.betfair.navigation.domain.Menu
+import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
+import com.thinkmorestupidless.betfair.proto.navigation.{BetfairNavigationServiceClient, GetMenuRequest}
 import com.thinkmorestupidless.betfair.proto.streams.{
   BetfairStreamsServiceClient,
   MarketFilter => MarketFilterProto,
@@ -17,19 +18,6 @@ import org.apache.pekko.grpc.GrpcClientSettings
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
-import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
-import com.thinkmorestupidless.betfair.proto.navigation.{
-  BetfairNavigationServiceClient,
-  GetMenuRequest,
-  Menu => MenuProto
-}
-import com.thinkmorestupidless.betfair.streams.domain
-import com.thinkmorestupidless.betfair.streams.domain.MarketId
-import com.thinkmorestupidless.grpc.Encoder._
-import com.thinkmorestupidless.betfair.streams.impl.grpc.Encoders._
-import com.thinkmorestupidless.grpc.Decoder._
-import com.thinkmorestupidless.betfair.navigation.impl.grpc.Decoders._
-import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
 
 import java.time.Clock
 import scala.concurrent.duration._

@@ -1,8 +1,8 @@
 package com.thinkmorestupidless.betfair.streams.domain
 
-import enumeratum.{CirceEnum, Enum, EnumEntry}
-import enumeratum.EnumEntry.{LowerCamelcase, Snakecase, UpperSnakecase}
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
+import enumeratum.EnumEntry.{LowerCamelcase, UpperSnakecase}
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 sealed trait BetfairSocketMessage
 

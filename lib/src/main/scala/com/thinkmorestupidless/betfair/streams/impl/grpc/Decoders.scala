@@ -8,10 +8,10 @@ import com.thinkmorestupidless.betfair.proto.streams.MarketDefinition.{
   BettingType => BettingTypeProto,
   MarketStatus => MarketStatusProto
 }
+import com.thinkmorestupidless.betfair.proto.streams.MarketFilter.{MarketBettingType => MarketBettingTypeProto}
 import com.thinkmorestupidless.betfair.proto.streams.PriceLadderDefinition.{PriceLadderType => PriceLadderTypeProto}
 import com.thinkmorestupidless.betfair.proto.streams.RunnerDefinition.{RunnerStatus => RunnerStatusProto}
 import com.thinkmorestupidless.betfair.proto.streams.{
-  ArrayOfStrings,
   KeyLineDefinition => KeyLineDefinitionProto,
   KeyLineSelection => KeyLineSelectionProto,
   MarketChange => MarketChangeProto,
@@ -21,7 +21,8 @@ import com.thinkmorestupidless.betfair.proto.streams.{
   PriceLadderDefinition => PriceLadderDefinitionProto,
   RunnerChange => RunnerChangeProto,
   RunnerDefinition => RunnerDefinitionProto,
-  SubscribeToMarketChangesRequest => SubscribeToMarketChangesRequestProto
+  SubscribeToMarketChangesRequest => SubscribeToMarketChangesRequestProto,
+  _
 }
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.grpc.GrpcStreamsServiceImpl.SubscribeToMarketChangesRequest
@@ -33,12 +34,7 @@ import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
 import enumeratum.EnumEntry
 import pl.iterators.kebs.macros.enums.EnumOf
-import com.thinkmorestupidless.grpc.DefaultDecoders._
-import com.thinkmorestupidless.utils.Validation.Validation
-import com.thinkmorestupidless.utils.Validation.ImplicitConversions.toValidatedOptionalList
-import com.thinkmorestupidless.betfair.proto.streams.MarketFilter.{MarketBettingType => MarketBettingTypeProto}
 
-import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object Decoders {

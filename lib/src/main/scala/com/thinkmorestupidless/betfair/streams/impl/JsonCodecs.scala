@@ -5,7 +5,6 @@ import com.thinkmorestupidless.betfair.auth.impl.JsonCodecs.{applicationKeyCodec
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.extensions.circe.CirceUtils._
 import io.circe.Decoder.Result
-import io.circe.Json.{JNumber, JString}
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._

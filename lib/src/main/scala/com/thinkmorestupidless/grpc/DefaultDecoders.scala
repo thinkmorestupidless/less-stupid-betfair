@@ -1,15 +1,13 @@
 package com.thinkmorestupidless.grpc
 
-import com.thinkmorestupidless.grpc.Decoder._
 import cats.syntax.traverse._
 import cats.syntax.validated._
+import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.utils.Validation.ImplicitConversions.{
   validatedOptionalStringToValidatedOptionalBigDecimal,
   validatedStringToValidatedBigDecimal
 }
 import com.thinkmorestupidless.utils.Validation.Validation
-
-import scala.language.implicitConversions
 
 object DefaultDecoders {
 

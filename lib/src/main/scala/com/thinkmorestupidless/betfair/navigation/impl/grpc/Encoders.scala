@@ -1,5 +1,6 @@
 package com.thinkmorestupidless.betfair.navigation.impl.grpc
 
+import com.thinkmorestupidless.betfair.navigation.domain._
 import com.thinkmorestupidless.betfair.proto.navigation.{
   Event => EventProto,
   EventType => EventTypeProto,
@@ -8,7 +9,6 @@ import com.thinkmorestupidless.betfair.proto.navigation.{
   Menu => MenuProto,
   Race => RaceProto
 }
-import com.thinkmorestupidless.betfair.navigation.domain.{Event, EventType, Group, Market, Menu, Race}
 import com.thinkmorestupidless.grpc.Encoder
 
 object Encoders {

@@ -29,7 +29,8 @@ object StreamsApiPostgresExample {
         log.info("betfair is ready {}", betfair)
 
         betfair.getMenu().map { menu =>
-          val marketSubscription = menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).toMarketSubscription()
+          val marketSubscription =
+            menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).toMarketSubscription()
           betfair.subscribeToMarketChanges(marketSubscription)
         }
       }

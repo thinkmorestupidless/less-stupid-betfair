@@ -7,13 +7,13 @@ import com.thinkmorestupidless.betfair.auth.domain._
 import com.thinkmorestupidless.betfair.auth.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.auth.impl.PlayWsBetfairAuthenticationService.AuthHeader
 import com.thinkmorestupidless.betfair.core.impl.{BetfairConfig, LoginUri}
+import com.thinkmorestupidless.utils.EitherTUtils._
 import io.circe.Json
 import io.circe.parser.parse
 import org.apache.pekko.actor.ActorSystem
 import org.slf4j.LoggerFactory
 import play.api.libs.ws.DefaultBodyWritables._
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
-import com.thinkmorestupidless.utils.EitherTUtils._
 
 import scala.concurrent.Future
 

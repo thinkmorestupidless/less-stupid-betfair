@@ -7,11 +7,11 @@ import com.thinkmorestupidless.betfair.streams.domain.{
   MarketSubscription,
   OutgoingBetfairSocketMessage
 }
+import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.eventstream.EventStream.Subscribe
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.stream.BoundedSourceQueue
-import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
 
 import scala.util.{Failure, Success}
 

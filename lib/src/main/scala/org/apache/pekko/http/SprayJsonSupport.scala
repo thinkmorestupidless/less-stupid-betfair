@@ -1,8 +1,8 @@
 package org.apache.pekko.http
 
-import org.apache.pekko.http.javadsl.{common, model => jm}
 import org.apache.pekko.NotUsed
 import org.apache.pekko.event.Logging
+import org.apache.pekko.http.javadsl.{common, model => jm}
 import org.apache.pekko.http.scaladsl.common.EntityStreamingSupport
 import org.apache.pekko.http.scaladsl.marshalling._
 import org.apache.pekko.http.scaladsl.model.MediaTypes.`application/json`
@@ -13,8 +13,6 @@ import org.apache.pekko.http.scaladsl.util.FastFuture
 import org.apache.pekko.stream.scaladsl.{Flow, Keep, Source}
 import org.apache.pekko.util.ByteString
 import spray.json._
-
-import scala.language.implicitConversions
 
 /** A trait providing automatic to and from JSON marshalling/unmarshalling using an in-scope *spray-json* protocol.
   */

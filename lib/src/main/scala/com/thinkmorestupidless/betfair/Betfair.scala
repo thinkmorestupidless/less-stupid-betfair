@@ -3,18 +3,11 @@ package com.thinkmorestupidless.betfair
 import cats.data.EitherT
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairAuthenticationService, SessionToken}
-import com.thinkmorestupidless.betfair.auth.impl.{
-  ClusterSingletonBetfairAuthenticationService,
-  PlayWsBetfairAuthenticationService,
-  SessionTokenStore
-}
+import com.thinkmorestupidless.betfair.auth.impl.{PlayWsBetfairAuthenticationService, SessionTokenStore}
 import com.thinkmorestupidless.betfair.auth.usecases.LoginToBetfair
 import com.thinkmorestupidless.betfair.core.impl.{BetfairConfig, OutgoingHeartbeat}
 import com.thinkmorestupidless.betfair.exchange.domain._
-import com.thinkmorestupidless.betfair.exchange.impl.{
-  AkkaHttpBetfairExchangeService,
-  ClusterSingletonBetfairExchangeService
-}
+import com.thinkmorestupidless.betfair.exchange.impl.AkkaHttpBetfairExchangeService
 import com.thinkmorestupidless.betfair.exchange.usecases.ListAllEventTypesUseCase.ListAllEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
@@ -24,29 +17,24 @@ import com.thinkmorestupidless.betfair.exchange.usecases.{
   ListEventsUseCase
 }
 import com.thinkmorestupidless.betfair.navigation.domain.BetfairNavigationService
-import com.thinkmorestupidless.betfair.navigation.impl.{
-  ClusterSingletonBetfairNavigationService,
-  PlayWsBetfairNavigationService
-}
+import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase
 import com.thinkmorestupidless.betfair.navigation.usecases.GetMenuUseCase.GetMenuUseCase
-import com.thinkmorestupidless.betfair.streams.domain
 import com.thinkmorestupidless.betfair.streams.domain.{
   GlobalMarketFilterRepository,
-  IncomingBetfairSocketMessage,
   MarketChange,
   MarketChangeMessage,
   MarketSubscription
 }
 import com.thinkmorestupidless.betfair.streams.impl.TlsSocketFlow.TlsSocketFlow
 import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, InMemoryMarketFilterRepository, TlsSocketFlow}
+import com.thinkmorestupidless.utils.EitherTUtils._
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
-import org.apache.pekko.{actor => classic, NotUsed}
-import pureconfig.error.ConfigReaderFailures
-import com.thinkmorestupidless.utils.EitherTUtils._
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.{RunnableGraph, Sink, Source}
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.{actor => classic}
+import pureconfig.error.ConfigReaderFailures
 
 import java.time.Clock
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,8 +46,8 @@ final case class Betfair(
     listEvents: ListEventsUseCase,
     socketFlow: BetfairSocketFlow
 ) {
-  def subscribeToMarketChanges[T](marketSubscription: MarketSubscription, sink: Sink[MarketChange, T])(
-      implicit mat: Materializer
+  def subscribeToMarketChanges[T](marketSubscription: MarketSubscription, sink: Sink[MarketChange, T])(implicit
+      mat: Materializer
   ): T = {
     socketFlow.marketSubscriptionQueue.offer(marketSubscription)
     socketFlow.source

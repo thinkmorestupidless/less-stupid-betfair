@@ -7,13 +7,12 @@ import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService._
 import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.JsonCodecs._
 import com.thinkmorestupidless.utils.CirceSupport
+import io.circe.parser.decode
 import io.circe.{Decoder, Encoder}
-import io.circe.parser.{decode, parse}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.client.RequestBuilding
 import org.apache.pekko.http.scaladsl.coding.Coders
-import org.apache.pekko.http.scaladsl.marshalling.ToEntityMarshaller
 import org.apache.pekko.http.scaladsl.model.headers.{HttpEncodings, RawHeader}
 import org.apache.pekko.http.scaladsl.model.{HttpHeader, HttpRequest, HttpResponse}
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal

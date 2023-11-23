@@ -1,8 +1,8 @@
 package com.thinkmorestupidless.betfair.exchange.domain
 
-import enumeratum.{CirceEnum, Enum, EnumEntry}
-import enumeratum.EnumEntry.UpperSnakecase
 import com.thinkmorestupidless.betfair.core.domain.{Money, Price}
+import enumeratum.EnumEntry.UpperSnakecase
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 import java.time.Instant
 

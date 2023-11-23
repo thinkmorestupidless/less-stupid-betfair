@@ -1,6 +1,5 @@
 package gente.oss.betfair.channels.domain
 
-import cats.data.EitherT
 import com.thinkmorestupidless.betfair.streams.domain.{MarketDefinition, MarketFilter, MarketId}
 import org.apache.pekko.Done
 

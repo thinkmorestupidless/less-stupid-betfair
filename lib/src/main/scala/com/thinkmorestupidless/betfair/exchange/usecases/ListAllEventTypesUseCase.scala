@@ -1,10 +1,9 @@
 package com.thinkmorestupidless.betfair.exchange.usecases
 
 import cats.data.EitherT
-import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.EventTypeResponse
+import com.thinkmorestupidless.betfair.exchange.domain.{BetfairExchangeService, MarketFilter}
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.FailedToListEventTypes
-import com.thinkmorestupidless.betfair.exchange.domain.MarketFilter
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}

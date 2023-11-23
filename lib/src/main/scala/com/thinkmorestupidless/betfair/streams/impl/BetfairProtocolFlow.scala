@@ -17,7 +17,7 @@ import org.apache.pekko.actor.typed.eventstream.EventStream.Publish
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.{ActorRef, ActorSystem, Behavior, Props}
 import org.apache.pekko.stream.BidiShape
-import org.apache.pekko.stream.scaladsl.{BidiFlow, Broadcast, Flow, GraphDSL, Merge, Source}
+import org.apache.pekko.stream.scaladsl._
 import org.apache.pekko.stream.typed.scaladsl.ActorFlow
 import org.apache.pekko.util.Timeout
 

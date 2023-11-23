@@ -7,23 +7,9 @@ import com.thinkmorestupidless.betfair.exchange.impl.grpc.GrpcExchangeService.Li
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventTypesUseCase.ListEventTypesUseCase
 import com.thinkmorestupidless.betfair.exchange.usecases.ListEventsUseCase.ListEventsUseCase
 import com.thinkmorestupidless.betfair.proto.exchange.{
-  BetfairExchangeService,
-  CancelExecutionReport,
-  CancelOrdersRequest,
-  ClearedOrderSummaryReport,
-  CompetitionResult,
-  CountryCodeResponse,
-  CurrentOrderSummaryReport,
-  ListCurrentOrdersRequest,
   ListEventTypesResponse => ListEventTypesResponseProto,
   ListEventsResponse => ListEventsResponseProto,
-  ListMarketBookRequest,
-  ListMarketBookResponse,
-  ListMarketCatalogueRequest,
-  ListMarketCatalogueResponse,
-  MarketFilter,
-  PlaceExecutionReport,
-  PlaceOrdersRequest
+  _
 }
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.grpc.Encoder._

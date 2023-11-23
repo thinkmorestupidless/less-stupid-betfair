@@ -1,7 +1,7 @@
 package com.thinkmorestupidless.betfair.navigation.domain
 
-import enumeratum.{Enum, EnumEntry}
 import enumeratum.EnumEntry.UpperSnakecase
+import enumeratum.{Enum, EnumEntry}
 
 sealed trait MenuItemType extends EnumEntry with UpperSnakecase
 object MenuItemType extends Enum[MenuItemType] {

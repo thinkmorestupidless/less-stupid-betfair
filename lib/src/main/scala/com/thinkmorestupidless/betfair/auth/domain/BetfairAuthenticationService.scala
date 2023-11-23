@@ -1,9 +1,9 @@
 package com.thinkmorestupidless.betfair.auth.domain
 
 import cats.data.EitherT
-import io.circe.{DecodingFailure, Json}
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
 import com.thinkmorestupidless.utils.ValidationException
+import io.circe.{DecodingFailure, Json}
 
 import scala.concurrent.Future
 

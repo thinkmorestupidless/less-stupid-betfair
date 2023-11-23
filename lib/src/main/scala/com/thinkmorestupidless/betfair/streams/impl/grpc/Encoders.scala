@@ -11,7 +11,6 @@ import com.thinkmorestupidless.betfair.proto.streams.MarketDefinition.{
 import com.thinkmorestupidless.betfair.proto.streams.PriceLadderDefinition.{PriceLadderType => PriceLadderTypeProto}
 import com.thinkmorestupidless.betfair.proto.streams.RunnerDefinition.{RunnerStatus => RunnerStatusProto}
 import com.thinkmorestupidless.betfair.proto.streams.{
-  ArrayOfStrings,
   KeyLineDefinition => KeyLineDefinitionProto,
   KeyLineSelection => KeyLineSelectionProto,
   MarketChange => MarketChangeProto,
@@ -19,7 +18,8 @@ import com.thinkmorestupidless.betfair.proto.streams.{
   MarketDefinition => MarketDefinitionProto,
   PriceLadderDefinition => PriceLadderDefinitionProto,
   RunnerChange => RunnerChangeProto,
-  RunnerDefinition => RunnerDefinitionProto
+  RunnerDefinition => RunnerDefinitionProto,
+  _
 }
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.grpc.Encoder

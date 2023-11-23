@@ -1,9 +1,8 @@
 package gente.oss.betfair.channels.impl.channels
 
-import org.apache.pekko.Done
-import org.apache.pekko.actor.Status.Status
-import org.apache.pekko.actor.typed.ActorRef
 import com.thinkmorestupidless.betfair.streams.domain.MarketFilter
+import org.apache.pekko.Done
+import org.apache.pekko.actor.typed.ActorRef
 
 object ChannelProtocol {
 

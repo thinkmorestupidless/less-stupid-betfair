@@ -1,8 +1,7 @@
 package com.thinkmorestupidless.betfair.streams.domain
 
-import enumeratum.{CirceEnum, Enum, EnumEntry}
 import enumeratum.EnumEntry.UpperSnakecase
-import com.thinkmorestupidless.utils.OptionalSetUtils._
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 sealed trait MarketBettingType extends EnumEntry with UpperSnakecase
 object MarketBettingType extends Enum[MarketBettingType] with CirceEnum[MarketBettingType] {

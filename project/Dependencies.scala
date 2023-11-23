@@ -15,6 +15,7 @@ object DependencyVersions {
   val postgresVersion = "42.1.4"
   val pureConfigVersion = "0.17.1"
   val sbtioVersion = "1.7.0"
+  val scalaFixOrganiseImportsVersion = "0.6.0"
   val scalaVersion = "2.13.9"
   val scalaTestVersion = "3.1.0"
   val slf4jVersion = "1.7.30"
@@ -101,6 +102,10 @@ object Dependencies {
   private val sbtio = Seq(
     "org.scala-sbt" %% "io"
   ).map(_ % sbtioVersion)
+
+  val scalaFixPlugins = Seq(
+    "com.github.liancheng" %% "organize-imports"
+  ).map(_ % scalaFixOrganiseImportsVersion)
 
   private val scalatest = Seq(
     "org.scalatest" %% "scalatest"

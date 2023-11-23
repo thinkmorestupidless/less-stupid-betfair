@@ -1,13 +1,13 @@
 package com.thinkmorestupidless.utils
 
-import org.apache.pekko.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
-import org.apache.pekko.http.scaladsl.model.{ContentTypes, MediaTypes}
-import org.apache.pekko.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
-import org.apache.pekko.util.ByteString
 import cats.syntax.either._
 import io.circe.jawn._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
+import org.apache.pekko.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+import org.apache.pekko.http.scaladsl.model.{ContentTypes, MediaTypes}
+import org.apache.pekko.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
+import org.apache.pekko.util.ByteString
 
 trait CirceSupport {
   private final val compactPrinter: Printer = Printer(

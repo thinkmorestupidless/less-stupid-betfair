@@ -4,30 +4,7 @@ import cats.syntax.apply._
 import cats.syntax.traverse._
 import cats.syntax.validated._
 import com.thinkmorestupidless.betfair.exchange.domain.BetfairExchangeService.EventTypeResponse
-import com.thinkmorestupidless.betfair.exchange.domain.{
-  Competition,
-  CompetitionId,
-  CompetitionName,
-  CountryCode,
-  Event,
-  EventId,
-  EventName,
-  EventType,
-  EventTypeId,
-  EventTypeName,
-  MarketCatalogue,
-  MarketDescription,
-  MarketFilter,
-  MarketId,
-  MarketName,
-  MarketStartTime,
-  OpenDate,
-  RunnerCatalog,
-  RunnerMetadata,
-  Timezone,
-  TotalMatched,
-  Venue
-}
+import com.thinkmorestupidless.betfair.exchange.domain._
 import com.thinkmorestupidless.betfair.exchange.impl.grpc.GrpcExchangeService.ListEventTypesResponse
 import com.thinkmorestupidless.betfair.proto.exchange.{
   Competition => CompetitionProto,
@@ -43,8 +20,8 @@ import com.thinkmorestupidless.betfair.proto.exchange.{
 import com.thinkmorestupidless.grpc.Decoder
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.grpc.DefaultDecoders._
-import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.Validation.ImplicitConversions.toValidatedOptionalList
+import com.thinkmorestupidless.utils.Validation.Validation
 
 import java.time.Instant
 
