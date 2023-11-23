@@ -4,12 +4,7 @@ import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken
 import com.thinkmorestupidless.betfair.core.domain.{SocketAuthenticated, SocketAuthenticationFailed, SocketConnected}
 import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain._
-import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
-  Answer,
-  BetfairProtocolMessage,
-  IncomingQuestion,
-  OutgoingQuestion
-}
+import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{Answer, BetfairProtocolMessage, IncomingQuestion, OutgoingQuestion}
 import com.thinkmorestupidless.extensions.akkastreams.SplitEither
 import com.thinkmorestupidless.utils.RandomUtils
 import org.apache.pekko.NotUsed
@@ -17,7 +12,7 @@ import org.apache.pekko.actor.typed.eventstream.EventStream.Publish
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.{ActorRef, ActorSystem, Behavior, Props}
 import org.apache.pekko.stream.BidiShape
-import org.apache.pekko.stream.scaladsl.{BidiFlow, Broadcast, GraphDSL, Merge, Source}
+import org.apache.pekko.stream.scaladsl.{BidiFlow, Broadcast, Flow, GraphDSL, Merge, Source}
 import org.apache.pekko.stream.typed.scaladsl.ActorFlow
 import org.apache.pekko.util.Timeout
 
@@ -66,28 +61,23 @@ object BetfairProtocolFlow {
       val broadcastOutgoing = b.add(Broadcast[OutgoingBetfairSocketMessage](outputPorts = 2))
       val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source, outgoingHeartbeat))
 
+      val handleSplitResult =
+      Flow[Answer].mapConcat(_.messages)
+        .map {
+        case incoming: IncomingBetfairSocketMessage => Left(incoming)
+        case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
+      }
+
       val incomingProtocolFlow = b.add(
         ActorFlow
-          .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)(makeMessage =
-            (el, replyTo) => IncomingQuestion(el, replyTo)
-          )
-          .mapConcat(_.messages)
-          .map {
-            case incoming: IncomingBetfairSocketMessage => Left(incoming)
-            case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
-          }
+          .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)(IncomingQuestion(_, _))
+          .via(handleSplitResult)
       )
 
       val outgoingProtocolFlow = b.add(
         ActorFlow
-          .ask[OutgoingBetfairSocketMessage, OutgoingQuestion, Answer](protocolActor)(makeMessage =
-            (el, replyTo) => OutgoingQuestion(el, replyTo)
-          )
-          .mapConcat(_.messages)
-          .map {
-            case incoming: IncomingBetfairSocketMessage => Left(incoming)
-            case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
-          }
+          .ask[OutgoingBetfairSocketMessage, OutgoingQuestion, Answer](protocolActor)(OutgoingQuestion(_, _))
+          .via(handleSplitResult)
       )
 
       incomingProtocolFlow.out ~> splitIncoming.in

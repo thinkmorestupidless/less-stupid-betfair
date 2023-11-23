@@ -24,6 +24,9 @@ final case class MarketName(value: String)
 final case class MarketId(value: String)
 final case class ExchangeId(value: String)
 final case class MarketType(value: String)
+object MarketType {
+  val MatchOdds = MarketType("MATCH_ODDS")
+}
 final case class MarketStartTime(value: String)
 final case class NumberOfWinners(value: Option[Int])
 
@@ -37,6 +40,9 @@ final case class Market(
 ) extends MenuItem
 
 final case class EventName(value: String)
+object EventName {
+  val EnglishPremierLeague = EventName("English Premier League")
+}
 final case class EventId(value: String)
 final case class CountryCode(value: String)
 

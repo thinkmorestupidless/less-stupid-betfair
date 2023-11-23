@@ -1,6 +1,6 @@
 package com.thinkmorestupidless.betfair.navigation.impl
 
-import com.thinkmorestupidless.betfair.navigation.domain.{EventNames, MarketTypes, Menu}
+import com.thinkmorestupidless.betfair.navigation.domain.Menu
 import com.thinkmorestupidless.betfair.navigation.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
 import com.thinkmorestupidless.utils.FileSupport.jsonFromResource

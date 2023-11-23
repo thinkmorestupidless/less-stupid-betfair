@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  db:
+    build:
+      context: .
+      target: db
+    environment:
+      POSTGRES_PORT: 5400
+      POSTGRES_USER: streams_example
+      POSTGRES_DB: streams_example
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - db:/var/lib/tmsl_streams_example_postgres/data
+  flyway:
+    build:
+      context: .
+      target: migrate-db
+    environment:
+      POSTGRES_HOSTNAME: db
+      POSTGRES_USER: streams_example
+      POSTGRES_DB: streams_example
+      POSTGRES_PASSWORD: changeme
+    command: migrate
+    volumes:
+      - ./tools/sql:/flyway/sql
+
+volumes:
+  db:

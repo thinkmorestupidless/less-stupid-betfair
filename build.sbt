@@ -14,12 +14,16 @@ lazy val root = project.in(file("."))
   )
   .aggregate(
     lib,
+    `example-streams-api`,
+    `example-streams-api-postgres`,
     `example-websocket`,
     `example-grpc`,
     gente
   )
   .dependsOn(Array(
     lib,
+    `example-streams-api`,
+    `example-streams-api-postgres`,
     `example-websocket`,
     `example-grpc`).map(_ % "test->test"): _*)
 
@@ -54,6 +58,14 @@ lazy val `example-streams-api` = project.in(file("examples/streams-api"))
   .settings(
     publish := false,
     libraryDependencies ++= Dependencies.streamsApiExampleDependencies,
+    run / fork := true
+  )
+
+lazy val `example-streams-api-postgres` = project.in(file("examples/streams-api-postgres"))
+  .dependsOn(lib)
+  .settings(
+    publish := false,
+    libraryDependencies ++= Dependencies.streamsApiPostgresExampleDependencies,
     run / fork := true
   )
 

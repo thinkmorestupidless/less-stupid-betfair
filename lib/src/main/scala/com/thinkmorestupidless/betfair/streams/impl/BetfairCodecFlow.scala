@@ -17,17 +17,14 @@ object BetfairCodecFlow {
   private val log = LoggerFactory.getLogger(getClass)
 
   private val outgoing = Flow[OutgoingBetfairSocketMessage]
-    .map { outgoing =>
-      val json = outgoing.asJson.noSpaces
-      log.info(s"OUT => $json")
-      json
-    }
+    .map(_.asJson.noSpaces)
+    .log("OUT")
     .map(json => ByteString(s"$json\r\n"))
 
   private val incoming = Flow[ByteString]
-    .map { byteString =>
-      val str = byteString.utf8String
-      log.info(s"IN => $str")
+    .map(_.utf8String)
+    .log("IN")
+    .map { str =>
       for {
         json <- parse(str)
         msg <- json.as[IncomingBetfairSocketMessage]

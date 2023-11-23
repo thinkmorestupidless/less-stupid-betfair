@@ -164,6 +164,11 @@ object Dependencies {
   val streamsApiExampleDependencies =
     logging
 
+  val streamsApiPostgresExampleDependencies =
+    logging ++
+    postgres ++
+    slick
+
   val websocketExampleDependencies =
     logging
 

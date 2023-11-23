@@ -11,8 +11,6 @@
         </encoder>
     </appender>
 
-    <logger name="org.apache.pekko" level="DEBUG"/>
-
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

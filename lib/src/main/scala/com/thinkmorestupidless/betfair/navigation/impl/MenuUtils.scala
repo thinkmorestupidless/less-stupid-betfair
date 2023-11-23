@@ -46,4 +46,18 @@ object MenuUtils {
     parent.children.foldLeft(List.empty[Event])(fold)
   }
 
+  implicit class EventListOps(self: List[Event]) {
+
+    def ofType(eventTypeName: EventName): List[Event] =
+      self.filter(_.name == eventTypeName)
+
+    def allMarkets(): List[Market] =
+      self.flatMap(_.allMarkets)
+  }
+
+  implicit class MarketListOps(self: List[Market]) {
+
+    def ofType(marketType: MarketType): List[Market] =
+      self.filter(_.marketType == marketType)
+  }
 }
