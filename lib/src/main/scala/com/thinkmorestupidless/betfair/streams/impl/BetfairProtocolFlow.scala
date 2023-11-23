@@ -4,7 +4,12 @@ import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken
 import com.thinkmorestupidless.betfair.core.domain.{SocketAuthenticated, SocketAuthenticationFailed, SocketConnected}
 import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain._
-import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{Answer, BetfairProtocolMessage, IncomingQuestion, OutgoingQuestion}
+import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
+  Answer,
+  BetfairProtocolMessage,
+  IncomingQuestion,
+  OutgoingQuestion
+}
 import com.thinkmorestupidless.extensions.akkastreams.SplitEither
 import com.thinkmorestupidless.utils.RandomUtils
 import org.apache.pekko.NotUsed
@@ -62,11 +67,10 @@ object BetfairProtocolFlow {
       val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source, outgoingHeartbeat))
 
       val handleSplitResult =
-      Flow[Answer].mapConcat(_.messages)
-        .map {
-        case incoming: IncomingBetfairSocketMessage => Left(incoming)
-        case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
-      }
+        Flow[Answer].mapConcat(_.messages).map {
+          case incoming: IncomingBetfairSocketMessage => Left(incoming)
+          case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
+        }
 
       val incomingProtocolFlow = b.add(
         ActorFlow

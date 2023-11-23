@@ -4,7 +4,7 @@ import com.thinkmorestupidless.betfair.Betfair
 import com.thinkmorestupidless.betfair.navigation.domain.EventName.EnglishPremierLeague
 import com.thinkmorestupidless.betfair.navigation.domain.MarketType.MatchOdds
 import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
-import com.thinkmorestupidless.betfair.streams.domain.IncomingBetfairSocketMessage
+import com.thinkmorestupidless.betfair.streams.domain.{IncomingBetfairSocketMessage, MarketChange}
 import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
@@ -31,7 +31,7 @@ object StreamsApiExample {
 
         betfair.getMenu().map { menu =>
           val marketSubscription = menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).toMarketSubscription()
-          betfair.subscribeToMarketChanges(marketSubscription, Sink.foreach[IncomingBetfairSocketMessage](msg => log.info(msg.toString)))
+          betfair.subscribeToMarketChanges(marketSubscription, Sink.foreach[MarketChange](msg => log.info(msg.toString)))
         }
       }
       .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))

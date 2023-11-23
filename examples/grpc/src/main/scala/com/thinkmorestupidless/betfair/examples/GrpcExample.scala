@@ -5,7 +5,11 @@ import com.thinkmorestupidless.betfair.grpc.BetfairGrpcServer
 import com.thinkmorestupidless.betfair.navigation.domain.EventName.EnglishPremierLeague
 import com.thinkmorestupidless.betfair.navigation.domain.MarketType.MatchOdds
 import com.thinkmorestupidless.betfair.navigation.domain.Menu
-import com.thinkmorestupidless.betfair.proto.streams.{BetfairStreamsServiceClient, SubscribeToMarketChangesRequest, MarketFilter => MarketFilterProto}
+import com.thinkmorestupidless.betfair.proto.streams.{
+  BetfairStreamsServiceClient,
+  MarketFilter => MarketFilterProto,
+  SubscribeToMarketChangesRequest
+}
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.scaladsl.adapter._
@@ -14,7 +18,11 @@ import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
 import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
-import com.thinkmorestupidless.betfair.proto.navigation.{BetfairNavigationServiceClient, GetMenuRequest, Menu => MenuProto}
+import com.thinkmorestupidless.betfair.proto.navigation.{
+  BetfairNavigationServiceClient,
+  GetMenuRequest,
+  Menu => MenuProto
+}
 import com.thinkmorestupidless.betfair.streams.domain
 import com.thinkmorestupidless.betfair.streams.domain.MarketId
 import com.thinkmorestupidless.grpc.Encoder._
@@ -53,7 +61,8 @@ object GrpcExample {
         val menu = navigationClient.getMenu(GetMenuRequest())
 
         betfair.getMenu().map { menu =>
-          val marketFilter = MarketFilterProto(menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).map(_.id.value))
+          val marketFilter =
+            MarketFilterProto(menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).map(_.id.value))
           val source =
             streamsClient.subscribeToMarketChanges(SubscribeToMarketChangesRequest(Some(marketFilter))).recover {
               case e: Exception =>

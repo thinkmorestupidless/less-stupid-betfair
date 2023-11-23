@@ -2,7 +2,13 @@ package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
-import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, Heartbeat, IncomingBetfairSocketMessage, MarketSubscription, OutgoingBetfairSocketMessage}
+import com.thinkmorestupidless.betfair.streams.domain.{
+  GlobalMarketFilterRepository,
+  Heartbeat,
+  IncomingBetfairSocketMessage,
+  MarketSubscription,
+  OutgoingBetfairSocketMessage
+}
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.stream.{ActorAttributes, Supervision}
@@ -31,7 +37,9 @@ object BetfairSocketFlow {
 
   private val handleStreamFailures: Supervision.Decider = {
     case e: FramingException =>
-      log.error(s"stream failed with FramingException '${e.getMessage}' - this is usually a sign you need to increase the frame size of the socket. Check config value betfair.exchange.socket.frame-size")
+      log.error(
+        s"stream failed with FramingException '${e.getMessage}' - this is usually a sign you need to increase the frame size of the socket. Check config value betfair.exchange.socket.frame-size"
+      )
       Supervision.Stop
     case _ => Supervision.Stop
   }
@@ -45,7 +53,8 @@ object BetfairSocketFlow {
   )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
     val codecFlow = BetfairCodecFlow().join(socketFlow)
     val betfairSocketFlow =
-      BetfairProtocolFlow(applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat).join(codecFlow)
+      BetfairProtocolFlow(applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat)
+        .join(codecFlow)
         .withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
 
     val (sink, source) =
