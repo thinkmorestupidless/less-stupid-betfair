@@ -28,7 +28,12 @@ object ConfigSupport {
         RawHeader("Accept-Charset", "UTF-8"),
         RawHeader("Accept-Encoding", "gzip, deflate")
       ),
-      SocketConfig(SocketUri("stream-api.betfair.com"), SocketPort(443)),
+      SocketConfig(
+        SocketFrameSize(102400),
+        SocketUri("stream-api.betfair.com"),
+        SocketPort(443),
+        OutgoingHeartbeat(false)
+      ),
       ExchangeUris(
         CancelOrdersUri(s"$baseUri/cancelOrders/"),
         ListClearedOrdersUri(s"$baseUri/listClearedOrders/"),

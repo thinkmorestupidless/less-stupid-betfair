@@ -6,8 +6,6 @@ import com.thinkmorestupidless.betfair.streams.impl.JsonCodecsSpec.RunnerChangeW
 import io.circe.parser._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import io.circe._
-import io.circe.syntax._
 
 final class JsonCodecsSpec extends AnyWordSpecLike with Matchers {
 

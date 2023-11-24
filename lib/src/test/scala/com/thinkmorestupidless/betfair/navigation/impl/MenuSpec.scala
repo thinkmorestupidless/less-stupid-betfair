@@ -1,6 +1,8 @@
 package com.thinkmorestupidless.betfair.navigation.impl
 
-import com.thinkmorestupidless.betfair.navigation.domain.Menu
+import com.thinkmorestupidless.betfair.navigation.domain.EventName.EnglishPremierLeague
+import com.thinkmorestupidless.betfair.navigation.domain.MarketType.MatchOdds
+import com.thinkmorestupidless.betfair.navigation.domain.{EventName, Menu}
 import com.thinkmorestupidless.betfair.navigation.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
 import com.thinkmorestupidless.utils.FileSupport.jsonFromResource
@@ -16,19 +18,16 @@ class MenuSpec extends AnyWordSpecLike with Matchers with Inspectors {
 
       val menu = jsonFromResource("full_menu.json").convertTo[Menu]
 
-      val expectedEvent = menu.findEventByName(EventNames.EnglishPremierLeague)
+      val expectedEvent = menu.findEventByName(EnglishPremierLeague)
 
-      expectedEvent.get.name shouldBe EventNames.EnglishPremierLeague
+      expectedEvent.get.name shouldBe EventName.EnglishPremierLeague
     }
 
     "find all markets with given marketType for an Event" in {
 
       val menu = jsonFromResource("full_menu.json").convertTo[Menu]
 
-      val markets = menu
-        .findEventByName(EventNames.EnglishPremierLeague)
-        .toList
-        .flatMap(_.getMarketsWithMarketType(MarketTypes.MatchOdds))
+      val _ = menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds)
     }
   }
 }

@@ -11,8 +11,6 @@ import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.
 import com.thinkmorestupidless.betfair.auth.domain.{LoginStatus, SessionToken}
 import com.thinkmorestupidless.betfair.core.impl.BetfairConfig
 import com.thinkmorestupidless.utils.{ConfigSupport, FutureSupport}
-import io.circe.CursorOp.DownField
-import io.circe.{DecodingFailure, ParsingFailure}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll

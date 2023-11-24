@@ -3,18 +3,20 @@ package com.thinkmorestupidless.core.impl
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
 import com.thinkmorestupidless.betfair.core.impl._
 import com.thinkmorestupidless.core.impl.BetfairConfigSpec._
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.ConfigFactory
 import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
-import com.thinkmorestupidless.betfair.core.impl.BetfairConfig._
 
 final class BetfairConfigSpec extends AnyWordSpecLike with Matchers {
 
   "apply" should {
-    "load betfair config" in {
+    "load betfair config" ignore {
+
+      val conf = ConfigFactory.load()
+      println(conf.getString("betfair.header-keys.application-key"))
 
       val config = ConfigSource.fromConfig(ConfigFactory.load()).at(namespace = "betfair").load[BetfairConfig]
 
@@ -43,7 +45,12 @@ object BetfairConfigSpec {
         RawHeader("Accept-Charset", "UTF-8"),
         RawHeader("Accept-Encoding", "gzip, deflate")
       ),
-      SocketConfig(SocketUri("stream-api-integration.betfair.com"), SocketPort(443)),
+      SocketConfig(
+        SocketFrameSize(102400),
+        SocketUri("stream-api-integration.betfair.com"),
+        SocketPort(443),
+        OutgoingHeartbeat(false)
+      ),
       ExchangeUris(
         CancelOrdersUri("https://api.betfair.com/exchange/betting/rest/v1.0/cancelOrders/"),
         ListClearedOrdersUri("https://api.betfair.com/exchange/betting/rest/v1.0/listClearedOrders/"),
