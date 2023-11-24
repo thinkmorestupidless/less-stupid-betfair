@@ -1,6 +1,6 @@
 package com.thinkmorestupidless.utils
 
-import akka.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, BetfairCredentials, Password, Username}
 import com.thinkmorestupidless.betfair.core.impl._
 
@@ -8,7 +8,7 @@ object ConfigSupport {
 
   def generateConfig(baseUri: String) = BetfairConfig(
     HeaderKeys(ApplicationKeyHeaderKey("X-Application"), SessionTokenHeaderKey("X-Authentication")),
-    LoginConfig(
+    AuthConfig(
       Cert(
         CertFile("certfile.pkcs12"),
         CertPassword("top-secret")
@@ -18,7 +18,8 @@ object ConfigSupport {
         Password("changeme"),
         ApplicationKey("foobar")
       ),
-      LoginUri(s"$baseUri/login")
+      LoginUri(s"$baseUri/login"),
+      SessionStoreConfig(SessionStoreProviderType.InMem, FileProviderConfig(FileProviderFilePath(".")))
     ),
     ExchangeConfig(
       List(
@@ -27,7 +28,12 @@ object ConfigSupport {
         RawHeader("Accept-Charset", "UTF-8"),
         RawHeader("Accept-Encoding", "gzip, deflate")
       ),
-      SocketConfig(SocketUri("stream-api.betfair.com"), SocketPort(443)),
+      SocketConfig(
+        SocketFrameSize(102400),
+        SocketUri("stream-api.betfair.com"),
+        SocketPort(443),
+        OutgoingHeartbeat(false)
+      ),
       ExchangeUris(
         CancelOrdersUri(s"$baseUri/cancelOrders/"),
         ListClearedOrdersUri(s"$baseUri/listClearedOrders/"),
@@ -39,7 +45,9 @@ object ConfigSupport {
         ListMarketCatalogueUri(s"$baseUri/listMarketCatalogue"),
         ListMarketBookUri(s"$baseUri/listMarketBook"),
         PlaceOrdersUri(s"$baseUri/placeOrders")
-      )
-    )
+      ),
+      ExchangeLogging(LogExchangeRequests(true), LogExchangeResponses(true))
+    ),
+    NavigationConfig(MenuUri(s"$baseUri/navigation/menu.json"))
   )
 }

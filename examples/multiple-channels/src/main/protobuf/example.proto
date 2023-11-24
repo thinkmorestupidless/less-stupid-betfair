@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "gente.oss.betfair.examples.grpc";
+option java_outer_classname = "GrpcExampleProto";
+
+import "com/thinkmorestupidless/betfair/proto/streams/streams_domain.proto";
+
+message SubscriptionRequest {
+  string market_id = 1;
+}
+
+service GenteService {
+  rpc SubscribeToMarketChanges (stream SubscriptionRequest) returns (stream com.thinkmorestupidless.betfair.proto.streams.MarketChange) {}
+}

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.streams;
+
+import "com/thinkmorestupidless/betfair/proto/streams/streams_domain.proto";
+
+message SubscribeToMarketChangesRequest {
+  MarketFilter market_filter = 2;
+}
+
+service BetfairStreamsService {
+
+  rpc SubscribeToMarketChanges (SubscribeToMarketChangesRequest) returns (stream MarketChange) {}
+}

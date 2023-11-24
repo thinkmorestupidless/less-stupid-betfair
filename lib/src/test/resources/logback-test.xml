@@ -15,7 +15,7 @@
     the captured logging events are flushed to the appenders defined for the
     akka.actor.testkit.typed.internal.CapturingAppenderDelegate logger.
     -->
-    <appender name="CapturingAppender" class="akka.actor.testkit.typed.internal.CapturingAppender" />
+    <appender name="CapturingAppender" class="org.apache.pekko.actor.testkit.typed.internal.CapturingAppender" />
 
     <!--
     The appenders defined for this CapturingAppenderDelegate logger are used

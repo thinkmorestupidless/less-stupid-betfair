@@ -9,12 +9,6 @@ final case class Password(value: String)
 final case class ApplicationKey(value: String)
 final case class SessionToken(value: String)
 
-case class BetfairSession(applicationKey: ApplicationKey, sessionToken: SessionToken) {
-
-  def withSessionToken(sessionToken: SessionToken): BetfairSession =
-    copy(sessionToken = sessionToken)
-}
-
 sealed trait LoginStatus extends EnumEntry with UpperSnakecase
 object LoginStatus extends Enum[LoginStatus] with CirceEnum[LoginStatus] {
   val values = findValues

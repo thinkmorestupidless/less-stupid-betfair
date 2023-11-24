@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto;
+
+// Represents a whole calendar date, such as a birthday. The time of day and
+// time zone are either specified elsewhere or are insignificant. The date is
+// relative to the Gregorian Calendar.
+message Date {
+  // Year of the date. Must be from 1 to 9999.
+  int32 year = 1;
+
+  // Month of a year. Must be from 1 to 12.
+  int32 month = 2;
+
+  // Day of a month. Must be from 1 to 31, and be within the valid range for the month
+  // and year.
+  int32 day = 3;
+}

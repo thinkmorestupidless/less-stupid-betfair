@@ -2,7 +2,7 @@ package com.thinkmorestupidless.utils
 
 import com.typesafe.config.{Config, ConfigFactory => TypesafeConfigFactory}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object ConfigFactory {
 

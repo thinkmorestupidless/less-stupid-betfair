@@ -1,13 +1,17 @@
 package com.thinkmorestupidless.betfair.streams.domain
 
-import enumeratum.{CirceEnum, Enum, EnumEntry}
-import enumeratum.EnumEntry.{LowerCamelcase, Snakecase, UpperSnakecase}
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
+import enumeratum.EnumEntry.{LowerCamelcase, UpperSnakecase}
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 sealed trait BetfairSocketMessage
 
 sealed trait OutgoingBetfairSocketMessage extends BetfairSocketMessage
-final case object Heartbeat extends OutgoingBetfairSocketMessage
+abstract case class Heartbeat private (op: Op = Op.Heartbeat) extends OutgoingBetfairSocketMessage
+object Heartbeat {
+  def apply(): Heartbeat =
+    new Heartbeat() {}
+}
 abstract case class Authentication private (op: Op = Op.Authentication, appKey: ApplicationKey, session: SessionToken)
     extends OutgoingBetfairSocketMessage
 object Authentication {
@@ -53,6 +57,21 @@ final case class MarketChangeMessage(
     segmentType: Option[SegmentType],
     status: Option[Int]
 ) extends IncomingBetfairSocketMessage
+object MarketChangeMessage {
+  def apply(
+      id: Option[Int],
+      ct: Option[ChangeType],
+      clk: String,
+      heartbeatMs: Option[Long],
+      pt: Long,
+      initialClk: Option[String],
+      mc: Option[Set[MarketChange]],
+      conflateMs: Option[Long],
+      segmentType: Option[SegmentType],
+      status: Option[Int]
+  ): MarketChangeMessage =
+    new MarketChangeMessage(Op.mcm, id, ct, clk, heartbeatMs, pt, initialClk, mc, conflateMs, segmentType, status)
+}
 
 final case class CannotParseJson(cause: Throwable) extends IncomingBetfairSocketMessage
 case object SocketReady extends IncomingBetfairSocketMessage
@@ -71,6 +90,7 @@ object Op extends Enum[Op] with CirceEnum[Op] {
 
   case object Connection extends Op
   case object Authentication extends Op
+  case object Heartbeat extends Op
   case object Status extends Op
   case object MarketSubscription extends Op
   case object mcm extends Op
@@ -91,7 +111,9 @@ object ErrorCode extends Enum[ErrorCode] with CirceEnum[ErrorCode] {
   case object Timeout extends ErrorCode
   case object NoAppKey extends ErrorCode
   case object InvalidAppKey extends ErrorCode
+  case object InvalidInput extends ErrorCode
   case object SubscriptionLimitExceeded extends ErrorCode
+  case object NotAuthorized extends ErrorCode
 }
 
 sealed trait ChangeType extends EnumEntry with UpperSnakecase

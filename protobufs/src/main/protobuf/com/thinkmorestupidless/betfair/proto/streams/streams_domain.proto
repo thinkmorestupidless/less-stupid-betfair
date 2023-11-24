@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.streams;
+
+message MarketChangeMessage {
+    optional int32 id = 2;
+
+    enum ChangeType {
+      SUB_IMAGE = 0;
+      RESUB_DELTA = 1;
+      HEARTBEAT = 2;
+    }
+
+    optional ChangeType ct = 3;
+    string clk = 4;
+    optional int64 heartbeatMs = 5;
+    int64 pt = 6;
+    optional string initialClk = 7;
+    repeated MarketChange mc = 8;
+    optional int64 conflateMs = 9;
+
+    enum SegmentType {
+      SEG_START = 0;
+      SEG = 1;
+      SEG_END = 2;
+    }
+
+    optional SegmentType segmentType = 10;
+    optional int32 status = 11;
+}
+
+message MarketFilter {
+
+  enum MarketBettingType {
+      ODDS = 0;
+      LINE = 1;
+      RANGE = 2;
+      ASIAN_HANDICAP_DOUBLE_LINE = 3;
+      ASIAN_HANDICAP_SINGLE_LINE = 4;
+      FIXED_ODDS = 5;
+  }
+
+  repeated string marketIds = 1;
+  optional bool bspMarket = 2;
+  repeated MarketBettingType bettingTypes = 3;
+  repeated string eventTypeIds = 4;
+  repeated string eventIds = 5;
+  optional bool turnInPlayEnabled = 6;
+  repeated string marketTypes = 7;
+  repeated string venues = 8;
+  repeated string countryCodes = 9;
+  repeated string raceTypes = 10;
+}
+
+message MarketChange {
+  repeated RunnerChange rc = 1;
+  optional bool img = 2;
+  optional string tv = 3;
+  optional bool con = 4;
+  optional MarketDefinition marketDefinition = 5;
+  string id = 6;
+}
+
+ message RunnerChange {
+   optional string tv = 1;
+   repeated ArrayOfStrings batb = 2;
+   repeated ArrayOfStrings spb = 3;
+   repeated ArrayOfStrings bdatl = 4;
+   repeated ArrayOfStrings trd = 5;
+   optional string spf = 6;
+   optional string ltp = 7;
+   repeated ArrayOfStrings atb = 8;
+   repeated ArrayOfStrings spl = 9;
+   optional string spn = 10;
+   repeated ArrayOfStrings atl = 11;
+   repeated ArrayOfStrings batl = 12;
+   int64 id = 13;
+   optional string hc = 14;
+   repeated ArrayOfStrings bdatb = 15;
+ }
+
+ message ArrayOfStrings {
+  repeated string values = 1;
+ }
+
+ message MarketDefinition {
+
+  enum MarketStatus {
+    INACTIVE = 0;
+    OPEN = 1;
+    SUSPENDED = 2;
+    CLOSED = 3;
+  }
+
+  MarketStatus status = 1;
+  optional string venue = 2;
+  optional string settledTime = 3;
+  string timezone = 4;
+  optional string eachWayDivisor = 5;
+  repeated string regulators = 6;
+  string marketType = 7;
+  string marketBaseRate = 8;
+  int32 numberOfWinners = 9;
+  string countryCode = 10;
+  optional string lineMaxUnit = 11;
+  bool inPlay = 12;
+  int32 betDelay = 13;
+  bool bspMarket = 14;
+
+  enum BettingType {
+    ODDS = 0;
+    LINE = 1;
+    RANGE = 2;
+    ASIAN_HANDICAP_DOUBLE_LINE = 3;
+    ASIAN_HANDICAP_SINGLE_LINE = 4;
+  }
+
+  BettingType bettingType = 15;
+  int32 numberOfActiveRunners = 16;
+  optional string lineMinUnit = 17;
+  string eventId = 18;
+  bool crossMatching = 19;
+  bool runnersVoidable = 20;
+  bool turnInPlayEnabled = 21;
+  PriceLadderDefinition priceLadderDefinition = 22;
+  optional KeyLineDefinition keyLineDefinition = 23;
+  string suspendTime = 24;
+  bool discountAllowed = 25;
+  bool persistenceEnabled = 26;
+  repeated RunnerDefinition runners = 27;
+  int64 version = 28;
+  string eventTypeId = 29;
+  bool complete = 30;
+  string openDate = 31;
+  string marketTime = 32;
+  bool bspReconciled = 33;
+  optional string line_interval = 34;
+ }
+
+ message PriceLadderDefinition {
+  enum PriceLadderType {
+    CLASSIC = 0;
+    FINEST = 1;
+    LINE_RANGE = 2;
+  }
+
+  PriceLadderType type = 1;
+ }
+
+message KeyLineDefinition {
+  KeyLineSelection kl = 1;
+}
+
+message KeyLineSelection {
+  int64 id = 1;
+  string hc = 2;
+}
+
+message RunnerDefinition {
+  int32 sortPriority = 1;
+  optional string removalDate = 2;
+  int64 id = 3;
+  optional string hc = 4;
+  optional string adjustmentFactor = 5;
+  optional string bsp = 6;
+
+  enum RunnerStatus {
+    ACTIVE = 0;
+    REMOVED = 1;
+    WINNER = 2;
+    PLACED = 3;
+    LOSER = 4;
+    HIDDEN = 5;
+    REMOVED_VACANT = 6;
+  }
+
+  RunnerStatus status = 7;
+}

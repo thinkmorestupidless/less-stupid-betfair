@@ -1,7 +1,7 @@
 package com.thinkmorestupidless.utils
 
-import akka.actor.testkit.typed.scaladsl.ActorTestKit
-import akka.actor.typed.ActorSystem
+import org.apache.pekko.actor.testkit.typed.scaladsl.ActorTestKit
+import org.apache.pekko.actor.typed.ActorSystem
 import com.thinkmorestupidless.utils.ConfigFactory.Environment
 import com.typesafe.config.Config
 import org.scalatest.{BeforeAndAfterAll, TestSuite}

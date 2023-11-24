@@ -2,7 +2,6 @@ package com.thinkmorestupidless.betfair.streams.impl
 
 package less.stupid.betting.betfair.socket.impl
 
-import akka.actor.typed.ActorSystem
 import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, MarketFilter}
 import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs._
 import com.thinkmorestupidless.betfair.streams.impl.MarketFilterUtils._
@@ -13,6 +12,7 @@ import com.thinkmorestupidless.betfair.streams.impl.less.stupid.betting.betfair.
 import com.thinkmorestupidless.extensions.slick.CustomPostgresProfile.api._
 import io.circe.Json
 import io.circe.syntax._
+import org.apache.pekko.actor.typed.ActorSystem
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 

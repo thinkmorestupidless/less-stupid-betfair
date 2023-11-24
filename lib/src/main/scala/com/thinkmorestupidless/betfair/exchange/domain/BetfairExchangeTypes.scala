@@ -1,18 +1,42 @@
 package com.thinkmorestupidless.betfair.exchange.domain
 
-import enumeratum.{CirceEnum, Enum, EnumEntry}
-import enumeratum.EnumEntry.UpperSnakecase
 import com.thinkmorestupidless.betfair.core.domain.{Money, Price}
+import enumeratum.EnumEntry.UpperSnakecase
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 import java.time.Instant
 
 case class EventTypeId(value: String)
-object EventTypeId {
-  val HorseRacing = EventTypeId("7")
-}
-
 case class EventTypeName(value: String)
 case class EventType(id: EventTypeId, name: EventTypeName)
+object EventType {
+  val Soccer = EventType(EventTypeId("1"), EventTypeName("Soccer"))
+  val Tennis = EventType(EventTypeId("2"), EventTypeName("Tennis"))
+  val Golf = EventType(EventTypeId("3"), EventTypeName("Golf"))
+  val Cricket = EventType(EventTypeId("4"), EventTypeName("Cricket"))
+  val RugbyUnion = EventType(EventTypeId("5"), EventTypeName("Rugby Union"))
+  val RugbyLeague = EventType(EventTypeId("1477"), EventTypeName("Rugby League"))
+  val Boxing = EventType(EventTypeId("6"), EventTypeName("Boxing"))
+  val HorseRacing = EventType(EventTypeId("7"), EventTypeName("Horse Racing"))
+  val MotorSport = EventType(EventTypeId("8"), EventTypeName("Motor Sport"))
+  val Esports = EventType(EventTypeId("27454571"), EventTypeName("Esports"))
+  val SpecialBets = EventType(EventTypeId("10"), EventTypeName("Special Bets"))
+  val Volleyball = EventType(EventTypeId("998917"), EventTypeName("Volleyball"))
+  val Cycling = EventType(EventTypeId("11"), EventTypeName("Cycling"))
+  val GaelicGames = EventType(EventTypeId("2152880"), EventTypeName("Gaelic Games"))
+  val Snooker = EventType(EventTypeId("6422"), EventTypeName("Snooker"))
+  val AmericanFootball = EventType(EventTypeId("6423"), EventTypeName("American Football"))
+  val Baseball = EventType(EventTypeId("7511"), EventTypeName("Baseball"))
+  val WinterSports = EventType(EventTypeId("451485"), EventTypeName("Winter Sports"))
+  val Basketball = EventType(EventTypeId("7522"), EventTypeName("Basketball"))
+  val IceHockey = EventType(EventTypeId("7524"), EventTypeName("Ice Hockey"))
+  val AustralianRules = EventType(EventTypeId("61420"), EventTypeName("Australian Rules"))
+  val Handball = EventType(EventTypeId("468328"), EventTypeName("Handball"))
+  val Darts = EventType(EventTypeId("3503"), EventTypeName("Darts"))
+  val MixedMartialArts = EventType(EventTypeId("26420387"), EventTypeName("Mixed Martial Arts"))
+  val GreyhoundRacing = EventType(EventTypeId("4339"), EventTypeName("Greyhound Racing"))
+  val Politics = EventType(EventTypeId("2378961"), EventTypeName("Politics"))
+}
 
 case class EventId(value: String)
 case class EventName(value: String)
@@ -159,6 +183,25 @@ case class MarketFilter(
     marketStartTime: Option[TimeRange] = None,
     withOrders: Option[Set[OrderStatus]] = None
 )
+
+object MarketFilter {
+  val empty: MarketFilter = MarketFilter(
+    textQuery = None,
+    eventTypeIds = None,
+    marketIds = None,
+    inPlayOnly = None,
+    eventIds = None,
+    competitionIds = None,
+    venues = None,
+    bspOnly = None,
+    turnInPlayEnabled = None,
+    marketBettingTypes = None,
+    marketCountries = None,
+    marketTypeCodes = None,
+    marketStartTime = None,
+    withOrders = None
+  )
+}
 
 case class PriceSize(price: Price, size: Money)
 
@@ -450,7 +493,7 @@ object ExecutionReportErrorCode extends Enum[ExecutionReportErrorCode] with Circ
   val values = findValues
 
   case object ErrorInMatcher extends ExecutionReportErrorCode
-  case object FaiProcessedWithErrorslure extends ExecutionReportErrorCode
+  case object ProcessedWithErrors extends ExecutionReportErrorCode
   case object BetActionError extends ExecutionReportErrorCode
   case object InvalidAccountState extends ExecutionReportErrorCode
   case object InvalidWalletStatus extends ExecutionReportErrorCode

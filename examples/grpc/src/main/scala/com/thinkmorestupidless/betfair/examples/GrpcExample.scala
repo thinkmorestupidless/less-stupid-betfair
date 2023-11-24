@@ -1,24 +1,77 @@
 package com.thinkmorestupidless.betfair.examples
 
 import com.thinkmorestupidless.betfair.Betfair
-import org.apache.pekko.actor.ActorSystem
+import com.thinkmorestupidless.betfair.grpc.BetfairGrpcServer
+import com.thinkmorestupidless.betfair.navigation.domain.EventName.EnglishPremierLeague
+import com.thinkmorestupidless.betfair.navigation.domain.MarketType.MatchOdds
+import com.thinkmorestupidless.betfair.navigation.impl.MenuUtils._
+import com.thinkmorestupidless.betfair.proto.streams.{
+  BetfairStreamsServiceClient,
+  MarketFilter => MarketFilterProto,
+  SubscribeToMarketChangesRequest
+}
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.actor.typed.scaladsl.adapter._
+import org.apache.pekko.grpc.GrpcClientSettings
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
+
+import java.time.Clock
+import scala.concurrent.duration._
 
 object GrpcExample {
 
-  private var log = LoggerFactory.getLogger(getClass)
+  private val log = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]): Unit = {
-    log.info("gRPC example starting")
+    implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "grpc-example")
+    implicit val ec = system.executionContext
+    implicit val clock = Clock.systemUTC()
 
-    implicit val system = ActorSystem("grpc-example")
-    implicit val ec = system.dispatcher
+    Betfair
+      .create()
+      .map { betfair =>
+        implicit val classicSystem = system.toClassic
 
-    Betfair().map { betfair =>
-      log.info("betfair is ready {}", betfair)
+        new BetfairGrpcServer(betfair).run()
 
-      val binding = new GrpcExampleServer(system).run()
+        val settings =
+          GrpcClientSettings
+            .connectToServiceAt("localhost", 8080)(classicSystem)
+            .withDeadline(10.seconds)
+            .withTls(false)
+        val streamsClient = BetfairStreamsServiceClient(settings)(classicSystem)
 
-    }.leftMap(error => log.error(s"failed to log in to Betfair '$error'"))
+        betfair.getMenu().map { menu =>
+          val marketFilter =
+            MarketFilterProto(
+              menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds).map(_.id.value)
+            )
+          val source =
+            streamsClient.subscribeToMarketChanges(SubscribeToMarketChangesRequest(Some(marketFilter))).recover {
+              case e: Exception =>
+                log.error("failed to create source", e)
+                Source.empty
+            }
+
+          implicit val mat = Materializer(classicSystem)
+
+          source.runWith(Sink.foreach(o => log.info(o.toString)))
+        }
+
+//        val x = betfair.listAllEventTypes().map { allEventTypes =>
+//          log.info(s"event types: $allEventTypes")
+//        }
+//
+//        log.info("invoking service client")
+
+//
+//        log.info(s"source is $source")
+//
+
+      }
+      .leftMap(error => log.error(s"Something went wrong '$error'"))
   }
 }

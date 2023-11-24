@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.exchange;
+
+import "com/thinkmorestupidless/betfair/proto/date.proto";
+
+message TimeRange {
+  Date from = 1;
+  Date to = 2;
+}
+
+message MarketFilter {
+  enum MarketBettingType {
+    ODDS = 0;
+    LINE = 1;
+    RANGE = 2;
+    ASIAN_HANDICAP_DOUBLE_LINE = 3;
+    ASIAN_HANDICAP_SINGLE_LINE = 4;
+    FIXED_ODDS = 5;
+  }
+
+  enum OrderStatus {
+    EXECUTION_COMPLETE = 0;
+    EXECUTABLE = 1;
+  }
+
+    optional string textQuery = 1;
+    repeated string eventTypeIds = 2;
+    repeated string marketIds = 3;
+    optional bool inPlayOnly = 4;
+    repeated string eventIds = 5;
+    repeated string competitionIds = 6;
+    repeated string venues = 7;
+    optional bool bspOnly = 8;
+    optional bool turnInPlayEnabled = 9;
+    repeated MarketBettingType marketBettingTypes = 10;
+    repeated string marketCountries = 11;
+    repeated string marketTypeCodes = 12;
+    optional TimeRange marketStartTime = 13;
+    repeated OrderStatus withOrders = 14;
+}
+
+message EventType {
+  string id = 1;
+  string name = 2;
+}
+
+message Event {
+  string id = 1;
+  string name = 2;
+  optional string country_code = 3;
+  string timezone = 4;
+  optional string venue = 5;
+  string open_date = 6;
+}
+
+message MarketCatalogue {
+    string market_id = 1;
+    string market_name = 2;
+    optional string market_start_time = 3;
+    optional MarketDescription description = 4;
+    repeated RunnerCatalog runners = 5;
+    optional EventType event_type = 6;
+    optional Competition competition = 7;
+    optional Event event = 8;
+    string total_matched = 9;
+}
+
+message MarketDescription {
+    bool persistence_enabled = 1;
+    bool bsp_market = 2;
+    string market_time = 3;
+    string suspend_time = 4;
+    string settle_time = 5;
+    string betting_type = 6;
+    bool turn_in_play_enabled = 7;
+    string market_type = 8;
+    string regulator = 9;
+    string market_base_rate = 10;
+    bool discount_allowed = 11;
+    string wallet = 12;
+    string rules = 13;
+    bool rules_has_date = 14;
+    string clarifications = 15;
+}
+
+message RunnerCatalog {
+    int32 sort_priority = 1;
+    int64 selection_id = 2;
+    string runner_name = 3;
+    string handicap = 4;
+    optional RunnerMetadata metadata = 5;
+}
+
+message RunnerMetadata {}
+
+message Competition {
+  string id = 1;
+  string name = 2;
+}

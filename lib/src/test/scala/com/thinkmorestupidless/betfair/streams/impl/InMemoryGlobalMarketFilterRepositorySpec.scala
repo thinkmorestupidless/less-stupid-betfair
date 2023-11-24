@@ -13,7 +13,7 @@ class InMemoryGlobalMarketFilterRepositorySpec
     with GlobalMarketFilterRepositoryBehaviour {
 
   describe("InMemoryMarketFilterRepository") {
-    val repositoryFactory = () => new InMemoryMarketFilterRepository()(ExecutionContext.global)
+    val repositoryFactory = () => InMemoryMarketFilterRepository()(ExecutionContext.global)
     (it should behave).like(globalMarketFilterRepositoryBehaviour(repositoryFactory))
   }
 }

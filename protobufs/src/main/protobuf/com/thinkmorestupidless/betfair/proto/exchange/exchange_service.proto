@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package com.thinkmorestupidless.betfair.proto.exchange;
+
+import "com/thinkmorestupidless/betfair/proto/date.proto";
+import "com/thinkmorestupidless/betfair/proto/money.proto";
+import "com/thinkmorestupidless/betfair/proto/exchange/exchange_domain.proto";
+
+message CancelInstruction {
+  string bet_id = 1;
+  optional Money size_reduction = 2;
+}
+
+message CancelOrdersRequest {
+    string marketId = 1;
+    string customerRef = 2;
+    repeated CancelInstruction instructions = 3;
+}
+
+message CancelExecutionReport {
+
+  string marketId = 1;
+
+  enum ExecutionReportStatus {
+    ERS_SUCCESS = 0;
+    ERS_FAILURE = 1;
+    ERS_PROCESSED_WITH_ERRORS = 2;
+    ERS_TIMEOUT = 3;
+  }
+
+  ExecutionReportStatus status = 2;
+  string customerRef = 3;
+
+  enum ExecutionReportErrorCode {
+    EREC_ERROR_IN_MATCHER = 0;
+    EREC_PROCESSED_WITH_ERRORS = 1;
+    EREC_BET_ACTION_ERROR = 2;
+    EREC_INVALID_ACCOUNT_STATE = 3;
+    EREC_INVALID_WALLET_STATUS = 4;
+    EREC_INSUFFICIENT_FUNDS = 5;
+    EREC_LOSS_LIMIT_EXCEEDED = 6;
+    EREC_MARKET_SUSPENDED = 7;
+    EREC_MARKET_NOT_OPEN_FOR_BETTING = 8;
+    EREC_DUPLICATE_TRANSACTION = 9;
+    EREC_INVALID_ORDER = 10;
+    EREC_INVALID_MARKET_ID = 11;
+    EREC_PERMISSION_DENIED = 12;
+    EREC_DUPLICATE_BET_IDS = 13;
+    EREC_NO_ACTION_REQUIRED = 14;
+    EREC_SERVICE_UNAVAILABLE = 15;
+    EREC_REJECTED_BY_REGULATOR = 16;
+    EREC_NO_CHASING = 17;
+    EREC_REGULATOR_IS_NOT_AVAILABLE = 18;
+    EREC_TOO_MANY_INSTRUCTIONS = 19;
+    EREC_INVALID_MARKET_VERSION = 20;
+  }
+
+  ExecutionReportErrorCode errorCode = 4;
+  repeated CancelInstructionReport instructionReports = 5;
+}
+
+message CancelInstructionReport {
+  enum InstructionReportStatus {
+    SUCCESS = 0;
+    FAILURE = 1;
+    TIMEOUT = 2;
+  }
+
+  enum InstructionReportErrorCode {
+    INVALID_BET_SIZE = 0;
+    INVALID_RUNNER = 1;
+    BET_TAKEN_OR_LAPSED = 2;
+    BET_IN_PROGRESS = 3;
+    RUNNER_REMOVED = 4;
+    MARKET_NOT_OPEN_FOR_BETTING = 5;
+    LOSS_LIMIT_EXCEEDED = 6;
+    MARKET_NOT_OPEN_FOR_BSP_BETTING = 7;
+    INVALID_PRICE_EDIT = 8;
+    INVALID_ODDS = 9;
+    INSUFFICIENT_FUNDS = 10;
+    INVALID_PERSISTENCE_TYPE = 11;
+    ERROR_IN_MATCHER = 12;
+    INVALID_BACK_LAY_COMBINATION = 13;
+    ERROR_IN_ORDER = 14;
+    INVALID_BID_TYPE = 15;
+    INVALID_BET_ID = 16;
+    CANCELLED_NOT_PLACED = 17;
+    RELATED_ACTION_FAILED = 18;
+    NO_ACTION_REQUIRED = 19;
+    TIME_IN_FORCE_CONFLICT = 20;
+    UNEXPECTED_PERSISTENCE_TYPE = 21;
+    INVALID_ORDER_TYPE = 22;
+    UNEXPECTED_MIN_FILL_SIZE = 23;
+    INVALID_CUSTOMER_ORDER_REF = 24;
+    INVALID_MIN_FILL_SIZE = 25;
+    BET_LAPSED_PRICE_IMPROVEMENT_TOO_LARGE = 26;
+  }
+
+    InstructionReportStatus status = 1;
+    InstructionReportErrorCode errorCode = 2;
+    CancelInstruction instruction = 3;
+  string sizeCancelled = 4;
+  string cancelledDate = 5;
+}
+
+message ClearedOrderSummaryReport {
+
+}
+
+message CompetitionResult {
+
+}
+
+message CountryCodeResponse {
+
+}
+
+message ListCurrentOrdersRequest {}
+
+message CurrentOrderSummaryReport {}
+
+message ListEventTypesResponse {
+  repeated EventTypeResponse results = 1;
+}
+
+message EventTypeResponse {
+  EventType event_type = 1;
+  int32 market_count = 2;
+}
+
+message ListEventsResponse {
+  repeated EventResponse results = 1;
+}
+
+message EventResponse {
+  Event event = 1;
+  int32 market_count = 2;
+}
+
+message ListMarketCatalogueRequest {}
+
+message ListMarketCatalogueResponse {}
+
+message ListMarketBookRequest {}
+
+message ListMarketBookResponse {}
+
+message PlaceOrdersRequest {}
+
+message PlaceExecutionReport {}
+
+service BetfairExchangeService {
+
+  rpc CancelOrders (CancelOrdersRequest) returns (CancelExecutionReport) {}
+
+  rpc ListClearedOrders (MarketFilter) returns (ClearedOrderSummaryReport) {}
+
+  rpc ListCompetitions (MarketFilter) returns (CompetitionResult) {}
+
+  rpc ListCountries (MarketFilter) returns (CountryCodeResponse) {}
+
+  rpc ListCurrentOrders (ListCurrentOrdersRequest) returns (CurrentOrderSummaryReport) {}
+
+  rpc ListEventTypes (MarketFilter) returns (ListEventTypesResponse) {}
+
+  rpc ListEvents (MarketFilter) returns (ListEventsResponse) {}
+
+  rpc ListMarketCatalogue (ListMarketCatalogueRequest) returns (ListMarketCatalogueResponse) {}
+
+  rpc ListMarketBook (ListMarketBookRequest) returns (ListMarketBookResponse) {}
+
+  rpc PlaceOrders (PlaceOrdersRequest) returns (PlaceExecutionReport) {}
+}
