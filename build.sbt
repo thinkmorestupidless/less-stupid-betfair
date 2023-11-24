@@ -27,6 +27,11 @@ lazy val commonSettings = Seq(
   scalafmtOnCompile := true
 )
 
+lazy val exampleSettings = Seq(
+  publish := false,
+  run / fork := true
+)
+
 lazy val root = project.in(file("."))
   .enablePlugins(BuildInfoPlugin)
   .settings(commonSettings)
@@ -40,7 +45,8 @@ lazy val root = project.in(file("."))
     `example-streams-api-postgres`,
     `example-websocket`,
     `example-grpc`,
-    `example-multiple-channels`
+    `example-multiple-channels`,
+    `example-betting-strategy`
   )
   .dependsOn(Array(
     lib,
@@ -48,7 +54,8 @@ lazy val root = project.in(file("."))
     `example-streams-api-postgres`,
     `example-websocket`,
     `example-grpc`,
-    `example-multiple-channels`).map(_ % "test->test"): _*)
+    `example-multiple-channels`,
+    `example-betting-strategy`).map(_ % "test->test"): _*)
 
 lazy val lib = project.in(file("lib"))
   .enablePlugins(BuildInfoPlugin)
@@ -80,48 +87,47 @@ lazy val lib = project.in(file("lib"))
 lazy val `example-streams-api` = project.in(file("examples/streams-api"))
   .dependsOn(lib)
   .settings(commonSettings)
+  .settings(exampleSettings)
   .settings(
-    publish := false,
-    libraryDependencies ++= Dependencies.streamsApiExampleDependencies,
-    run / fork := true
+    libraryDependencies ++= Dependencies.streamsApiExampleDependencies
   )
 
 lazy val `example-streams-api-postgres` = project.in(file("examples/streams-api-postgres"))
   .dependsOn(lib)
   .settings(commonSettings)
+  .settings(exampleSettings)
   .settings(
-    publish := false,
-    libraryDependencies ++= Dependencies.streamsApiPostgresExampleDependencies,
-    run / fork := true
+    libraryDependencies ++= Dependencies.streamsApiPostgresExampleDependencies
   )
 
 lazy val `example-websocket` = project.in(file("examples/websocket"))
   .dependsOn(lib)
   .settings(commonSettings)
+  .settings(exampleSettings)
   .settings(
-    publish := false,
-    libraryDependencies ++= Dependencies.websocketExampleDependencies,
-    run / fork := true
+    libraryDependencies ++= Dependencies.websocketExampleDependencies
   )
 
 lazy val `example-grpc` = project.in(file("examples/grpc"))
   .enablePlugins(PekkoGrpcPlugin)
   .dependsOn(lib)
   .settings(commonSettings)
+  .settings(exampleSettings)
   .settings(
-    publish := false,
-    libraryDependencies ++= Dependencies.grpcExampleDependencies,
-    run / fork := true
+    libraryDependencies ++= Dependencies.grpcExampleDependencies
   )
 
 lazy val `example-multiple-channels` = project.in(file("examples/multiple-channels"))
   .dependsOn(lib)
   .settings(commonSettings)
+  .settings(exampleSettings)
   .settings(
-    publish := false,
-    libraryDependencies ++= Dependencies.genteExampleGrpcDependencies,
-    run / fork := true
+    libraryDependencies ++= Dependencies.genteExampleGrpcDependencies
   )
+
+lazy val `example-betting-strategy` = project.in(file("examples/betting-strategy"))
+  .dependsOn(lib)
+  .settings(commonSettings)
 
 lazy val protobufs = project.in(file("protobufs"))
   .enablePlugins(PekkoGrpcPlugin)
