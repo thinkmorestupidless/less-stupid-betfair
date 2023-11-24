@@ -19,4 +19,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Release
-        run: sbt -v "release with-defaults"
+        run: |
+          git config user.name ${{ secrets.GH_USER }}
+          git config user.email ${{ secrets.GH_EMAIL }}
+          sbt -v "release with-defaults"
