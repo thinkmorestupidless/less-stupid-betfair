@@ -1,5 +1,7 @@
 import xerial.sbt.Sonatype._
 
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+
 publishMavenStyle := true
 
 sonatypeProfileName    := "com.thinkmorestupidless"
