@@ -1,7 +1,12 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
-import com.thinkmorestupidless.betfair.core.domain.{SocketAuthenticated, SocketAuthenticationFailed, SocketConnected}
+import com.thinkmorestupidless.betfair.core.domain.{
+  MarketFilterUpdate,
+  SocketAuthenticated,
+  SocketAuthenticationFailed,
+  SocketConnected
+}
 import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
@@ -49,7 +54,7 @@ object BetfairProtocolFlow {
       val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
 
       system.systemActorOf(
-        GlobalMarketSubscriptionSupplierActor(globalMarketFilterRepository, queue),
+        GlobalMarketSubscriptionActor(globalMarketFilterRepository, queue),
         "betfair-global-filter"
       )
 
@@ -167,6 +172,11 @@ private object BetfairProtocolActor {
               Behaviors.same
 
             case OutgoingQuestion(message, replyTo) =>
+              message match {
+                case MarketSubscription(_, Some(marketFilter)) =>
+                  context.system.eventStream ! Publish(MarketFilterUpdate(marketFilter))
+                case _ => ()
+              }
               replyTo ! Answer(List(message))
               Behaviors.same
           }

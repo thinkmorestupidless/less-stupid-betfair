@@ -16,7 +16,6 @@ lazy val commonSettings = Seq(
     "UTF-8",
     "-feature",
     "-language:_",
-    "-Xfatal-warnings",
     "-Xlog-reflective-calls",
     "-Xlint:-byname-implicit",
     "-Ybackend-parallelism",

@@ -10,19 +10,19 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit class JsValueVectorOps(self: Vector[JsValue]) {
 
-    def asEventTypes(implicit reader: JsonReader[EventType]): List[EventType] =
+    def asEventTypes(): List[EventType] =
       asListOfType[EventType](typeName = "EVENT_TYPE")
 
-    def asEvents(implicit reader: JsonReader[Event]): List[Event] =
+    def asEvents(): List[Event] =
       asListOfType[Event](typeName = "EVENT")
 
-    def asGroups(implicit reader: JsonReader[Group]): List[Group] =
+    def asGroups(): List[Group] =
       asListOfType[Group](typeName = "GROUP")
 
-    def asRaces(implicit reader: JsonReader[Race]): List[Race] =
+    def asRaces(): List[Race] =
       asListOfType[Race](typeName = "RACE")
 
-    def asMarkets(implicit reader: JsonReader[Market]): List[Market] =
+    def asMarkets(): List[Market] =
       asListOfType[Market](typeName = "MARKET")
 
     private def asListOfType[T <: MenuItem](typeName: String)(implicit reader: JsonReader[T]): List[T] =
@@ -41,7 +41,7 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
     override def read(json: JsValue): EventType =
       json.asJsObject.getFields(fieldNames = "id", "name", "children") match {
         case Seq(JsString(id), JsString(name), JsArray(children)) =>
-          EventType(EventTypeId(id), EventTypeName(name), children.asEvents, children.asGroups, children.asRaces)
+          EventType(EventTypeId(id), EventTypeName(name), children.asEvents(), children.asGroups(), children.asRaces())
       }
 
     override def write(obj: EventType): JsValue =
@@ -67,7 +67,7 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val groupReader: RootJsonReader[Group] = (json: JsValue) =>
     json.asJsObject.getFields(fieldNames = "id", "name", "children") match {
       case Seq(JsString(id), JsString(name), JsArray(children)) =>
-        Group(GroupId(id), GroupName(name), children.asEvents, children.asGroups)
+        Group(GroupId(id), GroupName(name), children.asEvents(), children.asGroups())
     }
 
   implicit val groupFormat: RootJsonFormat[Group] = rootJsonFormat(groupReader, groupWriter)
@@ -91,9 +91,9 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
           EventId(id),
           EventName(name),
           CountryCode(countryCode),
-          children.asEvents,
-          children.asGroups,
-          children.asMarkets
+          children.asEvents(),
+          children.asGroups(),
+          children.asMarkets()
         )
     }
 
@@ -170,7 +170,7 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
             CountryCode(countryCode),
             Venue(venue),
             RaceStartTime(startTime),
-            children.asMarkets
+            children.asMarkets()
           )
         case _ => deserializationError(msg = s"Unable to read Race from '$json'")
       }
@@ -191,7 +191,7 @@ trait JsonCodecs extends SprayJsonSupport with DefaultJsonProtocol {
     override def read(json: JsValue): Menu =
       json.asJsObject.getFields(fieldNames = "type", "id", "name", "children") match {
         case Seq(JsString("GROUP"), JsNumber(id), JsString("ROOT"), JsArray(children)) if id == 0 =>
-          Menu(children.asEventTypes)
+          Menu(children.asEventTypes())
         case x =>
           deserializationError(
             msg = s"""Expected '{"type": "GROUP","name": "ROOT","id": 0,"children": []}' but received '$x'"""

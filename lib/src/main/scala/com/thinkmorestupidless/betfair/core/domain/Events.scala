@@ -1,6 +1,7 @@
 package com.thinkmorestupidless.betfair.core.domain
 
 import com.thinkmorestupidless.betfair.auth.domain.BetfairAuthenticationService.AuthenticationError
+import com.thinkmorestupidless.betfair.streams.domain.MarketFilter
 
 sealed trait BetfairLifecycleEvent
 case object Authenticated extends BetfairLifecycleEvent
@@ -9,3 +10,4 @@ case object SocketConnected extends BetfairLifecycleEvent
 final case class SocketConnectionFailed() extends BetfairLifecycleEvent
 case object SocketAuthenticated extends BetfairLifecycleEvent
 final case class SocketAuthenticationFailed() extends BetfairLifecycleEvent
+final case class MarketFilterUpdate(marketFilter: MarketFilter) extends BetfairLifecycleEvent

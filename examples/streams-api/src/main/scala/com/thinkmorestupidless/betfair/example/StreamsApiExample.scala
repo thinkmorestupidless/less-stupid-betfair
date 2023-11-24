@@ -31,7 +31,7 @@ object StreamsApiExample {
 
         betfair.getMenu().map { menu =>
           val marketSubscription =
-            menu.allEvents.ofType(EnglishPremierLeague).allMarkets.ofType(MatchOdds).toMarketSubscription()
+            menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds).toMarketSubscription()
           betfair
             .subscribeToMarketChanges(marketSubscription, Sink.foreach[MarketChange](msg => log.info(msg.toString)))
         }

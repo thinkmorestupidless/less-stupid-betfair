@@ -30,7 +30,7 @@ class ShardedDurableStateMarketDefinitionsService()(implicit system: ActorSystem
     entityRefFor(marketId).ask[Status](replyTo => GetMarketDefinition(replyTo)).map {
       case Success(marketDefinition: MarketDefinition) => Some(marketDefinition)
       case Success(_)                                  => None
-      case Failure(cause)                              => None
+      case Failure(_)                                  => None
     }
 
   private def entityRefFor(marketId: MarketId): EntityRef[Command] =

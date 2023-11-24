@@ -37,7 +37,7 @@ object DurableStateGlobalMarketFilterRepository {
 
   def apply()(implicit system: ActorSystem[_]) = {
     val singletonManager = ClusterSingleton(system)
-    val proxy: ActorRef[Message] = singletonManager.init(
+    singletonManager.init(
       SingletonActor(
         Behaviors.supervise(GlobalMarketFilterActor()).onFailure[Exception](SupervisorStrategy.restart),
         "GlobalMarketFilter"
@@ -60,7 +60,7 @@ object GlobalMarketFilterActor {
           Effect.persist(marketFilter.mergeWith(newMarketFilter)).thenReply(replyTo)(_ => Done)
       }
 
-  def apply()(implicit system: ActorSystem[_]): Behavior[Message] =
+  def apply(): Behavior[Message] =
     DurableStateBehavior[Message, MarketFilter](
       PersistenceId.ofUniqueId("GlobalMarketFilter"),
       MarketFilter.empty,

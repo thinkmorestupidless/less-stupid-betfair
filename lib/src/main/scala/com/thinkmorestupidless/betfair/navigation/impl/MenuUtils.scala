@@ -6,15 +6,15 @@ object MenuUtils {
 
   implicit class MenuUtilsMenuOps(self: Menu) {
 
-    def allEvents: List[Event] = _allEvents(self)
+    def allEvents(): List[Event] = _allEvents(self)
 
     def findEventByName(eventName: EventName): Option[Event] =
-      self.allEvents.find(_.name == eventName)
+      self.allEvents().find(_.name == eventName)
   }
 
   implicit class MenuUtilsEventOps(self: Event) {
 
-    def allEvents: List[Event] = _allEvents(self)
+    def allEvents(): List[Event] = _allEvents(self)
 
     lazy val allMarkets: List[Market] = {
       def fold(markets: List[Market], next: MenuItem): List[Market] =
@@ -32,7 +32,7 @@ object MenuUtils {
 
   implicit class MenuUtilsEventTypeOps(self: EventType) {
 
-    def allEvents: List[Event] = _allEvents(self)
+    def allEvents(): List[Event] = _allEvents(self)
   }
 
   private def _allEvents(parent: HasChildren): List[Event] = {
