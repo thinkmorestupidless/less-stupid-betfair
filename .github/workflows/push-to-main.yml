@@ -8,18 +8,6 @@ permissions:
   contents: read
 
 jobs:
-  compile-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Build and Test
-        run: sbt -v clean compile scalafmtCheckAll test
   release:
     runs-on: ubuntu-latest
     steps:
@@ -31,4 +19,4 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Release
-        run: sbt -v release with-defaults
+        run: sbt -v "release with-defaults"
