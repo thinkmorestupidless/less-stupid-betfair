@@ -55,7 +55,6 @@ object GlobalMarketSubscriptionActor {
           } else {
             context.log.info("global market filter is empty, NOT using it as a market subscription")
           }
-          context.log.info("global market filter actor is stopping")
           Behaviors.same
 
         case UpdateGlobalMarketFilter(marketFilter) =>

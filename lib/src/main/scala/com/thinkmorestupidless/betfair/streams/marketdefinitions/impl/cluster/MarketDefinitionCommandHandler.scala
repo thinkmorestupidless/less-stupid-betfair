@@ -1,12 +1,12 @@
-package com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions
+package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster
 
-import com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions.MarketDefinitionProtocol.{
+import com.thinkmorestupidless.betfair.streams.domain.MarketDefinition
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster.MarketDefinitionProtocol.{
   Command,
   GetMarketDefinition,
   MarketDefinitionNotInitialized,
   UpdateMarketDefinition
 }
-import com.thinkmorestupidless.betfair.streams.domain.MarketDefinition
 import org.apache.pekko.Done
 import org.apache.pekko.actor.Status
 import org.apache.pekko.persistence.typed.state.scaladsl.Effect

@@ -13,6 +13,8 @@ import com.thinkmorestupidless.betfair.navigation.domain.{BetfairNavigationServi
 import com.thinkmorestupidless.betfair.navigation.impl.PlayWsBetfairNavigationService.AuthHeader
 import org.apache.pekko.actor.ActorSystem
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import sbt.io.{IO => sbtio}
+import sbt.io.syntax._
 import spray.json._
 
 import scala.concurrent.Future
@@ -43,6 +45,7 @@ final class PlayWsBetfairNavigationService private (
         )
         .get()
         .map { response =>
+          sbtio.write(file("menu.json"), response.body)
           try
             response.body.parseJson.convertTo[Menu].asRight
           catch {

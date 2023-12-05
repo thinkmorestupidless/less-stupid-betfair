@@ -14,8 +14,9 @@ object ListAllEventTypesUseCase {
 
   type ListAllEventTypesUseCase = () => EitherT[Future, FailedToListEventTypes, List[EventTypeResponse]]
 
-  def apply(exchange: BetfairExchangeService)(implicit ec: ExecutionContext): ListAllEventTypesUseCase = {
-    log.info("getting all event types")
-    () => exchange.listEventTypes(MarketFilter.empty).leftMap(FailedToListEventTypes(_))
-  }
+  def apply(exchange: BetfairExchangeService)(implicit ec: ExecutionContext): ListAllEventTypesUseCase =
+    () => {
+      log.debug("getting all event types")
+      exchange.listEventTypes(MarketFilter.empty).leftMap(FailedToListEventTypes(_))
+    }
 }

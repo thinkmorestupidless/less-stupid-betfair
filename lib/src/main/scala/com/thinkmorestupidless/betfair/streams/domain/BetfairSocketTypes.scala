@@ -1,5 +1,6 @@
 package com.thinkmorestupidless.betfair.streams.domain
 
+import com.thinkmorestupidless.betfair.exchange.domain.{EventId, EventTypeId}
 import enumeratum.EnumEntry.UpperSnakecase
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 
@@ -75,6 +76,8 @@ final case class MarketFilter(
 
 object MarketFilter {
 
+  val empty: MarketFilter = MarketFilter(List.empty)
+
   def apply(marketIds: List[MarketId]): MarketFilter =
     new MarketFilter(
       marketIds = Some(marketIds),
@@ -89,7 +92,49 @@ object MarketFilter {
       raceTypes = None
     )
 
-  val empty: MarketFilter = MarketFilter(List.empty)
+  def withEventTypeId(eventTypeId: EventTypeId): MarketFilter =
+    withEventTypeIds(Set(eventTypeId))
+
+  def withEventTypeIds(eventTypeIds: Set[EventTypeId]): MarketFilter = {
+    val maybeEventTypesIds = eventTypeIds.map(_.value).toList match {
+      case Nil  => None
+      case list => Some(list)
+    }
+    new MarketFilter(
+      marketIds = None,
+      bspMarket = None,
+      bettingTypes = None,
+      eventTypeIds = maybeEventTypesIds,
+      eventIds = None,
+      turnInPlayEnabled = None,
+      marketTypes = None,
+      venues = None,
+      countryCodes = None,
+      raceTypes = None
+    )
+  }
+
+  def withEventId(eventId: EventId): MarketFilter =
+    withEventIds(Set(eventId))
+
+  def withEventIds(eventIds: Set[EventId]): MarketFilter = {
+    val maybeEventIds = eventIds.map(_.value).toList match {
+      case Nil  => None
+      case list => Some(list)
+    }
+    new MarketFilter(
+      marketIds = None,
+      bspMarket = None,
+      bettingTypes = None,
+      eventTypeIds = None,
+      eventIds = maybeEventIds,
+      turnInPlayEnabled = None,
+      marketTypes = None,
+      venues = None,
+      countryCodes = None,
+      raceTypes = None
+    )
+  }
 }
 
 final case class MarketChange(

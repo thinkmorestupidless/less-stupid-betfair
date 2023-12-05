@@ -7,7 +7,6 @@ import com.thinkmorestupidless.betfair.core.domain.{
   SocketAuthenticationFailed,
   SocketConnected
 }
-import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
   Answer,
@@ -15,97 +14,48 @@ import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolActor.{
   IncomingQuestion,
   OutgoingQuestion
 }
-import com.thinkmorestupidless.extensions.akkastreams.SplitEither
+import com.thinkmorestupidless.betfair.streams.impl.BetfairProtocolFlows.{IncomingFlow, OutgoingFlow}
 import com.thinkmorestupidless.utils.RandomUtils
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.eventstream.EventStream.Publish
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.{ActorRef, ActorSystem, Behavior, Props}
-import org.apache.pekko.stream.BidiShape
 import org.apache.pekko.stream.scaladsl._
 import org.apache.pekko.stream.typed.scaladsl.ActorFlow
 import org.apache.pekko.util.Timeout
 
 import scala.concurrent.duration._
 
-object BetfairProtocolFlow {
+final case class BetfairProtocolFlows(incoming: IncomingFlow, outgoing: OutgoingFlow)
 
-  type BetfairProtocolFlow = BidiFlow[
-    OutgoingBetfairSocketMessage,
-    OutgoingBetfairSocketMessage,
-    IncomingBetfairSocketMessage,
-    IncomingBetfairSocketMessage,
-    NotUsed
-  ]
+object BetfairProtocolFlows {
 
-  def apply(
-      applicationKey: ApplicationKey,
-      sessionToken: SessionToken,
-      globalMarketFilterRepository: GlobalMarketFilterRepository,
-      outgoingHeartbeat: OutgoingHeartbeat
-  )(implicit
+  type IncomingFlow = Flow[IncomingBetfairSocketMessage, BetfairSocketMessage, NotUsed]
+  type OutgoingFlow = Flow[OutgoingBetfairSocketMessage, BetfairSocketMessage, NotUsed]
+
+  def apply(applicationKey: ApplicationKey, sessionToken: SessionToken)(implicit
       system: ActorSystem[_]
-  ): BetfairProtocolFlow =
-    BidiFlow.fromGraph(GraphDSL.create() { implicit b =>
-      import GraphDSL.Implicits._
+  ): BetfairProtocolFlows = {
+    implicit val timeout: Timeout = Timeout(10.seconds)
 
-      implicit val timeout = Timeout(10.seconds)
+    val protocolActor: ActorRef[BetfairProtocolMessage] = system.systemActorOf(
+      BetfairProtocolActor(applicationKey, sessionToken),
+      name = s"betfair-socket-protocol-${RandomUtils.generateRandomString()}",
+      Props.empty
+    )
 
-      val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
+    val incoming: IncomingFlow =
+      ActorFlow
+        .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)(IncomingQuestion(_, _))
+        .mapConcat(_.messages)
 
-      system.systemActorOf(
-        GlobalMarketSubscriptionActor(globalMarketFilterRepository, queue),
-        "betfair-global-filter"
-      )
+    val outgoing: OutgoingFlow =
+      ActorFlow
+        .ask[OutgoingBetfairSocketMessage, OutgoingQuestion, Answer](protocolActor)(OutgoingQuestion(_, _))
+        .mapConcat(_.messages)
 
-      val protocolActor: ActorRef[BetfairProtocolMessage] = system.systemActorOf(
-        BetfairProtocolActor(applicationKey, sessionToken),
-        name = s"betfair-socket-protocol-${RandomUtils.generateRandomString()}",
-        Props.empty
-      )
-
-      val mergeIncoming = b.add(Merge[IncomingBetfairSocketMessage](inputPorts = 2))
-      val mergeOutgoing = b.add(Merge[OutgoingBetfairSocketMessage](inputPorts = 3))
-      val splitIncoming = b.add(SplitEither[IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage])
-      val splitOutgoing = b.add(SplitEither[IncomingBetfairSocketMessage, OutgoingBetfairSocketMessage])
-      val broadcastOutgoing = b.add(Broadcast[OutgoingBetfairSocketMessage](outputPorts = 2))
-      val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source, outgoingHeartbeat))
-
-      val handleSplitResult =
-        Flow[Answer].mapConcat(_.messages).map {
-          case incoming: IncomingBetfairSocketMessage => Left(incoming)
-          case outgoing: OutgoingBetfairSocketMessage => Right(outgoing)
-        }
-
-      val incomingProtocolFlow = b.add(
-        ActorFlow
-          .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)(IncomingQuestion(_, _))
-          .via(handleSplitResult)
-      )
-
-      val outgoingProtocolFlow = b.add(
-        ActorFlow
-          .ask[OutgoingBetfairSocketMessage, OutgoingQuestion, Answer](protocolActor)(OutgoingQuestion(_, _))
-          .via(handleSplitResult)
-      )
-
-      incomingProtocolFlow.out ~> splitIncoming.in
-
-      splitIncoming.right ~> mergeOutgoing.in(0)
-      splitIncoming.left ~> mergeIncoming.in(0)
-
-      outgoingProtocolFlow.out ~> splitOutgoing.in
-
-      splitOutgoing.right ~> broadcastOutgoing.in
-      splitOutgoing.left ~> mergeIncoming.in(1)
-
-      broadcastOutgoing.out(0) ~> mergeOutgoing.in(1)
-      broadcastOutgoing.out(1) ~> heartbeatFlow.in
-
-      heartbeatFlow.out ~> mergeOutgoing.in(2)
-
-      BidiShape(outgoingProtocolFlow.in, mergeOutgoing.out, incomingProtocolFlow.in, mergeIncoming.out)
-    })
+    new BetfairProtocolFlows(incoming, outgoing)
+  }
 }
 
 private object BetfairProtocolActor {
@@ -135,7 +85,6 @@ private object BetfairProtocolActor {
               connecting()
 
             case message =>
-              context.system.log.info(s"received message '$message'")
               buffer.stash(message)
               Behaviors.same
           }

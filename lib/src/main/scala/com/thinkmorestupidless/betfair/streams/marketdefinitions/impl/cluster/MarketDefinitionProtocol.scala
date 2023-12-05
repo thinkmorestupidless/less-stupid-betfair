@@ -1,4 +1,4 @@
-package com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions
+package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster
 
 import com.thinkmorestupidless.betfair.streams.domain.MarketDefinition
 import org.apache.pekko.Done

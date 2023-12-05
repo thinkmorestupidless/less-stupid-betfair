@@ -100,6 +100,14 @@ lazy val `example-streams-api-postgres` = project.in(file("examples/streams-api-
     libraryDependencies ++= Dependencies.streamsApiPostgresExampleDependencies
   )
 
+lazy val `example-http-api` = project.in(file("examples/http-api"))
+  .dependsOn(lib)
+  .settings(commonSettings)
+  .settings(exampleSettings)
+  .settings(
+    libraryDependencies ++= Dependencies.httpApiExampleDependencies
+  )
+
 lazy val `example-websocket` = project.in(file("examples/websocket"))
   .dependsOn(lib)
   .settings(commonSettings)

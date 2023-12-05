@@ -9,6 +9,7 @@ import com.thinkmorestupidless.betfair.streams.domain.{
   MarketSubscription,
   OutgoingBetfairSocketMessage
 }
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.stream.scaladsl.Framing.FramingException
@@ -16,7 +17,7 @@ import org.apache.pekko.stream.scaladsl._
 import org.apache.pekko.stream.{ActorAttributes, Supervision}
 import org.slf4j.LoggerFactory
 
-final class BetfairSocketFlow(
+final class BetfairSocket(
     val sink: Sink[OutgoingBetfairSocketMessage, NotUsed],
     val source: Source[IncomingBetfairSocketMessage, NotUsed]
 )(implicit system: ActorSystem[_]) {
@@ -31,7 +32,7 @@ final class BetfairSocketFlow(
     Flow.fromSinkAndSource(sink, source)
 }
 
-object BetfairSocketFlow {
+object BetfairSocket {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -49,13 +50,18 @@ object BetfairSocketFlow {
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
       globalMarketFilterRepository: GlobalMarketFilterRepository,
+      marketDefinitionsRepository: MarketDefinitionsRepository,
       outgoingHeartbeat: OutgoingHeartbeat
-  )(implicit system: ActorSystem[_]): BetfairSocketFlow = {
-    val codecFlow = BetfairCodecFlow().join(socketFlow)
+  )(implicit system: ActorSystem[_]): BetfairSocket = {
+    val codecFlow = BetfairCodeBidiFlow().join(socketFlow)
     val betfairSocketFlow =
-      BetfairProtocolFlow(applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat)
-        .join(codecFlow)
-        .withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
+      BetfairSocketBidiFlow(
+        applicationKey,
+        sessionToken,
+        globalMarketFilterRepository,
+        marketDefinitionsRepository,
+        outgoingHeartbeat
+      ).join(codecFlow).withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
 
     val (sink, source) =
       MergeHub
@@ -69,6 +75,6 @@ object BetfairSocketFlow {
     // The TCP socket won't connect until there's demand in the stream.
     Source.single(Heartbeat()).runWith(sink)
 
-    new BetfairSocketFlow(sink, source)
+    new BetfairSocket(sink, source)
   }
 }

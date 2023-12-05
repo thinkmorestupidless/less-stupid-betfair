@@ -43,7 +43,11 @@ object MarketFilterUtils {
   }
 
   implicit class MenuMarketListOps(self: List[Market]) {
+
+    def toMarketFilter(): MarketFilter =
+      MarketFilter(self.map(_.id).map(x => MarketId(x.value)))
+
     def toMarketSubscription(): MarketSubscription =
-      MarketSubscription(MarketFilter(self.map(_.id).map(x => MarketId(x.value))))
+      MarketSubscription(self.toMarketFilter())
   }
 }

@@ -39,7 +39,13 @@ object EventType {
 }
 
 case class EventId(value: String)
+object EventId {
+  val EnglishPremierLeague = EventId("2022802")
+}
 case class EventName(value: String)
+object EventName {
+  val EnglishPremierLeague = EventName("English Premier League")
+}
 case class CountryCode(value: String)
 case class Timezone(value: String)
 case class Venue(value: String)
@@ -201,6 +207,58 @@ object MarketFilter {
     marketStartTime = None,
     withOrders = None
   )
+
+  def withEventTypeId(eventTypeId: EventTypeId): MarketFilter =
+    withEventTypeIds(Set(eventTypeId))
+
+  def withEventTypeIds(eventTypeIds: Set[EventTypeId]): MarketFilter = {
+    val maybeEventTypesIds: Option[List[EventTypeId]] = eventTypeIds.toList match {
+      case Nil  => None
+      case list => Some(list)
+    }
+    new MarketFilter(
+      textQuery = None,
+      eventTypeIds = maybeEventTypesIds.map(_.toSet),
+      marketIds = None,
+      inPlayOnly = None,
+      eventIds = None,
+      competitionIds = None,
+      venues = None,
+      bspOnly = None,
+      turnInPlayEnabled = None,
+      marketBettingTypes = None,
+      marketCountries = None,
+      marketTypeCodes = None,
+      marketStartTime = None,
+      withOrders = None
+    )
+  }
+
+  def withEventId(eventId: EventId): MarketFilter =
+    withEventIds(Set(eventId))
+
+  def withEventIds(eventIds: Set[EventId]): MarketFilter = {
+    val maybeEventIds: Option[List[EventId]] = eventIds.toList match {
+      case Nil  => None
+      case list => Some(list)
+    }
+    new MarketFilter(
+      textQuery = None,
+      eventTypeIds = None,
+      marketIds = None,
+      inPlayOnly = None,
+      eventIds = maybeEventIds.map(_.toSet),
+      competitionIds = None,
+      venues = None,
+      bspOnly = None,
+      turnInPlayEnabled = None,
+      marketBettingTypes = None,
+      marketCountries = None,
+      marketTypeCodes = None,
+      marketStartTime = None,
+      withOrders = None
+    )
+  }
 }
 
 case class PriceSize(price: Price, size: Money)

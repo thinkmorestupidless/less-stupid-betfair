@@ -18,7 +18,6 @@ object JsonCodecs {
 
   implicit val marketFilterCodec: Codec[MarketFilter] = deriveCodec[MarketFilter]
   implicit val marketChangeCodec: Codec[MarketChange] = deriveCodec[MarketChange]
-//  implicit val runnerChangeCodec: Codec[RunnerChange] = deriveCodec[RunnerChange]
   implicit val marketDefinitionCodec: Codec[MarketDefinition] = deriveCodec[MarketDefinition]
   implicit val priceLadderDefinitionCodec: Codec[PriceLadderDefinition] = deriveCodec[PriceLadderDefinition]
   implicit val keyLineDefinitionCodec: Codec[KeyLineDefinition] = deriveCodec[KeyLineDefinition]
@@ -110,55 +109,51 @@ object JsonCodecs {
   )
 
   implicit val runnerChangeCodec: Codec[RunnerChange] = Codec.from(
-    new Decoder[RunnerChange] {
-      override def apply(cursor: HCursor): Result[RunnerChange] =
-        for {
-          tv <- cursor.downField("tv").as[Option[BigDecimal]]
-          batb <- cursor.downField("batb").as[Option[List[List[BigDecimal]]]]
-          spb <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
-          bdatl <- cursor.downField("bdatl").as[Option[List[List[BigDecimal]]]]
-          trd <- cursor.downField("trd").as[Option[List[List[BigDecimal]]]]
-          spfJson <- cursor.downField("spf").as[Json]
-          ltp <- cursor.downField("ltp").as[Option[BigDecimal]]
-          atb <- cursor.downField("atb").as[Option[List[List[BigDecimal]]]]
-          spl <- cursor.downField("spl").as[Option[List[List[BigDecimal]]]]
-          spn <- cursor.downField("spn").as[Option[BigDecimal]]
-          atl <- cursor.downField("atl").as[Option[List[List[BigDecimal]]]]
-          batl <- cursor.downField("batl").as[Option[List[List[BigDecimal]]]]
-          id <- cursor.downField("id").as[Long]
-          hc <- cursor.downField("hc").as[Option[BigDecimal]]
-          bdatb <- cursor.downField("bdatb").as[Option[List[List[BigDecimal]]]]
-        } yield {
-          val spf = if (spfJson.isString) {
-            None
-          } else if (spfJson.isNumber) {
-            spfJson.asNumber.flatMap(_.toBigDecimal)
-          } else {
-            None
-          }
-          RunnerChange(tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb)
+    cursor =>
+      for {
+        tv <- cursor.downField("tv").as[Option[BigDecimal]]
+        batb <- cursor.downField("batb").as[Option[List[List[BigDecimal]]]]
+        spb <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
+        bdatl <- cursor.downField("bdatl").as[Option[List[List[BigDecimal]]]]
+        trd <- cursor.downField("trd").as[Option[List[List[BigDecimal]]]]
+        spfJson <- cursor.downField("spf").as[Json]
+        ltp <- cursor.downField("ltp").as[Option[BigDecimal]]
+        atb <- cursor.downField("atb").as[Option[List[List[BigDecimal]]]]
+        spl <- cursor.downField("spl").as[Option[List[List[BigDecimal]]]]
+        spn <- cursor.downField("spn").as[Option[BigDecimal]]
+        atl <- cursor.downField("atl").as[Option[List[List[BigDecimal]]]]
+        batl <- cursor.downField("batl").as[Option[List[List[BigDecimal]]]]
+        id <- cursor.downField("id").as[Long]
+        hc <- cursor.downField("hc").as[Option[BigDecimal]]
+        bdatb <- cursor.downField("bdatb").as[Option[List[List[BigDecimal]]]]
+      } yield {
+        val spf = if (spfJson.isString) {
+          None
+        } else if (spfJson.isNumber) {
+          spfJson.asNumber.flatMap(_.toBigDecimal)
+        } else {
+          None
         }
-    },
-    new Encoder[RunnerChange] {
-      override def apply(runnerChange: RunnerChange): Json =
-        Json.obj(
-          ("tv", runnerChange.tv.asJson),
-          ("batb", runnerChange.batb.asJson),
-          ("spb", runnerChange.spb.asJson),
-          ("bdatl", runnerChange.bdatl.asJson),
-          ("trd", runnerChange.trd.asJson),
-          ("spf", runnerChange.spf.asJson),
-          ("ltp", runnerChange.ltp.asJson),
-          ("atb", runnerChange.atb.asJson),
-          ("spl", runnerChange.spl.asJson),
-          ("spn", runnerChange.spn.asJson),
-          ("atl", runnerChange.atl.asJson),
-          ("batl", runnerChange.batl.asJson),
-          ("id", runnerChange.id.asJson),
-          ("hc", runnerChange.hc.asJson),
-          ("bdatb", runnerChange.bdatb.asJson)
-        )
-    }
+        RunnerChange(tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb)
+      },
+    runnerChange =>
+      Json.obj(
+        ("tv", runnerChange.tv.asJson),
+        ("batb", runnerChange.batb.asJson),
+        ("spb", runnerChange.spb.asJson),
+        ("bdatl", runnerChange.bdatl.asJson),
+        ("trd", runnerChange.trd.asJson),
+        ("spf", runnerChange.spf.asJson),
+        ("ltp", runnerChange.ltp.asJson),
+        ("atb", runnerChange.atb.asJson),
+        ("spl", runnerChange.spl.asJson),
+        ("spn", runnerChange.spn.asJson),
+        ("atl", runnerChange.atl.asJson),
+        ("batl", runnerChange.batl.asJson),
+        ("id", runnerChange.id.asJson),
+        ("hc", runnerChange.hc.asJson),
+        ("bdatb", runnerChange.bdatb.asJson)
+      )
   )
 
   implicit val incomingMessageCodec: Codec[IncomingBetfairSocketMessage] = Codec.from(

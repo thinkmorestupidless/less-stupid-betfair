@@ -27,7 +27,9 @@ import com.thinkmorestupidless.betfair.streams.domain.{
   MarketSubscription
 }
 import com.thinkmorestupidless.betfair.streams.impl.TlsSocketFlow.TlsSocketFlow
-import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocketFlow, InMemoryMarketFilterRepository, TlsSocketFlow}
+import com.thinkmorestupidless.betfair.streams.impl.{BetfairSocket, InMemoryMarketFilterRepository, TlsSocketFlow}
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.InMemoryMarketDefinitionsRepository
 import com.thinkmorestupidless.utils.EitherTUtils._
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
@@ -44,7 +46,7 @@ final case class Betfair(
     listAllEventTypes: ListAllEventTypesUseCase,
     listEventTypes: ListEventTypesUseCase,
     listEvents: ListEventsUseCase,
-    socketFlow: BetfairSocketFlow
+    socketFlow: BetfairSocket
 ) {
   def subscribeToMarketChanges[T](marketSubscription: MarketSubscription, sink: Sink[MarketChange, T])(implicit
       mat: Materializer
@@ -85,6 +87,7 @@ object Betfair {
       val applicationKey = config.auth.credentials.applicationKey
       val socketFlow = maybeSocketFlow.getOrElse(TlsSocketFlow.fromConfig(config.exchange.socket))
       val globalMarketFilterRepository = maybeGlobalMarketFilterRepository.getOrElse(InMemoryMarketFilterRepository())
+      val marketDefinitionsRepository = new InMemoryMarketDefinitionsRepository()
 
       create(
         navigationService,
@@ -92,6 +95,7 @@ object Betfair {
         applicationKey,
         sessionToken,
         globalMarketFilterRepository,
+        marketDefinitionsRepository,
         socketFlow,
         config.exchange.socket.outgoingHeartbeat
       )
@@ -137,6 +141,7 @@ object Betfair {
       applicationKey: ApplicationKey,
       sessionToken: SessionToken,
       globalMarketFilterRepository: GlobalMarketFilterRepository,
+      marketDefinitionsRepository: MarketDefinitionsRepository,
       socketFlow: TlsSocketFlow.TlsSocketFlow,
       outgoingHeartbeat: OutgoingHeartbeat
   )(implicit
@@ -149,10 +154,17 @@ object Betfair {
     val listEventTypes = ListEventTypesUseCase(exchangeService)
     val listEvents = ListEventsUseCase(exchangeService)
 
-    val betfairSocketFlow =
-      BetfairSocketFlow(socketFlow, applicationKey, sessionToken, globalMarketFilterRepository, outgoingHeartbeat)
+    val betfairSocket =
+      BetfairSocket(
+        socketFlow,
+        applicationKey,
+        sessionToken,
+        globalMarketFilterRepository,
+        marketDefinitionsRepository,
+        outgoingHeartbeat
+      )
 
-    Betfair(getMenu, listAllEventTypes, listEventTypes, listEvents, betfairSocketFlow)
+    Betfair(getMenu, listAllEventTypes, listEventTypes, listEvents, betfairSocket)
   }
 
   private def createAuthenticationService(

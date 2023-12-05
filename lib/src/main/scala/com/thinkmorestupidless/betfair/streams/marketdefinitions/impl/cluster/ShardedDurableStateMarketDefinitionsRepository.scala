@@ -1,12 +1,12 @@
-package com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions
+package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster
 
-import com.thinkmorestupidless.betfair.extensions.channels.domain.MarketDefinitionsService
-import com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions.MarketDefinitionProtocol.{
+import com.thinkmorestupidless.betfair.streams.domain.{MarketDefinition, MarketId}
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster.MarketDefinitionProtocol.{
   Command,
   GetMarketDefinition,
   UpdateMarketDefinition
 }
-import com.thinkmorestupidless.betfair.streams.domain.{MarketDefinition, MarketId}
 import org.apache.pekko.Done
 import org.apache.pekko.actor.Status.{Failure, Status, Success}
 import org.apache.pekko.actor.typed.ActorSystem
@@ -16,7 +16,8 @@ import org.apache.pekko.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class ShardedDurableStateMarketDefinitionsService()(implicit system: ActorSystem[_]) extends MarketDefinitionsService {
+class ShardedDurableStateMarketDefinitionsRepository()(implicit system: ActorSystem[_])
+    extends MarketDefinitionsRepository {
 
   private val sharding = ClusterSharding(system)
 
@@ -37,10 +38,10 @@ class ShardedDurableStateMarketDefinitionsService()(implicit system: ActorSystem
     sharding.entityRefFor(MarketDefinitionShardRegion.TypeKey, marketId.value)
 }
 
-object ShardedDurableStateMarketDefinitionsService {
+object ShardedDurableStateMarketDefinitionsRepository {
 
-  def apply()(implicit system: ActorSystem[_]): MarketDefinitionsService = {
+  def apply()(implicit system: ActorSystem[_]): MarketDefinitionsRepository = {
     MarketDefinitionShardRegion.init()
-    new ShardedDurableStateMarketDefinitionsService()
+    new ShardedDurableStateMarketDefinitionsRepository()
   }
 }

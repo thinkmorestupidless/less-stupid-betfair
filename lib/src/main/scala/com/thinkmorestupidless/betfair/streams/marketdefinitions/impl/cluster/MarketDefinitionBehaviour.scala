@@ -1,7 +1,7 @@
-package com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions
+package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster
 
-import com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions.MarketDefinitionProtocol.Command
 import com.thinkmorestupidless.betfair.streams.domain.MarketDefinition
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster.MarketDefinitionProtocol.Command
 import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.persistence.typed.PersistenceId
 import org.apache.pekko.persistence.typed.state.scaladsl.DurableStateBehavior

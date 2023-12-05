@@ -1,6 +1,6 @@
-package com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions
+package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster
 
-import com.thinkmorestupidless.betfair.extensions.channels.impl.marketdefinitions.MarketDefinitionProtocol.Command
+import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.cluster.MarketDefinitionProtocol.Command
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.actor.typed.{ActorSystem, Behavior, SupervisorStrategy}
 import org.apache.pekko.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}

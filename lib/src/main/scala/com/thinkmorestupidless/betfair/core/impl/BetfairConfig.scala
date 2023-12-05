@@ -72,11 +72,13 @@ final case class ListMarketCatalogueUri(value: String)
 final case class ListMarketBookUri(value: String)
 final case class PlaceOrdersUri(value: String)
 final case class SocketConfig(
+    enabled: StreamsApiEnabled,
     frameSize: SocketFrameSize,
     uri: SocketUri,
     port: SocketPort,
     outgoingHeartbeat: OutgoingHeartbeat
 )
+final case class StreamsApiEnabled(value: Boolean)
 final case class SocketFrameSize(value: Int)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
@@ -94,6 +96,7 @@ object BetfairConfig {
   implicit val loginUriReader = ConfigReader[String].map(LoginUri(_))
   implicit val certFileReader = ConfigReader[String].map(CertFile(_))
   implicit val certPasswordReader = ConfigReader[String].map(CertPassword(_))
+  implicit val streamsApiEnabledReader = ConfigReader[Boolean].map(StreamsApiEnabled(_))
   implicit val socketUriReader = ConfigReader[String].map(SocketUri(_))
   implicit val socketPortReader = ConfigReader[Int].map(SocketPort(_))
   implicit val cancelOrdersReader = ConfigReader[String].map(CancelOrdersUri(_))

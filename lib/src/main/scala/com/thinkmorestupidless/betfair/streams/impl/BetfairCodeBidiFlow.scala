@@ -9,19 +9,18 @@ import org.apache.pekko.stream.scaladsl.{BidiFlow, Flow}
 import org.apache.pekko.util.ByteString
 import org.slf4j.LoggerFactory
 
-object BetfairCodecFlow {
+object BetfairCodeBidiFlow {
 
-  type BetfairCodecFlow =
+  type BetfairCodecBidiFlow =
     BidiFlow[OutgoingBetfairSocketMessage, ByteString, ByteString, IncomingBetfairSocketMessage, NotUsed]
 
   private val log = LoggerFactory.getLogger(getClass)
 
   private val outgoing =
-    Flow[OutgoingBetfairSocketMessage].map(_.asJson.noSpaces).log("OUT").map(json => ByteString(s"$json\r\n"))
+    Flow[OutgoingBetfairSocketMessage].map(_.asJson.noSpaces).map(str => ByteString(s"$str\r\n"))
 
   private val incoming = Flow[ByteString]
     .map(_.utf8String)
-    .log("IN")
     .map { str =>
       for {
         json <- parse(str)
@@ -38,6 +37,6 @@ object BetfairCodecFlow {
       message
     }
 
-  def apply(): BetfairCodecFlow =
+  def apply(): BetfairCodecBidiFlow =
     BidiFlow.fromFlows(outgoing, incoming)
 }
