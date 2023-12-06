@@ -2,19 +2,16 @@ package com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.actor
 
 import com.thinkmorestupidless.betfair.streams.domain.{MarketDefinition, MarketId}
 import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
-import org.apache.pekko.Done
-import org.apache.pekko.actor.typed.{ActorRef, ActorSystem}
-import org.apache.pekko.actor.typed.scaladsl.AskPattern._
 import com.thinkmorestupidless.betfair.streams.marketdefinitions.impl.actor.MarketDefinitionsRepositoryBehaviour.{
   Message,
   UpsertMarketDefinition
 }
-import org.apache.pekko.actor.Status
-import org.apache.pekko.actor.Status.Status
+import org.apache.pekko.Done
+import org.apache.pekko.actor.typed.scaladsl.AskPattern._
+import org.apache.pekko.actor.typed.{ActorRef, ActorSystem}
 import org.apache.pekko.util.Timeout
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 final class ActorMarketDefinitionsRepository private (actor: ActorRef[Message])(implicit system: ActorSystem[_])

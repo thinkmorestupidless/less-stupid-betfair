@@ -29,7 +29,6 @@ import com.thinkmorestupidless.betfair.streams.impl.grpc.GrpcStreamsServiceImpl.
 import com.thinkmorestupidless.grpc.Decoder
 import com.thinkmorestupidless.grpc.Decoder._
 import com.thinkmorestupidless.grpc.DefaultDecoders._
-import com.thinkmorestupidless.utils.Validation.ImplicitConversions.toValidatedOptionalList
 import com.thinkmorestupidless.utils.Validation.Validation
 import com.thinkmorestupidless.utils.ValidationException
 import enumeratum.EnumEntry
@@ -58,10 +57,8 @@ object Decoders {
       val heartbeatMs: Validation[Option[Long]] = marketChangeMessageProto.heartbeatMs.validNel
       val pt: Validation[Long] = marketChangeMessageProto.pt.validNel
       val initialClk: Validation[Option[String]] = marketChangeMessageProto.initialClk.validNel
-      val mc: Validation[Option[Set[MarketChange]]] = marketChangeMessageProto.mc.toList match {
-        case Nil  => validNone[Set[MarketChange]]
-        case list => list.map(_.decode[MarketChange]).sequence.map(list => Some(list.toSet))
-      }
+      val mc: Validation[Set[MarketChange]] =
+        marketChangeMessageProto.mc.map(_.decode[MarketChange]).sequence.map(_.toSet)
       val conflateMs: Validation[Option[Long]] = marketChangeMessageProto.conflateMs.validNel
       val segmentType: Validation[Option[SegmentType]] =
         marketChangeMessageProto.segmentType.fold(validNone[SegmentType])(segmentType =>
@@ -74,7 +71,7 @@ object Decoders {
 
   implicit val marketChangeProto_marketChange: Decoder[MarketChangeProto, MarketChange] =
     proto => {
-      val rc: Validation[Option[List[RunnerChange]]] = proto.rc.toList.map(_.decode).sequence
+      val rc: Validation[List[RunnerChange]] = proto.rc.toList.map(_.decode).sequence
       val img: Validation[Option[Boolean]] = proto.img.validNel
       val tv: Validation[Option[BigDecimal]] = proto.tv.map(BigDecimal(_)).validNel
       val con: Validation[Option[Boolean]] = proto.con.validNel
@@ -274,20 +271,20 @@ object Decoders {
   implicit val runnerChangeProto_runnerChange: Decoder[RunnerChangeProto, RunnerChange] =
     proto => {
       val tv = proto.tv.map(BigDecimal(_)).validNel
-      val batb = proto.batb.decode
-      val spb: Validation[Option[List[List[BigDecimal]]]] = proto.spb.decode
-      val bdatl: Validation[Option[List[List[BigDecimal]]]] = proto.bdatl.decode
-      val trd: Validation[Option[List[List[BigDecimal]]]] = proto.trd.decode
+      val batb: Validation[List[List[BigDecimal]]] = proto.batb.toList.map(_.decode).sequence
+      val spb: Validation[List[List[BigDecimal]]] = proto.spb.toList.map(_.decode).sequence
+      val bdatl: Validation[List[List[BigDecimal]]] = proto.bdatl.toList.map(_.decode).sequence
+      val trd: Validation[List[List[BigDecimal]]] = proto.trd.toList.map(_.decode).sequence
       val spf: Validation[Option[BigDecimal]] = proto.spf.map(BigDecimal(_)).validNel
       val ltp: Validation[Option[BigDecimal]] = proto.ltp.map(BigDecimal(_)).validNel
-      val atb: Validation[Option[List[List[BigDecimal]]]] = proto.atb.decode
-      val spl: Validation[Option[List[List[BigDecimal]]]] = proto.spl.decode
+      val atb: Validation[List[List[BigDecimal]]] = proto.atb.toList.map(_.decode).sequence
+      val spl: Validation[List[List[BigDecimal]]] = proto.spl.toList.map(_.decode).sequence
       val spn: Validation[Option[BigDecimal]] = proto.spn.map(BigDecimal(_)).validNel
-      val atl: Validation[Option[List[List[BigDecimal]]]] = proto.atl.decode
-      val batl: Validation[Option[List[List[BigDecimal]]]] = proto.batl.decode
+      val atl: Validation[List[List[BigDecimal]]] = proto.atl.toList.map(_.decode).sequence
+      val batl: Validation[List[List[BigDecimal]]] = proto.batl.toList.map(_.decode).sequence
       val id: Validation[Long] = proto.id.validNel
       val hc: Validation[Option[BigDecimal]] = proto.hc.map(BigDecimal(_)).validNel
-      val bdatb: Validation[Option[List[List[BigDecimal]]]] = proto.bdatb.decode
+      val bdatb: Validation[List[List[BigDecimal]]] = proto.bdatb.toList.map(_.decode).sequence
 
       (tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb).mapN(RunnerChange.apply _)
     }

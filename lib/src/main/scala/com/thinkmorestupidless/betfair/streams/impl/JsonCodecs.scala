@@ -14,10 +14,25 @@ object JsonCodecs {
 
   private val log = LoggerFactory.getLogger(getClass)
 
+  implicit class ListOps[T](self: List[T]) {
+    def toOpt: Option[List[T]] =
+      self match {
+        case Nil  => None
+        case list => Some(list)
+      }
+  }
+
+  implicit class SetOps[T](self: Set[T]) {
+    def toOpt: Option[Set[T]] =
+      self.size match {
+        case 0 => None
+        case _ => Some(self)
+      }
+  }
+
   implicit val marketIdCoded: Codec[MarketId] = bimapString(_.value, MarketId(_))
 
   implicit val marketFilterCodec: Codec[MarketFilter] = deriveCodec[MarketFilter]
-  implicit val marketChangeCodec: Codec[MarketChange] = deriveCodec[MarketChange]
   implicit val marketDefinitionCodec: Codec[MarketDefinition] = deriveCodec[MarketDefinition]
   implicit val priceLadderDefinitionCodec: Codec[PriceLadderDefinition] = deriveCodec[PriceLadderDefinition]
   implicit val keyLineDefinitionCodec: Codec[KeyLineDefinition] = deriveCodec[KeyLineDefinition]
@@ -67,6 +82,31 @@ object JsonCodecs {
       )
   )
 
+  implicit val marketChangeCodec: Codec[MarketChange] = Codec.from(
+    new Decoder[MarketChange] {
+      override def apply(c: HCursor): Result[MarketChange] =
+        for {
+          rc <- c.downField("rc").as[Option[List[RunnerChange]]]
+          img <- c.downField("img").as[Option[Boolean]]
+          tv <- c.downField("tv").as[Option[BigDecimal]]
+          con <- c.downField("con").as[Option[Boolean]]
+          marketDefinition <- c.downField("marketDefinition").as[Option[MarketDefinition]]
+          id <- c.downField("id").as[MarketId]
+        } yield MarketChange(rc.getOrElse(List.empty), img, tv, con, marketDefinition, id)
+    },
+    new Encoder[MarketChange] {
+      override def apply(runnerChange: MarketChange): Json =
+        Json.obj(
+          ("rc", runnerChange.rc.toOpt.asJson),
+          ("img", runnerChange.img.asJson),
+          ("tv", runnerChange.tv.asJson),
+          ("con", runnerChange.con.asJson),
+          ("marketDefinition", runnerChange.marketDefinition.asJson),
+          ("id", runnerChange.id.asJson)
+        )
+    }
+  )
+
   implicit val marketChangeMessageCodec: Codec[MarketChangeMessage] = Codec.from(
     cursor =>
       for {
@@ -87,7 +127,7 @@ object JsonCodecs {
         heartbeatMs,
         pt,
         initialClk,
-        mc,
+        mc.getOrElse(Set.empty),
         conflateMs,
         segmentType,
         status
@@ -101,7 +141,7 @@ object JsonCodecs {
         ("heartbeatMs", marketChangeMessage.heartbeatMs.asJson),
         ("pt", marketChangeMessage.pt.asJson),
         ("initialClk", marketChangeMessage.initialClk.asJson),
-        ("mc", marketChangeMessage.mc.asJson),
+        ("mc", marketChangeMessage.mc.toOpt.asJson),
         ("conflateMs", marketChangeMessage.conflateMs.asJson),
         ("segmentType", marketChangeMessage.segmentType.asJson),
         ("status", marketChangeMessage.status.asJson)
@@ -134,25 +174,41 @@ object JsonCodecs {
         } else {
           None
         }
-        RunnerChange(tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb)
+        RunnerChange(
+          tv,
+          batb.getOrElse(List.empty),
+          spb.getOrElse(List.empty),
+          bdatl.getOrElse(List.empty),
+          trd.getOrElse(List.empty),
+          spf,
+          ltp,
+          atb.getOrElse(List.empty),
+          spl.getOrElse(List.empty),
+          spn,
+          atl.getOrElse(List.empty),
+          batl.getOrElse(List.empty),
+          id,
+          hc,
+          bdatb.getOrElse(List.empty)
+        )
       },
     runnerChange =>
       Json.obj(
         ("tv", runnerChange.tv.asJson),
-        ("batb", runnerChange.batb.asJson),
-        ("spb", runnerChange.spb.asJson),
-        ("bdatl", runnerChange.bdatl.asJson),
-        ("trd", runnerChange.trd.asJson),
+        ("batb", runnerChange.batb.toOpt.asJson),
+        ("spb", runnerChange.spb.toOpt.asJson),
+        ("bdatl", runnerChange.bdatl.toOpt.asJson),
+        ("trd", runnerChange.trd.toOpt.asJson),
         ("spf", runnerChange.spf.asJson),
         ("ltp", runnerChange.ltp.asJson),
-        ("atb", runnerChange.atb.asJson),
-        ("spl", runnerChange.spl.asJson),
+        ("atb", runnerChange.atb.toOpt.asJson),
+        ("spl", runnerChange.spl.toOpt.asJson),
         ("spn", runnerChange.spn.asJson),
-        ("atl", runnerChange.atl.asJson),
-        ("batl", runnerChange.batl.asJson),
+        ("atl", runnerChange.atl.toOpt.asJson),
+        ("batl", runnerChange.batl.toOpt.asJson),
         ("id", runnerChange.id.asJson),
         ("hc", runnerChange.hc.asJson),
-        ("bdatb", runnerChange.bdatb.asJson)
+        ("bdatb", runnerChange.bdatb.toOpt.asJson)
       )
   )
 

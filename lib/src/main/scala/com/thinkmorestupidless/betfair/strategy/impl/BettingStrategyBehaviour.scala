@@ -2,7 +2,7 @@ package com.thinkmorestupidless.betfair.strategy.impl
 
 import com.thinkmorestupidless.betfair.strategy.domain.BettingStrategyLogic
 import com.thinkmorestupidless.betfair.streams.domain.MarketChange
-import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+import org.apache.pekko.actor.typed.Behavior
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 
 import scala.util.{Failure, Success}

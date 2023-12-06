@@ -22,10 +22,9 @@ final class GrpcStreamsServiceImpl(betfair: Betfair)(implicit system: ActorSyste
     in.decode.fold(
       errors => Source.failed(ValidationException.combineErrors(errors)),
       decoded => {
-//        val (sink, source) = betfair.socketFlow.sinkAndSource()
         Source.single(decoded.marketFilter).map(MarketSubscription(_)).runWith(betfair.socketFlow.sink)
         betfair.socketFlow.source
-          .collect { case MarketChangeMessage(_, _, _, _, _, _, _, Some(marketChanges), _, _, _) =>
+          .collect { case MarketChangeMessage(_, _, _, _, _, _, _, marketChanges, _, _, _) =>
             marketChanges
           }
           .flatMapConcat { elem =>

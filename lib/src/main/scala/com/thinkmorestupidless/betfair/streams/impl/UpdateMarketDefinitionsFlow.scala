@@ -13,7 +13,7 @@ object UpdateMarketDefinitionsFlow {
       marketDefinitionsRepository: MarketDefinitionsRepository
   )(implicit ec: ExecutionContext): Flow[IncomingBetfairSocketMessage, IncomingBetfairSocketMessage, NotUsed] =
     Flow[IncomingBetfairSocketMessage].mapAsync(parallelism = 1) {
-      case message @ MarketChangeMessage(_, _, _, _, _, _, _, Some(marketChanges), _, _, _) =>
+      case message @ MarketChangeMessage(_, _, _, _, _, _, _, marketChanges, _, _, _) =>
         updateMarketDefinitions(marketDefinitionsRepository, marketChanges).map(_ => message)
       case message => Future.successful(message)
     }

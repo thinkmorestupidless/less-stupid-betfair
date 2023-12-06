@@ -16,8 +16,8 @@ import org.apache.pekko.persistence.typed.PersistenceId
 import org.apache.pekko.persistence.typed.state.scaladsl.{DurableStateBehavior, Effect}
 import org.apache.pekko.util.Timeout
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 final class DurableStateGlobalMarketFilterRepository(proxy: ActorRef[Message])(implicit
     system: ActorSystem[_]

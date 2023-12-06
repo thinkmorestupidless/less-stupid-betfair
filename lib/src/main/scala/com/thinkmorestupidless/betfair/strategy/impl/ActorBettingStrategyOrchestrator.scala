@@ -35,7 +35,7 @@ final class ActorBettingStrategyOrchestrator private (betfair: Betfair, actor: A
     val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
     val betfairFlow = betfair.socketFlow
       .flowFromSinkAndSource()
-      .collect { case MarketChangeMessage(_, _, _, _, _, _, _, Some(marketChanges), _, _, _) =>
+      .collect { case MarketChangeMessage(_, _, _, _, _, _, _, marketChanges, _, _, _) =>
         marketChanges
       }
       .flatMapConcat(Source(_))

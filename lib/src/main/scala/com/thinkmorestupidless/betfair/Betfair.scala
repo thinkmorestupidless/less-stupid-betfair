@@ -34,7 +34,7 @@ import com.thinkmorestupidless.utils.EitherTUtils._
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.adapter._
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.stream.scaladsl.Sink
 import org.apache.pekko.{actor => classic}
 import pureconfig.error.ConfigReaderFailures
 
@@ -56,10 +56,7 @@ final case class Betfair(
       .collect { case mcm: MarketChangeMessage =>
         mcm.mc
       }
-      .collect { case Some(marketChanges) =>
-        marketChanges
-      }
-      .flatMapConcat(Source(_))
+      .mapConcat(identity)
       .runWith(sink)
   }
 }

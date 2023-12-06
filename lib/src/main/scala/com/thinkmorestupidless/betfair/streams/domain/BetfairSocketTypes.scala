@@ -138,7 +138,7 @@ object MarketFilter {
 }
 
 final case class MarketChange(
-    rc: Option[List[RunnerChange]],
+    rc: List[RunnerChange],
     img: Option[Boolean],
     tv: Option[BigDecimal],
     con: Option[Boolean],
@@ -147,20 +147,20 @@ final case class MarketChange(
 )
 final case class RunnerChange(
     tv: Option[BigDecimal],
-    batb: Option[List[List[BigDecimal]]],
-    spb: Option[List[List[BigDecimal]]],
-    bdatl: Option[List[List[BigDecimal]]],
-    trd: Option[List[List[BigDecimal]]],
+    batb: List[List[BigDecimal]],
+    spb: List[List[BigDecimal]],
+    bdatl: List[List[BigDecimal]],
+    trd: List[List[BigDecimal]],
     spf: Option[BigDecimal],
     ltp: Option[BigDecimal],
-    atb: Option[List[List[BigDecimal]]],
-    spl: Option[List[List[BigDecimal]]],
+    atb: List[List[BigDecimal]],
+    spl: List[List[BigDecimal]],
     spn: Option[BigDecimal],
-    atl: Option[List[List[BigDecimal]]],
-    batl: Option[List[List[BigDecimal]]],
+    atl: List[List[BigDecimal]],
+    batl: List[List[BigDecimal]],
     id: Long,
     hc: Option[BigDecimal],
-    bdatb: Option[List[List[BigDecimal]]]
+    bdatb: List[List[BigDecimal]]
 )
 final case class MarketDefinition(
     status: MarketStatus,

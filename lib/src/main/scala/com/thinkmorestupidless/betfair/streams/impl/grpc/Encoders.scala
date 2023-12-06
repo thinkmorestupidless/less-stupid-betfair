@@ -168,7 +168,7 @@ object Encoders {
   implicit val marketChangeEncoder: Encoder[MarketChange, MarketChangeProto] =
     marketChange =>
       MarketChangeProto(
-        rc = marketChange.rc.map(_.map(_.encode).toList).getOrElse(List.empty),
+        rc = marketChange.rc.map(_.encode),
         img = marketChange.img,
         tv = marketChange.tv.map(_.toString()),
         con = marketChange.con,
@@ -185,7 +185,7 @@ object Encoders {
         heartbeatMs = marketChangeMessage.heartbeatMs,
         pt = marketChangeMessage.pt,
         initialClk = marketChangeMessage.initialClk,
-        mc = marketChangeMessage.mc.map(_.map(_.encode).toSeq).getOrElse(Seq.empty),
+        mc = marketChangeMessage.mc.map(_.encode).toSeq,
         conflateMs = marketChangeMessage.conflateMs,
         segmentType = marketChangeMessage.segmentType.map(_.encode),
         status = marketChangeMessage.status

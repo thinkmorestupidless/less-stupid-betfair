@@ -52,7 +52,7 @@ final case class MarketChangeMessage(
     heartbeatMs: Option[Long],
     pt: Long,
     initialClk: Option[String],
-    mc: Option[Set[MarketChange]],
+    mc: Set[MarketChange],
     conflateMs: Option[Long],
     segmentType: Option[SegmentType],
     status: Option[Int]
@@ -65,7 +65,7 @@ object MarketChangeMessage {
       heartbeatMs: Option[Long],
       pt: Long,
       initialClk: Option[String],
-      mc: Option[Set[MarketChange]],
+      mc: Set[MarketChange],
       conflateMs: Option[Long],
       segmentType: Option[SegmentType],
       status: Option[Int]
