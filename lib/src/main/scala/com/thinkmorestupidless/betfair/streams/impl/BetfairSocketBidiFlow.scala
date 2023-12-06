@@ -39,11 +39,6 @@ object BetfairSocketBidiFlow {
 
       val (queue, source) = Source.queue[OutgoingBetfairSocketMessage](bufferSize = 100).preMaterialize()
 
-      system.systemActorOf(
-        GlobalMarketSubscriptionActor(globalMarketFilterRepository, queue),
-        "betfair-global-filter"
-      )
-
       val protocolFlows = BetfairProtocolFlows(applicationKey, sessionToken)
 
       val incomingProtocolFlow = b.add(protocolFlows.incoming)
@@ -56,6 +51,7 @@ object BetfairSocketBidiFlow {
       val broadcastOutgoing = b.add(Broadcast[OutgoingBetfairSocketMessage](outputPorts = 2))
       val heartbeatFlow = b.add(BetfairHeartbeatFlow(queue, source, outgoingHeartbeat))
       val upsertMarketDefinition = b.add(UpdateMarketDefinitionsFlow(marketDefinitionsRepository))
+      val updateGlobalMarketFilter = b.add(UpdateGlobalMarketFilterFlow(globalMarketFilterRepository))
 
       incomingProtocolFlow.out ~> splitIncoming.in
 
@@ -72,7 +68,8 @@ object BetfairSocketBidiFlow {
       broadcastOutgoing.out(1) ~> heartbeatFlow.in
 
       heartbeatFlow.out ~> mergeOutgoing.in(2)
+      mergeOutgoing.out ~> updateGlobalMarketFilter.in
 
-      BidiShape(outgoingProtocolFlow.in, mergeOutgoing.out, incomingProtocolFlow.in, mergeIncoming.out)
+      BidiShape(outgoingProtocolFlow.in, updateGlobalMarketFilter.out, incomingProtocolFlow.in, mergeIncoming.out)
     })
 }

@@ -23,7 +23,7 @@ final class BetfairSocket(
 )(implicit system: ActorSystem[_]) {
 
   val marketSubscriptionQueue = {
-    val (queue, source) = Source.queue[MarketSubscription](100).preMaterialize()
+    val (queue, source) = Source.queue[MarketSubscription](bufferSize = 100).preMaterialize()
     source.runWith(sink)
     queue
   }

@@ -20,17 +20,17 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 final class DurableStateGlobalMarketFilterRepository(proxy: ActorRef[Message])(implicit
-    system: ActorSystem[_],
-    ec: ExecutionContext
+    system: ActorSystem[_]
 ) extends GlobalMarketFilterRepository {
 
+  private implicit val ec = system.executionContext
   private implicit val timeout = Timeout(2.seconds)
 
   override def upsertGlobalMarketFilter(marketFilter: MarketFilter): Future[Unit] =
     proxy.ask(replyTo => UpdateGlobalMarketFilter(marketFilter, replyTo)).map(_ => ())
 
-  override def getCurrentGlobalFilter(): Future[MarketFilter] = ???
-  proxy.ask(replyTo => GetGlobalMarketFilter(replyTo))
+  override def getCurrentGlobalFilter(): Future[MarketFilter] =
+    proxy.ask(replyTo => GetGlobalMarketFilter(replyTo))
 }
 
 object DurableStateGlobalMarketFilterRepository {
