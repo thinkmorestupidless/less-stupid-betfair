@@ -92,16 +92,18 @@ private object BetfairProtocolActor {
         def connecting(): Behavior[BetfairProtocolMessage] =
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
             case IncomingQuestion(Success(_), replyTo) =>
-              context.system.log.info(s"${context.self.path.name} authentication success, moving to connected")
+              context.system.log.info(
+                s"[connecting] authentication success, moving to connected [unstashing ${buffer.size} messages]"
+              )
               context.system.eventStream ! Publish(SocketAuthenticated)
               replyTo ! Answer(List.empty)
               buffer.unstashAll(connected())
 
             case IncomingQuestion(Failure(_, _, _, _), replyTo) =>
-              context.system.log.info(s"${context.self.path.name} authentication failure, stopping")
+              context.system.log.info(s"[connecting] authentication failure, stopping")
               context.system.eventStream ! Publish(SocketAuthenticationFailed)
               replyTo ! Answer(List(SocketFailed))
-              Behaviors.same
+              Behaviors.stopped
 
             case message =>
               buffer.stash(message)
@@ -117,10 +119,12 @@ private object BetfairProtocolActor {
 
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
             case IncomingQuestion(message, replyTo) =>
+              context.system.log.info(s"[connected] receiving incoming message $message")
               replyTo ! Answer(handle(message))
               Behaviors.same
 
             case OutgoingQuestion(message, replyTo) =>
+              context.system.log.info(s"[connected] receiving outgoing message $message")
               message match {
                 case MarketSubscription(_, Some(marketFilter)) =>
                   context.system.eventStream ! Publish(MarketFilterUpdate(marketFilter))

@@ -47,7 +47,8 @@ object BetfairConfigSpec {
         SocketFrameSize(102400),
         SocketUri("stream-api-integration.betfair.com"),
         SocketPort(443),
-        OutgoingHeartbeat(false)
+        OutgoingHeartbeat(false),
+        EagerConnection(true)
       ),
       ExchangeUris(
         CancelOrdersUri("https://api.betfair.com/exchange/betting/rest/v1.0/cancelOrders/"),

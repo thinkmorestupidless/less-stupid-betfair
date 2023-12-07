@@ -9,7 +9,7 @@ import org.apache.pekko.stream.scaladsl.{BidiFlow, Flow}
 import org.apache.pekko.util.ByteString
 import org.slf4j.LoggerFactory
 
-object BetfairCodeBidiFlow {
+object BetfairCodecBidiFlow {
 
   type BetfairCodecBidiFlow =
     BidiFlow[OutgoingBetfairSocketMessage, ByteString, ByteString, IncomingBetfairSocketMessage, NotUsed]

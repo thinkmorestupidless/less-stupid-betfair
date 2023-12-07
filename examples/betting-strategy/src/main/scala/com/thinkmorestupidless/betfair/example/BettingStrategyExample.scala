@@ -32,7 +32,6 @@ object BettingStrategyExample {
         val strategyOrchestrator = ActorBettingStrategyOrchestrator(betfair, new InMemoryMarketDefinitionsRepository())
 
         betfair.getMenu().map { menu =>
-
           val premierLeagueMatchOddsMarketsFilter =
             menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds).toMarketFilter()
 

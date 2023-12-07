@@ -33,7 +33,8 @@ object ConfigSupport {
         SocketFrameSize(102400),
         SocketUri("stream-api.betfair.com"),
         SocketPort(443),
-        OutgoingHeartbeat(false)
+        OutgoingHeartbeat(false),
+        EagerConnection(true)
       ),
       ExchangeUris(
         CancelOrdersUri(s"$baseUri/cancelOrders/"),

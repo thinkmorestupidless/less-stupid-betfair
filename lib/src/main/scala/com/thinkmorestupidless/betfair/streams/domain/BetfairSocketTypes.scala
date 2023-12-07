@@ -5,6 +5,7 @@ import com.thinkmorestupidless.betfair.exchange.domain.{EventId, EventTypeId}
 import com.thinkmorestupidless.betfair.streams.domain.PricePointPriceLadder.priceLadderEntryOrdering
 import enumeratum.EnumEntry.UpperSnakecase
 import enumeratum.{CirceEnum, Enum, EnumEntry}
+import org.slf4j.LoggerFactory
 
 sealed trait MarketBettingType extends EnumEntry with UpperSnakecase
 object MarketBettingType extends Enum[MarketBettingType] with CirceEnum[MarketBettingType] {
@@ -166,37 +167,41 @@ final case class RunnerChange(
 )
 
 final case class PriceLadderLevel(value: Int)
-final case class PriceLadderEntry(price: Price, tradedVolume: Money)
-final case class LevelBasedPriceLadder(entries: List[PriceLadderEntry]) {
-  def add(entry: PriceLadderEntry, at: PriceLadderLevel): LevelBasedPriceLadder =
+final case class LevelBasedPriceLadderEntry(price: Price, tradedVolume: Money, level: PriceLadderLevel)
+final case class LevelBasedPriceLadder(entries: List[LevelBasedPriceLadderEntry]) {
+  def without(level: PriceLadderLevel): LevelBasedPriceLadder = {
+    val newEntries = entries.filterNot(_.level == level)
+    if (newEntries.isEmpty)
+      LevelBasedPriceLadder.empty
+    else
+      LevelBasedPriceLadder(entries.filterNot(_.level == level))
+  }
+
+  def add(entry: LevelBasedPriceLadderEntry): LevelBasedPriceLadder =
     if (entry.tradedVolume == Money.zero.get) {
-      LevelBasedPriceLadder(entries.slice(at.value, 1))
+      LevelBasedPriceLadder(entries.filterNot(_.level == entry.level))
     } else {
-      LevelBasedPriceLadder(entries.updated(at.value, entry))
+      LevelBasedPriceLadder(entries.filterNot(_.level == entry.level) :+ entry)
     }
 }
 object LevelBasedPriceLadder {
   val empty: LevelBasedPriceLadder = LevelBasedPriceLadder(List.empty)
 }
 
-final case class PricePointPriceLadder(entries: List[PriceLadderEntry]) {
-  import scala.math.Ordered.orderingToOrdered
-
-  def add(entry: PriceLadderEntry): PricePointPriceLadder =
-    if (entry.tradedVolume > Money.zero.get) {
-      PricePointPriceLadder.empty
-    } else {
-      val newEntries = entries.find(_.price == entry.price) match {
-        case Some(oldEntry) => entries.filterNot(_ == oldEntry) :+ entry
-        case None           => entries :+ entry
-      }
-      PricePointPriceLadder(newEntries.sorted)
+final case class PricePointPriceLadderEntry(price: Price, tradedVolume: Money)
+final case class PricePointPriceLadder(entries: List[PricePointPriceLadderEntry]) {
+  def add(entry: PricePointPriceLadderEntry): PricePointPriceLadder = {
+    val newEntries = entries.find(_.price == entry.price) match {
+      case Some(oldEntry) => entries.filterNot(_ == oldEntry) :+ entry
+      case None           => entries :+ entry
     }
+    PricePointPriceLadder(newEntries.sorted)
+  }
 }
 object PricePointPriceLadder {
   val empty: PricePointPriceLadder = PricePointPriceLadder(List.empty)
 
-  implicit val priceLadderEntryOrdering: Ordering[PriceLadderEntry] =
+  implicit val priceLadderEntryOrdering: Ordering[PricePointPriceLadderEntry] =
     Ordering.by(_.price.value)
 }
 

@@ -36,10 +36,14 @@ object JsonCodecs {
       self
         .map(_.foldLeft(LevelBasedPriceLadder.empty) { (priceLadder, next) =>
           val level = PriceLadderLevel(next(0).intValue)
-          val price = Price(next(1))
-          val tradedVolume = Money(next(2))
-          val entry = PriceLadderEntry(price, tradedVolume)
-          priceLadder.add(entry, level)
+          val price = next(1)
+          val tradedVolume = next(2)
+          if (price == 0 && tradedVolume == 0)
+            priceLadder.without(level)
+          else {
+            val entry = LevelBasedPriceLadderEntry(Price(price), Money(tradedVolume), level)
+            priceLadder.add(entry)
+          }
         })
         .getOrElse(LevelBasedPriceLadder.empty)
 
@@ -48,7 +52,7 @@ object JsonCodecs {
         .map(_.foldLeft(PricePointPriceLadder.empty) { (priceLadder, next) =>
           val price = Price(next(0))
           val tradedVolume = Money(next(1))
-          val entry = PriceLadderEntry(price, tradedVolume)
+          val entry = PricePointPriceLadderEntry(price, tradedVolume)
           priceLadder.add(entry)
         })
         .getOrElse(PricePointPriceLadder.empty)
@@ -57,7 +61,7 @@ object JsonCodecs {
   implicit class LevelBasedPriceLadderOps(self: LevelBasedPriceLadder) {
     def toOpt: Option[List[List[BigDecimal]]] =
       self.entries match {
-        case Nil => None
+        case Nil     => None
         case entries => Some(entries.map(entry => List(entry.price.value, entry.tradedVolume.amount)))
       }
   }
@@ -194,24 +198,33 @@ object JsonCodecs {
     _.toOpt.asJson
   )
 
+  implicit class HCursorOps(self: HCursor) {
+    def asOrElse[T: Decoder](key: String, default: T): Decoder.Result[T] =
+      if (self.keys.map(_.toList.contains(key)).getOrElse(false)) {
+        self.downField(key).as[T]
+      } else {
+        Right(default)
+      }
+  }
+
   implicit val runnerChangeCodec: Codec[RunnerChange] = Codec.from(
     cursor =>
       for {
         tradedVolume <- cursor.downField("tv").as[Option[BigDecimal]]
-        bestAvailableToBack <- cursor.downField("batb").as[LevelBasedPriceLadder]
+        bestAvailableToBack <- cursor.asOrElse("batb", LevelBasedPriceLadder.empty)
         startingPriceAvailableToBack <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
-        bestDisplayAvailableToLay <- cursor.downField("bdatl").as[LevelBasedPriceLadder]
-        traded <- cursor.downField("trd").as[PricePointPriceLadder]
+        bestDisplayAvailableToLay <- cursor.asOrElse("bdatl", LevelBasedPriceLadder.empty)
+        traded <- cursor.asOrElse("trd", PricePointPriceLadder.empty)
         spfJson <- cursor.downField("spf").as[Json]
         lastTradedPrice <- cursor.downField("ltp").as[Option[BigDecimal]]
-        availableToBack <- cursor.downField("atb").as[PricePointPriceLadder]
+        availableToBack <- cursor.asOrElse("atb", PricePointPriceLadder.empty)
         startingPriceAvailableToLay <- cursor.downField("spl").as[Option[List[List[BigDecimal]]]]
         startingPriceNear <- cursor.downField("spn").as[Option[BigDecimal]]
-        availableToLay <- cursor.downField("atl").as[PricePointPriceLadder]
-        bestAvailableToLay <- cursor.downField("batl").as[LevelBasedPriceLadder]
+        availableToLay <- cursor.asOrElse("atl", PricePointPriceLadder.empty)
+        bestAvailableToLay <- cursor.asOrElse("batl", LevelBasedPriceLadder.empty)
         id <- cursor.downField("id").as[Long]
         hc <- cursor.downField("hc").as[Option[BigDecimal]]
-        bestDisplayAvailableToBack <- cursor.downField("bdatb").as[LevelBasedPriceLadder]
+        bestDisplayAvailableToBack <- cursor.asOrElse("bdatb", LevelBasedPriceLadder.empty)
       } yield {
         val startingPriceFar = if (spfJson.isString) {
           None

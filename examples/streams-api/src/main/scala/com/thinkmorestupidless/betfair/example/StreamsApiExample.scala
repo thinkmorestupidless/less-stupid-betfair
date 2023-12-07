@@ -27,9 +27,7 @@ object StreamsApiExample {
     Betfair
       .create()
       .map { betfair =>
-
         betfair.getMenu().map { menu =>
-
           val premierLeagueMatchOdds =
             menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds).toMarketSubscription()
 

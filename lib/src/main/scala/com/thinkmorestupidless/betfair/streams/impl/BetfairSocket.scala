@@ -1,8 +1,14 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
-import com.thinkmorestupidless.betfair.core.impl.{OutgoingHeartbeat, SocketConfig}
-import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, Heartbeat, IncomingBetfairSocketMessage, MarketSubscription, OutgoingBetfairSocketMessage}
+import com.thinkmorestupidless.betfair.core.impl.SocketConfig
+import com.thinkmorestupidless.betfair.streams.domain.{
+  GlobalMarketFilterRepository,
+  Heartbeat,
+  IncomingBetfairSocketMessage,
+  MarketSubscription,
+  OutgoingBetfairSocketMessage
+}
 import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
@@ -49,7 +55,7 @@ object BetfairSocket {
       marketDefinitionsRepository: MarketDefinitionsRepository,
       socketConfig: SocketConfig
   )(implicit system: ActorSystem[_]): BetfairSocket = {
-    val codecFlow: BetfairSocketFlow = BetfairCodeBidiFlow().join(socketFlow)
+    val codecFlow: BetfairSocketFlow = BetfairCodecBidiFlow().join(socketFlow)
     val betfairSocketFlow: BetfairSocketFlow =
       BetfairSocketBidiFlow(
         applicationKey,

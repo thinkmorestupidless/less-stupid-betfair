@@ -4,7 +4,7 @@ import scala.math.BigDecimal.RoundingMode
 
 case class Price(value: BigDecimal) {
   require(
-    value >= Price.MinValue && value < Price.MaxValue,
+    value >= Price.MinValue && value <= Price.MaxValue,
     s"Invalid decimal odds value $value, must be [${Price.MinValue}, ${Price.MaxValue})"
   )
 
