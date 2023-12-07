@@ -19,7 +19,7 @@ object MarketDefinitionsRepositoryBehaviour {
   final case class GetMarketDefinition(marketId: MarketId, replyTo: ActorRef[Status]) extends Message
 
   def apply(): Behavior[Message] =
-    Behaviors.setup { context =>
+    Behaviors.setup { _ =>
       def running(marketDefinitions: mutable.Map[MarketId, MarketDefinition]): Behavior[Message] =
         Behaviors.receiveMessage {
           case UpsertMarketDefinition(marketId, marketDefinition, replyTo) =>

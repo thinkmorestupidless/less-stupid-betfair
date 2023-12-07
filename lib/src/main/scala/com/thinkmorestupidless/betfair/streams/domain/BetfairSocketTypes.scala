@@ -1,6 +1,8 @@
 package com.thinkmorestupidless.betfair.streams.domain
 
+import com.thinkmorestupidless.betfair.core.domain.{Money, Price}
 import com.thinkmorestupidless.betfair.exchange.domain.{EventId, EventTypeId}
+import com.thinkmorestupidless.betfair.streams.domain.PricePointPriceLadder.priceLadderEntryOrdering
 import enumeratum.EnumEntry.UpperSnakecase
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 
@@ -147,21 +149,57 @@ final case class MarketChange(
 )
 final case class RunnerChange(
     tv: Option[BigDecimal],
-    batb: List[List[BigDecimal]],
+    batb: LevelBasedPriceLadder,
     spb: List[List[BigDecimal]],
-    bdatl: List[List[BigDecimal]],
-    trd: List[List[BigDecimal]],
+    bdatl: LevelBasedPriceLadder,
+    trd: PricePointPriceLadder,
     spf: Option[BigDecimal],
     ltp: Option[BigDecimal],
-    atb: List[List[BigDecimal]],
+    atb: PricePointPriceLadder,
     spl: List[List[BigDecimal]],
     spn: Option[BigDecimal],
-    atl: List[List[BigDecimal]],
-    batl: List[List[BigDecimal]],
+    atl: PricePointPriceLadder,
+    batl: LevelBasedPriceLadder,
     id: Long,
     hc: Option[BigDecimal],
-    bdatb: List[List[BigDecimal]]
+    bdatb: LevelBasedPriceLadder
 )
+
+final case class PriceLadderLevel(value: Int)
+final case class PriceLadderEntry(price: Price, tradedVolume: Money)
+final case class LevelBasedPriceLadder(entries: List[PriceLadderEntry]) {
+  def add(entry: PriceLadderEntry, at: PriceLadderLevel): LevelBasedPriceLadder =
+    if (entry.tradedVolume == Money.zero.get) {
+      LevelBasedPriceLadder(entries.slice(at.value, 1))
+    } else {
+      LevelBasedPriceLadder(entries.updated(at.value, entry))
+    }
+}
+object LevelBasedPriceLadder {
+  val empty: LevelBasedPriceLadder = LevelBasedPriceLadder(List.empty)
+}
+
+final case class PricePointPriceLadder(entries: List[PriceLadderEntry]) {
+  import scala.math.Ordered.orderingToOrdered
+
+  def add(entry: PriceLadderEntry): PricePointPriceLadder =
+    if (entry.tradedVolume > Money.zero.get) {
+      PricePointPriceLadder.empty
+    } else {
+      val newEntries = entries.find(_.price == entry.price) match {
+        case Some(oldEntry) => entries.filterNot(_ == oldEntry) :+ entry
+        case None           => entries :+ entry
+      }
+      PricePointPriceLadder(newEntries.sorted)
+    }
+}
+object PricePointPriceLadder {
+  val empty: PricePointPriceLadder = PricePointPriceLadder(List.empty)
+
+  implicit val priceLadderEntryOrdering: Ordering[PriceLadderEntry] =
+    Ordering.by(_.price.value)
+}
+
 final case class MarketDefinition(
     status: MarketStatus,
     venue: Option[String],

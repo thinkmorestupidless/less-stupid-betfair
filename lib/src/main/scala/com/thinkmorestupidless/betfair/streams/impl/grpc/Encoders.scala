@@ -24,6 +24,8 @@ import com.thinkmorestupidless.betfair.proto.streams.{
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.grpc.Encoder
 import com.thinkmorestupidless.grpc.Encoder._
+import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs.LevelBasedPriceLadderOps
+import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs.PricePointPriceLadderOps
 
 object Encoders {
 
@@ -85,6 +87,12 @@ object Encoders {
   implicit val optionalTwoDimensionalArrayOfBigDecimalEncoder
       : Encoder[Option[List[List[BigDecimal]]], Seq[ArrayOfStrings]] =
     input => input.map(_.encode).getOrElse(Seq.empty)
+
+  implicit val levelBasedPriceLadder_seqArrayOfString: Encoder[LevelBasedPriceLadder, Seq[ArrayOfStrings]] =
+    _.toOpt.encode
+
+  implicit val pricePointPriceLadder_seqArrayOfString: Encoder[PricePointPriceLadder, Seq[ArrayOfStrings]] =
+    _.toOpt.encode
 
   implicit val runnerChangeEncoder: Encoder[RunnerChange, RunnerChangeProto] =
     runnerChange =>

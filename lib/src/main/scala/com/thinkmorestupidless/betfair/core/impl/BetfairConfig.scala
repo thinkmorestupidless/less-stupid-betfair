@@ -76,13 +76,15 @@ final case class SocketConfig(
     frameSize: SocketFrameSize,
     uri: SocketUri,
     port: SocketPort,
-    outgoingHeartbeat: OutgoingHeartbeat
+    outgoingHeartbeat: OutgoingHeartbeat,
+    eagerConnection: EagerConnection
 )
 final case class StreamsApiEnabled(value: Boolean)
 final case class SocketFrameSize(value: Int)
 final case class SocketUri(value: String)
 final case class SocketPort(value: Int)
 final case class OutgoingHeartbeat(value: Boolean)
+final case class EagerConnection(value: Boolean)
 final case class NavigationConfig(uri: MenuUri)
 final case class MenuUri(value: String)
 
@@ -117,6 +119,7 @@ object BetfairConfig {
   implicit val logExchangeResponsesReader = ConfigReader[Boolean].map(LogExchangeResponses(_))
   implicit val socketFrameSizeReader = ConfigReader[Int].map(SocketFrameSize(_))
   implicit val outgoingHeartbeatReader = ConfigReader[Boolean].map(OutgoingHeartbeat(_))
+  implicit val eagerConnection = ConfigReader[Boolean].map(EagerConnection(_))
 
   implicit val rawHeaderReader = ConfigReader.fromCursor[RawHeader] { cur =>
     for {

@@ -27,13 +27,14 @@ object StreamsApiExample {
     Betfair
       .create()
       .map { betfair =>
-        log.info("betfair is ready {}", betfair)
 
         betfair.getMenu().map { menu =>
-          val marketSubscription =
+
+          val premierLeagueMatchOdds =
             menu.allEvents().ofType(EnglishPremierLeague).allMarkets().ofType(MatchOdds).toMarketSubscription()
+
           betfair
-            .subscribeToMarketChanges(marketSubscription, Sink.foreach[MarketChange](msg => log.info(msg.toString)))
+            .subscribeToMarketChanges(premierLeagueMatchOdds, Sink.foreach[MarketChange](msg => log.info(msg.toString)))
         }
       }
       .leftMap(error => log.error(s"failed to log in to Betfair '$error'"))

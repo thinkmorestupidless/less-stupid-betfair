@@ -27,7 +27,7 @@ object BetfairCodeBidiFlow {
         msg <- json.as[IncomingBetfairSocketMessage]
       } yield msg
     }
-    .collect {
+    .map {
       case Right(message) => Some(message)
       case Left(error) =>
         log.error(s"Failed to process incoming message '$error'")

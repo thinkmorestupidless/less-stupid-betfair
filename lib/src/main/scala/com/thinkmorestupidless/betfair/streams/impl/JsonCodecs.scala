@@ -2,6 +2,7 @@ package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
 import com.thinkmorestupidless.betfair.auth.impl.JsonCodecs.{applicationKeyCodec, sessionTokenCodec}
+import com.thinkmorestupidless.betfair.core.domain.{Money, Price}
 import com.thinkmorestupidless.betfair.streams.domain._
 import com.thinkmorestupidless.extensions.circe.CirceUtils._
 import io.circe.Decoder.Result
@@ -30,19 +31,58 @@ object JsonCodecs {
       }
   }
 
-  implicit val marketIdCoded: Codec[MarketId] = bimapString(_.value, MarketId(_))
+  implicit class ResultOptionListListBigDecimalOps(self: Option[List[List[BigDecimal]]]) {
+    def toLevelBasedPriceLadder(): LevelBasedPriceLadder =
+      self
+        .map(_.foldLeft(LevelBasedPriceLadder.empty) { (priceLadder, next) =>
+          val level = PriceLadderLevel(next(0).intValue)
+          val price = Price(next(1))
+          val tradedVolume = Money(next(2))
+          val entry = PriceLadderEntry(price, tradedVolume)
+          priceLadder.add(entry, level)
+        })
+        .getOrElse(LevelBasedPriceLadder.empty)
 
+    def toPricePointPriceLadder(): PricePointPriceLadder =
+      self
+        .map(_.foldLeft(PricePointPriceLadder.empty) { (priceLadder, next) =>
+          val price = Price(next(0))
+          val tradedVolume = Money(next(1))
+          val entry = PriceLadderEntry(price, tradedVolume)
+          priceLadder.add(entry)
+        })
+        .getOrElse(PricePointPriceLadder.empty)
+  }
+
+  implicit class LevelBasedPriceLadderOps(self: LevelBasedPriceLadder) {
+    def toOpt: Option[List[List[BigDecimal]]] =
+      self.entries match {
+        case Nil => None
+        case entries => Some(entries.map(entry => List(entry.price.value, entry.tradedVolume.amount)))
+      }
+  }
+
+  implicit class PricePointPriceLadderOps(self: PricePointPriceLadder) {
+    def toOpt: Option[List[List[BigDecimal]]] =
+      self.entries match {
+        case Nil => None
+        case entries =>
+          Some(entries.zipWithIndex.map { case (entry, index) =>
+            List(index, entry.price.value, entry.tradedVolume.amount)
+          })
+      }
+  }
+
+  implicit val marketIdCoded: Codec[MarketId] = bimapString(_.value, MarketId(_))
   implicit val marketFilterCodec: Codec[MarketFilter] = deriveCodec[MarketFilter]
   implicit val marketDefinitionCodec: Codec[MarketDefinition] = deriveCodec[MarketDefinition]
   implicit val priceLadderDefinitionCodec: Codec[PriceLadderDefinition] = deriveCodec[PriceLadderDefinition]
   implicit val keyLineDefinitionCodec: Codec[KeyLineDefinition] = deriveCodec[KeyLineDefinition]
   implicit val keyLineSelectionCodec: Codec[KeyLineSelection] = deriveCodec[KeyLineSelection]
   implicit val runnerDefinitionCodec: Codec[RunnerDefinition] = deriveCodec[RunnerDefinition]
-
   implicit val errorMessageCodec: Codec[ErrorMessage] = bimapString(_.value, ErrorMessage(_))
   implicit val connectionClosedCodec: Codec[ConnectionClosed] = bimapBoolean(_.value, ConnectionClosed(_))
   implicit val connectionIdCodec: Codec[ConnectionId] = bimapString(_.value, ConnectionId(_))
-
   implicit val socketReadyCodec: Codec[SocketReady.type] = deriveCodec[SocketReady.type]
   implicit val socketFailedCodec: Codec[SocketFailed.type] = deriveCodec[SocketFailed.type]
 
@@ -83,28 +123,24 @@ object JsonCodecs {
   )
 
   implicit val marketChangeCodec: Codec[MarketChange] = Codec.from(
-    new Decoder[MarketChange] {
-      override def apply(c: HCursor): Result[MarketChange] =
-        for {
-          rc <- c.downField("rc").as[Option[List[RunnerChange]]]
-          img <- c.downField("img").as[Option[Boolean]]
-          tv <- c.downField("tv").as[Option[BigDecimal]]
-          con <- c.downField("con").as[Option[Boolean]]
-          marketDefinition <- c.downField("marketDefinition").as[Option[MarketDefinition]]
-          id <- c.downField("id").as[MarketId]
-        } yield MarketChange(rc.getOrElse(List.empty), img, tv, con, marketDefinition, id)
-    },
-    new Encoder[MarketChange] {
-      override def apply(runnerChange: MarketChange): Json =
-        Json.obj(
-          ("rc", runnerChange.rc.toOpt.asJson),
-          ("img", runnerChange.img.asJson),
-          ("tv", runnerChange.tv.asJson),
-          ("con", runnerChange.con.asJson),
-          ("marketDefinition", runnerChange.marketDefinition.asJson),
-          ("id", runnerChange.id.asJson)
-        )
-    }
+    cursor =>
+      for {
+        rc <- cursor.downField("rc").as[Option[List[RunnerChange]]]
+        img <- cursor.downField("img").as[Option[Boolean]]
+        tv <- cursor.downField("tv").as[Option[BigDecimal]]
+        con <- cursor.downField("con").as[Option[Boolean]]
+        marketDefinition <- cursor.downField("marketDefinition").as[Option[MarketDefinition]]
+        id <- cursor.downField("id").as[MarketId]
+      } yield MarketChange(rc.getOrElse(List.empty), img, tv, con, marketDefinition, id),
+    marketChange =>
+      Json.obj(
+        ("rc", marketChange.rc.toOpt.asJson),
+        ("img", marketChange.img.asJson),
+        ("tv", marketChange.tv.asJson),
+        ("con", marketChange.con.asJson),
+        ("marketDefinition", marketChange.marketDefinition.asJson),
+        ("id", marketChange.id.asJson)
+      )
   )
 
   implicit val marketChangeMessageCodec: Codec[MarketChangeMessage] = Codec.from(
@@ -148,26 +184,36 @@ object JsonCodecs {
       )
   )
 
+  implicit val pricePointPriceLadderCodec: Codec[PricePointPriceLadder] = Codec.from(
+    _.as[Option[List[List[BigDecimal]]]].map(_.toPricePointPriceLadder()),
+    _.toOpt.asJson
+  )
+
+  implicit val levelBasedPriceLadderCodec: Codec[LevelBasedPriceLadder] = Codec.from(
+    _.as[Option[List[List[BigDecimal]]]].map(_.toLevelBasedPriceLadder()),
+    _.toOpt.asJson
+  )
+
   implicit val runnerChangeCodec: Codec[RunnerChange] = Codec.from(
     cursor =>
       for {
-        tv <- cursor.downField("tv").as[Option[BigDecimal]]
-        batb <- cursor.downField("batb").as[Option[List[List[BigDecimal]]]]
-        spb <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
-        bdatl <- cursor.downField("bdatl").as[Option[List[List[BigDecimal]]]]
-        trd <- cursor.downField("trd").as[Option[List[List[BigDecimal]]]]
+        tradedVolume <- cursor.downField("tv").as[Option[BigDecimal]]
+        bestAvailableToBack <- cursor.downField("batb").as[LevelBasedPriceLadder]
+        startingPriceAvailableToBack <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
+        bestDisplayAvailableToLay <- cursor.downField("bdatl").as[LevelBasedPriceLadder]
+        traded <- cursor.downField("trd").as[PricePointPriceLadder]
         spfJson <- cursor.downField("spf").as[Json]
-        ltp <- cursor.downField("ltp").as[Option[BigDecimal]]
-        atb <- cursor.downField("atb").as[Option[List[List[BigDecimal]]]]
-        spl <- cursor.downField("spl").as[Option[List[List[BigDecimal]]]]
-        spn <- cursor.downField("spn").as[Option[BigDecimal]]
-        atl <- cursor.downField("atl").as[Option[List[List[BigDecimal]]]]
-        batl <- cursor.downField("batl").as[Option[List[List[BigDecimal]]]]
+        lastTradedPrice <- cursor.downField("ltp").as[Option[BigDecimal]]
+        availableToBack <- cursor.downField("atb").as[PricePointPriceLadder]
+        startingPriceAvailableToLay <- cursor.downField("spl").as[Option[List[List[BigDecimal]]]]
+        startingPriceNear <- cursor.downField("spn").as[Option[BigDecimal]]
+        availableToLay <- cursor.downField("atl").as[PricePointPriceLadder]
+        bestAvailableToLay <- cursor.downField("batl").as[LevelBasedPriceLadder]
         id <- cursor.downField("id").as[Long]
         hc <- cursor.downField("hc").as[Option[BigDecimal]]
-        bdatb <- cursor.downField("bdatb").as[Option[List[List[BigDecimal]]]]
+        bestDisplayAvailableToBack <- cursor.downField("bdatb").as[LevelBasedPriceLadder]
       } yield {
-        val spf = if (spfJson.isString) {
+        val startingPriceFar = if (spfJson.isString) {
           None
         } else if (spfJson.isNumber) {
           spfJson.asNumber.flatMap(_.toBigDecimal)
@@ -175,21 +221,21 @@ object JsonCodecs {
           None
         }
         RunnerChange(
-          tv,
-          batb.getOrElse(List.empty),
-          spb.getOrElse(List.empty),
-          bdatl.getOrElse(List.empty),
-          trd.getOrElse(List.empty),
-          spf,
-          ltp,
-          atb.getOrElse(List.empty),
-          spl.getOrElse(List.empty),
-          spn,
-          atl.getOrElse(List.empty),
-          batl.getOrElse(List.empty),
+          tradedVolume,
+          bestAvailableToBack,
+          startingPriceAvailableToBack.getOrElse(List.empty),
+          bestDisplayAvailableToLay,
+          traded,
+          startingPriceFar,
+          lastTradedPrice,
+          availableToBack,
+          startingPriceAvailableToLay.getOrElse(List.empty),
+          startingPriceNear,
+          availableToLay,
+          bestAvailableToLay,
           id,
           hc,
-          bdatb.getOrElse(List.empty)
+          bestDisplayAvailableToBack
         )
       },
     runnerChange =>

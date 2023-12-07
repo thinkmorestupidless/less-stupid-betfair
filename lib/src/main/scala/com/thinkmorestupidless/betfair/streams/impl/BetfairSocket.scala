@@ -1,14 +1,8 @@
 package com.thinkmorestupidless.betfair.streams.impl
 
 import com.thinkmorestupidless.betfair.auth.domain.{ApplicationKey, SessionToken}
-import com.thinkmorestupidless.betfair.core.impl.OutgoingHeartbeat
-import com.thinkmorestupidless.betfair.streams.domain.{
-  GlobalMarketFilterRepository,
-  Heartbeat,
-  IncomingBetfairSocketMessage,
-  MarketSubscription,
-  OutgoingBetfairSocketMessage
-}
+import com.thinkmorestupidless.betfair.core.impl.{OutgoingHeartbeat, SocketConfig}
+import com.thinkmorestupidless.betfair.streams.domain.{GlobalMarketFilterRepository, Heartbeat, IncomingBetfairSocketMessage, MarketSubscription, OutgoingBetfairSocketMessage}
 import com.thinkmorestupidless.betfair.streams.marketdefinitions.domain.MarketDefinitionsRepository
 import org.apache.pekko.NotUsed
 import org.apache.pekko.actor.typed.ActorSystem
@@ -34,6 +28,8 @@ final class BetfairSocket(
 
 object BetfairSocket {
 
+  type BetfairSocketFlow = Flow[OutgoingBetfairSocketMessage, IncomingBetfairSocketMessage, NotUsed]
+
   private val log = LoggerFactory.getLogger(getClass)
 
   private val handleStreamFailures: Supervision.Decider = {
@@ -51,16 +47,16 @@ object BetfairSocket {
       sessionToken: SessionToken,
       globalMarketFilterRepository: GlobalMarketFilterRepository,
       marketDefinitionsRepository: MarketDefinitionsRepository,
-      outgoingHeartbeat: OutgoingHeartbeat
+      socketConfig: SocketConfig
   )(implicit system: ActorSystem[_]): BetfairSocket = {
-    val codecFlow = BetfairCodeBidiFlow().join(socketFlow)
-    val betfairSocketFlow =
+    val codecFlow: BetfairSocketFlow = BetfairCodeBidiFlow().join(socketFlow)
+    val betfairSocketFlow: BetfairSocketFlow =
       BetfairSocketBidiFlow(
         applicationKey,
         sessionToken,
         globalMarketFilterRepository,
         marketDefinitionsRepository,
-        outgoingHeartbeat
+        socketConfig.outgoingHeartbeat
       ).join(codecFlow).withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
 
     val (sink, source) =
@@ -70,10 +66,12 @@ object BetfairSocket {
         .toMat(BroadcastHub.sink[IncomingBetfairSocketMessage](bufferSize = 256))(Keep.both)
         .run()
 
-    // We send a heartbeat here to kickstart the stream
-    // Without it there's no demand until a user request arrives
-    // The TCP socket won't connect until there's demand in the stream.
-    Source.single(Heartbeat()).runWith(sink)
+    if (socketConfig.eagerConnection.value) {
+      // We send a heartbeat here to kickstart the stream
+      // Without it there's no demand until a user request arrives
+      // The TCP socket won't connect until there's demand in the stream.
+      Source.single(Heartbeat()).runWith(sink)
+    }
 
     new BetfairSocket(sink, source)
   }

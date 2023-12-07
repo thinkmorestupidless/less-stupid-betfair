@@ -21,15 +21,13 @@ object HttpApiExample {
     implicit val clock = Clock.systemUTC()
 
     Betfair.create().map { betfair =>
-      log.info("betfair is ready")
-
       listEventTypes(betfair)
-      listEvents(betfair, MarketFilter.empty.withEve)
+      listEvents(betfair)
     }
   }
 
-  private def listEvents(betfair: Betfair, filter: MarketFilter)(implicit ec: ExecutionContext): Unit =
-    betfair.listEvents(filter).map { eventResponse =>
+  private def listEvents(betfair: Betfair)(implicit ec: ExecutionContext): Unit =
+    betfair.listEvents(MarketFilter.empty).map { eventResponse =>
       log.info(s"There are ${eventResponse.size} events")
       eventResponse.foreach(response =>
         log.info(s"${response.event.id} => ${response.event.name} has ${response.marketCount} markets")

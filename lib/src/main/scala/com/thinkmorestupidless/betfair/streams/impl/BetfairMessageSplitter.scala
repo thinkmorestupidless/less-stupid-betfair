@@ -36,9 +36,9 @@ class BetfairMessageFanOutShape(_init: FanOutShape.Init[BetfairSocketMessage])
 
   def this(
       in: Inlet[BetfairSocketMessage],
-      left: Outlet[IncomingBetfairSocketMessage],
-      right: Outlet[OutgoingBetfairSocketMessage]
-  ) = this(FanOutShape.Ports(in, left :: right :: Nil))
+      incoming: Outlet[IncomingBetfairSocketMessage],
+      outgoing: Outlet[OutgoingBetfairSocketMessage]
+  ) = this(FanOutShape.Ports(in, incoming :: outgoing :: Nil))
 
   override protected def construct(init: FanOutShape.Init[BetfairSocketMessage]): FanOutShape[BetfairSocketMessage] =
     new BetfairMessageFanOutShape(init)

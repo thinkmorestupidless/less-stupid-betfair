@@ -268,23 +268,47 @@ object Decoders {
         case list => Some(list)
       })
 
+  import com.thinkmorestupidless.betfair.streams.impl.JsonCodecs.ResultOptionListListBigDecimalOps
+
+  implicit val seqArrayOfStrings_levelBasedPriceLadder: Decoder[Seq[ArrayOfStrings], LevelBasedPriceLadder] =
+    _.decode[Option[List[List[BigDecimal]]]].map(_.toLevelBasedPriceLadder())
+
+  implicit val seqArrayOfStrings_pricePointPriceLadder: Decoder[Seq[ArrayOfStrings], PricePointPriceLadder] =
+    _.decode[Option[List[List[BigDecimal]]]].map(_.toPricePointPriceLadder())
+
+//  tv: Option[BigDecimal]
+//  batb: LevelBasedPriceLadder
+//  spb: List[List[BigDecimal]]
+//  bdatl: LevelBasedPriceLadder
+//  trd: PricePointPriceLadder
+//  spf: Option[BigDecimal]
+//  ltp: Option[BigDecimal]
+//  atb: PricePointPriceLadder
+//  spl: List[List[BigDecimal]]
+//  spn: Option[BigDecimal]
+//  atl: PricePointPriceLadder
+//  batl: LevelBasedPriceLadder
+//  id: Long
+//  hc: Option[BigDecimal]
+//  bdatb: LevelBasedPriceLadder
+
   implicit val runnerChangeProto_runnerChange: Decoder[RunnerChangeProto, RunnerChange] =
     proto => {
       val tv = proto.tv.map(BigDecimal(_)).validNel
-      val batb: Validation[List[List[BigDecimal]]] = proto.batb.toList.map(_.decode).sequence
+      val batb: Validation[LevelBasedPriceLadder] = proto.batb.decode
       val spb: Validation[List[List[BigDecimal]]] = proto.spb.toList.map(_.decode).sequence
-      val bdatl: Validation[List[List[BigDecimal]]] = proto.bdatl.toList.map(_.decode).sequence
-      val trd: Validation[List[List[BigDecimal]]] = proto.trd.toList.map(_.decode).sequence
+      val bdatl: Validation[LevelBasedPriceLadder] = proto.bdatl.decode
+      val trd: Validation[PricePointPriceLadder] = proto.trd.decode
       val spf: Validation[Option[BigDecimal]] = proto.spf.map(BigDecimal(_)).validNel
       val ltp: Validation[Option[BigDecimal]] = proto.ltp.map(BigDecimal(_)).validNel
-      val atb: Validation[List[List[BigDecimal]]] = proto.atb.toList.map(_.decode).sequence
+      val atb: Validation[PricePointPriceLadder] = proto.atb.decode
       val spl: Validation[List[List[BigDecimal]]] = proto.spl.toList.map(_.decode).sequence
       val spn: Validation[Option[BigDecimal]] = proto.spn.map(BigDecimal(_)).validNel
-      val atl: Validation[List[List[BigDecimal]]] = proto.atl.toList.map(_.decode).sequence
-      val batl: Validation[List[List[BigDecimal]]] = proto.batl.toList.map(_.decode).sequence
+      val atl: Validation[PricePointPriceLadder] = proto.atl.decode
+      val batl: Validation[LevelBasedPriceLadder] = proto.batl.decode
       val id: Validation[Long] = proto.id.validNel
       val hc: Validation[Option[BigDecimal]] = proto.hc.map(BigDecimal(_)).validNel
-      val bdatb: Validation[List[List[BigDecimal]]] = proto.bdatb.toList.map(_.decode).sequence
+      val bdatb: Validation[LevelBasedPriceLadder] = proto.bdatb.decode
 
       (tv, batb, spb, bdatl, trd, spf, ltp, atb, spl, spn, atl, batl, id, hc, bdatb).mapN(RunnerChange.apply _)
     }

@@ -29,6 +29,7 @@ object ConfigSupport {
         RawHeader("Accept-Encoding", "gzip, deflate")
       ),
       SocketConfig(
+        StreamsApiEnabled(true),
         SocketFrameSize(102400),
         SocketUri("stream-api.betfair.com"),
         SocketPort(443),
