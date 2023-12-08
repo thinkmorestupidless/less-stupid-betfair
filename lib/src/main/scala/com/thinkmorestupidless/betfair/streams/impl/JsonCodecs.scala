@@ -210,7 +210,7 @@ object JsonCodecs {
   implicit val runnerChangeCodec: Codec[RunnerChange] = Codec.from(
     cursor =>
       for {
-        tradedVolume <- cursor.downField("tv").as[Option[BigDecimal]]
+        tradedVolume <- cursor.asOrElse("tv", BigDecimal(0)) // cursor.downField("tv").as[Option[BigDecimal]]
         bestAvailableToBack <- cursor.asOrElse("batb", LevelBasedPriceLadder.empty)
         startingPriceAvailableToBack <- cursor.downField("spb").as[Option[List[List[BigDecimal]]]]
         bestDisplayAvailableToLay <- cursor.asOrElse("bdatl", LevelBasedPriceLadder.empty)

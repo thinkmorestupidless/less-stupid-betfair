@@ -294,7 +294,7 @@ object Decoders {
 
   implicit val runnerChangeProto_runnerChange: Decoder[RunnerChangeProto, RunnerChange] =
     proto => {
-      val tv = proto.tv.map(BigDecimal(_)).validNel
+      val tv = BigDecimal(proto.tv).validNel
       val batb: Validation[LevelBasedPriceLadder] = proto.batb.decode
       val spb: Validation[List[List[BigDecimal]]] = proto.spb.toList.map(_.decode).sequence
       val bdatl: Validation[LevelBasedPriceLadder] = proto.bdatl.decode

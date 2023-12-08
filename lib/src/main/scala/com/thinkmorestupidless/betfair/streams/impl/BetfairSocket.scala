@@ -55,7 +55,6 @@ object BetfairSocket {
       marketDefinitionsRepository: MarketDefinitionsRepository,
       socketConfig: SocketConfig
   )(implicit system: ActorSystem[_]): BetfairSocket = {
-    val codecFlow: BetfairSocketFlow = BetfairCodecBidiFlow().join(socketFlow)
     val betfairSocketFlow: BetfairSocketFlow =
       BetfairSocketBidiFlow(
         applicationKey,
@@ -63,7 +62,9 @@ object BetfairSocket {
         globalMarketFilterRepository,
         marketDefinitionsRepository,
         socketConfig.outgoingHeartbeat
-      ).join(codecFlow).withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
+      ).atop(BetfairCodecBidiFlow())
+        .join(socketFlow)
+        .withAttributes(ActorAttributes.supervisionStrategy(handleStreamFailures))
 
     val (sink, source) =
       MergeHub

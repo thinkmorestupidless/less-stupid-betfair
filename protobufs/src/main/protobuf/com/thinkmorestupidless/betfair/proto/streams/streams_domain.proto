@@ -62,7 +62,7 @@ message MarketChange {
 }
 
  message RunnerChange {
-   optional string tv = 1;
+   string tv = 1;
    repeated ArrayOfStrings batb = 2;
    repeated ArrayOfStrings spb = 3;
    repeated ArrayOfStrings bdatl = 4;

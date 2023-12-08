@@ -46,7 +46,7 @@ object BetfairProtocolFlows {
 
     val incoming: IncomingFlow =
       ActorFlow
-        .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)(IncomingQuestion(_, _))
+        .ask[IncomingBetfairSocketMessage, IncomingQuestion, Answer](protocolActor)((elem, replyTo) => IncomingQuestion(elem, replyTo))
         .mapConcat(_.messages)
 
     val outgoing: OutgoingFlow =
@@ -67,6 +67,9 @@ private object BetfairProtocolActor {
       extends BetfairProtocolMessage
 
   final case class Answer(messages: List[BetfairSocketMessage])
+  object Answer {
+    def apply(): Answer = Answer(List.empty)
+  }
 
   def apply(
       applicationKey: ApplicationKey,
@@ -80,23 +83,23 @@ private object BetfairProtocolActor {
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
             case IncomingQuestion(Connection(_, _), replyTo) =>
               context.system.log.info(s"[unconnected] received connection, giving back authentication message")
-              context.system.eventStream ! Publish(SocketConnected)
               replyTo ! Answer(List(Authentication(applicationKey, sessionToken)))
-              connecting()
+              authenticating()
 
             case message =>
               buffer.stash(message)
               Behaviors.same
           }
 
-        def connecting(): Behavior[BetfairProtocolMessage] =
+        def authenticating(): Behavior[BetfairProtocolMessage] = {
+          context.system.eventStream ! Publish(SocketConnected)
+
           Behaviors.receiveMessagePartial[BetfairProtocolMessage] {
             case IncomingQuestion(Success(_), replyTo) =>
               context.system.log.info(
                 s"[connecting] authentication success, moving to connected [unstashing ${buffer.size} messages]"
               )
-              context.system.eventStream ! Publish(SocketAuthenticated)
-              replyTo ! Answer(List.empty)
+              replyTo ! Answer()
               buffer.unstashAll(connected())
 
             case IncomingQuestion(Failure(_, _, _, _), replyTo) =>
@@ -109,8 +112,11 @@ private object BetfairProtocolActor {
               buffer.stash(message)
               Behaviors.same
           }
+        }
 
         def connected(): Behavior[BetfairProtocolMessage] = {
+          context.system.eventStream ! Publish(SocketAuthenticated)
+
           def handle(message: IncomingBetfairSocketMessage): List[IncomingBetfairSocketMessage] =
             message match {
               case mcm: MarketChangeMessage => List(mcm)

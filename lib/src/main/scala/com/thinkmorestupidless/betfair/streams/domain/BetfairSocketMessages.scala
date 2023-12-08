@@ -73,16 +73,12 @@ object MarketChangeMessage {
     new MarketChangeMessage(Op.mcm, id, ct, clk, heartbeatMs, pt, initialClk, mc, conflateMs, segmentType, status)
 }
 
-final case class CannotParseJson(cause: Throwable) extends IncomingBetfairSocketMessage
 case object SocketReady extends IncomingBetfairSocketMessage
 case object SocketFailed extends IncomingBetfairSocketMessage
 
 final case class ErrorMessage(value: String)
 final case class ConnectionClosed(value: Boolean)
 final case class ConnectionId(value: String)
-
-sealed trait IncomingOp
-sealed trait OutgoingOp
 
 sealed trait Op extends EnumEntry with LowerCamelcase
 object Op extends Enum[Op] with CirceEnum[Op] {

@@ -5,7 +5,6 @@ import com.thinkmorestupidless.betfair.exchange.domain.{EventId, EventTypeId}
 import com.thinkmorestupidless.betfair.streams.domain.PricePointPriceLadder.priceLadderEntryOrdering
 import enumeratum.EnumEntry.UpperSnakecase
 import enumeratum.{CirceEnum, Enum, EnumEntry}
-import org.slf4j.LoggerFactory
 
 sealed trait MarketBettingType extends EnumEntry with UpperSnakecase
 object MarketBettingType extends Enum[MarketBettingType] with CirceEnum[MarketBettingType] {
@@ -149,7 +148,7 @@ final case class MarketChange(
     id: MarketId
 )
 final case class RunnerChange(
-    tv: Option[BigDecimal],
+    tv: BigDecimal,
     batb: LevelBasedPriceLadder,
     spb: List[List[BigDecimal]],
     bdatl: LevelBasedPriceLadder,

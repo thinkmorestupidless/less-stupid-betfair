@@ -97,7 +97,7 @@ object Encoders {
   implicit val runnerChangeEncoder: Encoder[RunnerChange, RunnerChangeProto] =
     runnerChange =>
       RunnerChangeProto(
-        tv = runnerChange.tv.map(_.toString()),
+        tv = runnerChange.tv.toString(),
         batb = runnerChange.batb.encode,
         spb = runnerChange.spb.encode,
         bdatl = runnerChange.bdatl.encode,

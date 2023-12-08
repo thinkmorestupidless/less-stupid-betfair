@@ -60,17 +60,6 @@ object GrpcExample {
 
           source.runWith(Sink.foreach(o => log.info(o.toString)))
         }
-
-//        val x = betfair.listAllEventTypes().map { allEventTypes =>
-//          log.info(s"event types: $allEventTypes")
-//        }
-//
-//        log.info("invoking service client")
-
-//
-//        log.info(s"source is $source")
-//
-
       }
       .leftMap(error => log.error(s"Something went wrong '$error'"))
   }
